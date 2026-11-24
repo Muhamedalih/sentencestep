@@ -76,7 +76,7 @@ import { WORD_DROP_CSS } from "./word-drop-styles";
 const PALETTE = {
   // Graphite: a near-neutral dark grey, so the cobalt accent is the only colour on the page.
   "--wd-bg": "oklch(0.145 0.004 265)",
-  "--wd-bg2": "oklch(0.2 0.007 265)",
+  "--wd-bg2": "oklch(0.165 0.005 265)",
   "--wd-board": "oklch(0.175 0.006 265)",
   "--wd-line": "oklch(0.28 0.008 265)",
   "--wd-mute": "oklch(0.66 0.01 265)",
@@ -968,61 +968,7 @@ export function WordDropGame({
     sentences: { name: strings.sentences, hint: strings.sentencesHint },
   };
 
-  const sampleWord = "spouse";
   const levelNow = levelFor(hud.correct);
-
-  function modeSample(m: WordDropMode) {
-    const letters = [...sampleWord];
-    if (m === "easy") {
-      return (
-        <>
-          <span className="mw">
-            {letters.map((c, i) => (
-              <i key={i} style={{ animationDelay: `${i * 0.16}s` }}>
-                {c}
-              </i>
-            ))}
-          </span>
-          <small dir="auto">{strings.sampleMeaning}</small>
-        </>
-      );
-    }
-    if (m === "sentences") {
-      return (
-        <>
-          <span className="sent">{strings.sampleSentence}</span>
-          <small dir="auto">{strings.sampleSentenceMeaning}</small>
-        </>
-      );
-    }
-    const slots = (
-      <span className="ms">
-        {letters.map((c, i) => (
-          <i key={i}>
-            <b style={{ animationDelay: `${i * 0.16}s` }}>{c}</b>
-          </i>
-        ))}
-      </span>
-    );
-    if (m === "mid") {
-      return (
-        <>
-          <span className="ar" dir="auto">
-            {strings.sampleMeaning}
-          </span>
-          {slots}
-        </>
-      );
-    }
-    return (
-      <>
-        <span className="wd-spk">
-          <Volume2 className="size-3.5" aria-hidden="true" />
-        </span>
-        {slots}
-      </>
-    );
-  }
 
   return (
     // h-app: the site's own height that follows a phone's keyboard (see KeyboardViewport), so the input stays above the keys.
@@ -1037,37 +983,43 @@ export function WordDropGame({
         {screen === "start" && (
           <div className="flex min-h-0 flex-1 flex-col">
             <div className="wd-top">
-              <span aria-hidden="true" />
               <Link href="/learn" aria-label={strings.exit} className="wd-xbtn">
                 <X className="size-4" aria-hidden="true" />
               </Link>
+              {!seed && (
+                <Link
+                  href={dailyHref}
+                  prefetch={false}
+                  title={strings.dailyLine}
+                  className="wd-pill"
+                  dir="auto"
+                >
+                  {strings.dailyTitle}
+                </Link>
+              )}
             </div>
             <div className="wd-st">
-              <div className="wd-st-left">
+              {pool.length >= 3 && (
+                <div className="wd-floaters" aria-hidden="true">
+                  {pool.slice(0, 3).map((word, index) => (
+                    <span key={word.id} className={cn("wd-ft", `f${index}`)}>
+                      {word.en}
+                      {index === 1 && <em>30</em>}
+                    </span>
+                  ))}
+                </div>
+              )}
+              <div className="wd-hero">
                 <p className="wd-logo" dir="ltr" aria-label="Word Drop">
                   word <span>drop</span>
                 </p>
                 <h1 dir="auto">
                   {seed?.kind === "daily"
-                    ? strings.dailyHeadline1
+                    ? `${strings.dailyHeadline1} ${strings.dailyHeadline2}`
                     : seed?.kind === "friend"
-                      ? strings.friendHeadline1
-                      : strings.headline1}
-                  <br />
-                  <span>
-                    {seed?.kind === "daily"
-                      ? strings.dailyHeadline2
-                      : seed?.kind === "friend"
-                        ? strings.friendHeadline2
-                        : strings.headline2}
-                  </span>
+                      ? `${strings.friendHeadline1} ${strings.friendHeadline2}`
+                      : `${strings.headline1} ${strings.headline2}`}
                 </h1>
-                <p className="src" dir="auto">
-                  {strings.source}
-                </p>
-              </div>
-
-              <div className="wd-st-right">
                 {seed && (
                   <div className="wd-seedcard">
                     <p dir="auto" className="text-[15px] font-bold">
@@ -1093,29 +1045,32 @@ export function WordDropGame({
                   </p>
                 )}
                 {!seed && (
-                  <div className="flex flex-col gap-2.5" role="radiogroup">
-                    {modes.map((m) => {
-                      const disabled = m === "hard" && !hardOk;
-                      const selected = mode === m && !disabled;
-                      return (
-                        <button
-                          key={m}
-                          type="button"
-                          role="radio"
-                          aria-checked={selected}
-                          disabled={disabled}
-                          onClick={() => setMode(m)}
-                          className="wd-mode"
-                        >
-                          <div className="wd-mini">{modeSample(m)}</div>
-                          <span dir="auto" className="mt">
-                            <b>{modeLabel[m].name}</b>
-                            <span>{disabled ? strings.hardUnavailable : modeLabel[m].hint}</span>
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
+                  <>
+                    <div className="wd-modes" role="radiogroup">
+                      {modes.map((m) => {
+                        const disabled = m === "hard" && !hardOk;
+                        const selected = mode === m && !disabled;
+                        return (
+                          <button
+                            key={m}
+                            type="button"
+                            role="radio"
+                            aria-checked={selected}
+                            disabled={disabled}
+                            title={disabled ? strings.hardUnavailable : undefined}
+                            onClick={() => setMode(m)}
+                            className="wd-mode"
+                            dir="auto"
+                          >
+                            {modeLabel[m].name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="wd-hint" dir="auto">
+                      {modeLabel[mode].hint}
+                    </p>
+                  </>
                 )}
                 {!seed && personal.length >= MIN_PERSONAL && mode !== "sentences" && (
                   <button
@@ -1123,7 +1078,7 @@ export function WordDropGame({
                     role="switch"
                     aria-checked={useMine}
                     onClick={() => setUseMine((on) => !on)}
-                    className="wd-rowbox"
+                    className="wd-mine"
                   >
                     <span dir="auto">
                       <b>{strings.myWordsTitle}</b>
@@ -1136,55 +1091,45 @@ export function WordDropGame({
                     </span>
                   </button>
                 )}
-                {!seed && (
-                  <div className="wd-rowbox" style={{ gridTemplateColumns: "1fr" }}>
-                    <div dir="auto">
-                      <b>{strings.dailyTitle}</b>
-                      <span className="l">{strings.dailyLine}</span>
+                <div className="wd-cta">
+                  <button
+                    type="button"
+                    onClick={start}
+                    disabled={poolEmpty || (mode !== "sentences" && pool.length === 0)}
+                    className="wd-btn main"
+                  >
+                    {strings.start}
+                  </button>
+                  <small dir="auto">{strings.source}</small>
+                </div>
+              </div>
+              {!seed && board && board.countries.length > 0 && (
+                <div className="wd-board3">
+                  <b dir="auto">{strings.countriesTitle}</b>
+                  {board.countries.slice(0, 3).map((row, index) => (
+                    <div key={row.country} dir="auto" className="wd-row3">
+                      <span
+                        dir="ltr"
+                        className={cn(
+                          "font-extrabold tabular-nums",
+                          index === 0 ? "text-[var(--wd-acc)]" : "text-[var(--wd-mute)]",
+                        )}
+                      >
+                        {index + 1}
+                      </span>
+                      <span>
+                        {countryName(row.country, locale)}
+                        <span className="ms-2 text-[11.5px] text-[var(--wd-mute)]">
+                          {strings.playersCount.replace("{n}", String(row.players))}
+                        </span>
+                      </span>
+                      <b dir="ltr" className="tabular-nums">
+                        {row.average}
+                      </b>
                     </div>
-                    {board && board.countries.length > 0 && (
-                      <div>
-                        {board.countries.slice(0, 3).map((row, index) => (
-                          <div key={row.country} dir="auto" className="wd-row3">
-                            <span
-                              dir="ltr"
-                              className={cn(
-                                "font-extrabold tabular-nums",
-                                index === 0 ? "text-[var(--wd-acc)]" : "text-[var(--wd-mute)]",
-                              )}
-                            >
-                              {index + 1}
-                            </span>
-                            <span>
-                              {countryName(row.country, locale)}
-                              <span className="ms-2 text-[11.5px] text-[var(--wd-mute)]">
-                                {strings.playersCount.replace("{n}", String(row.players))}
-                              </span>
-                            </span>
-                            <b dir="ltr" className="tabular-nums">
-                              {row.average}
-                            </b>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    <Link href={dailyHref} prefetch={false} className="wd-btn">
-                      {strings.dailyStart}
-                    </Link>
-                  </div>
-                )}
-              </div>
-
-              <div className="wd-st-foot">
-                <button
-                  type="button"
-                  onClick={start}
-                  disabled={poolEmpty || (mode !== "sentences" && pool.length === 0)}
-                  className="wd-btn main"
-                >
-                  {strings.start}
-                </button>
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -1200,6 +1145,9 @@ export function WordDropGame({
                     ×{hud.combo}
                   </span>
                 )}
+                <span className="wd-lvl" dir="auto">
+                  {strings.levelLabel.replace("{n}", String(levelNow))}
+                </span>
               </div>
               <div className="wd-hr">
                 <button
@@ -1461,7 +1409,6 @@ export function WordDropGame({
             <aside className="wd-side" aria-label={strings.caughtTitle}>
               <div className="wd-sd-h">
                 <b dir="auto">{strings.caughtTitle}</b>
-                <span dir="auto">{strings.levelLabel.replace("{n}", String(levelNow))}</span>
               </div>
               <div className="wd-lvbar" aria-hidden="true">
                 <i style={{ width: `${((hud.correct % LEVEL_EVERY) / LEVEL_EVERY) * 100}%` }} />
