@@ -1,3 +1,4 @@
+import { GERMAN_ID_PREFIX, type TargetLanguage } from "@/lib/learn-language";
 import { createClient } from "@/lib/supabase/server";
 import type { RuleOutcome } from "@/lib/daily-rule/schedule";
 import type { RuleStateRow } from "@/lib/daily-rule/visit";
@@ -73,9 +74,14 @@ const CHUNK = 100;
  * is not returned).
  */
 export async function fetchLevelSentences(
-  lessonIds: readonly string[],
+  allLessonIds: readonly string[],
   level: number,
+  language: TargetLanguage = "en",
 ): Promise<LevelSentence[]> {
+  // German lessons have ids that start with "de-" (permission germanTrack): each course reads only its own texts.
+  const lessonIds = allLessonIds.filter(
+    (id) => id.startsWith(GERMAN_ID_PREFIX) === (language === "de"),
+  );
   if (lessonIds.length === 0) return [];
   const supabase = await createClient();
   const levelIds: string[] = [];

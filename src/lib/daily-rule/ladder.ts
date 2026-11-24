@@ -10,8 +10,9 @@
  * word shows ("none") is taught from its prepared sentences. Ids never change: they are stored per learner.
  */
 
+import type { DeMatchKind } from "./de/matchers";
 import type { ExtraMatchKind } from "./matchers-more";
-import { SYLLABUS } from "./syllabus";
+import { SYLLABUS, type SyllabusEntry } from "./syllabus";
 
 export type RuleFamily =
   | "be"
@@ -36,7 +37,9 @@ export type RuleFamily =
   | "reported"
   | "relative"
   | "linking"
-  | "structure";
+  | "structure"
+  | "case"
+  | "word-order";
 
 /** The first 39 matchers (matchers.ts). */
 export type BaseMatchKind =
@@ -81,7 +84,7 @@ export type BaseMatchKind =
   | "gerund-after";
 
 /** Which sentence pattern a rule looks for (see matchers.ts and matchers-more.ts); "none": no word shows it. */
-export type MatchKind = BaseMatchKind | ExtraMatchKind | "none";
+export type MatchKind = BaseMatchKind | ExtraMatchKind | DeMatchKind | "none";
 
 /** The level a rule belongs to: A1, A2–B1 (level 2 in Looma) or B2 (level 3). */
 export type RuleLevel = "A1" | "A2-B1" | "B2";
@@ -108,8 +111,11 @@ export interface RuleSpec {
 }
 
 /** The rules of one level in the order they are opened. */
-export function ladderOf(level: RuleLevel): readonly RuleSpec[] {
-  return SYLLABUS.filter((entry) => entry.level === level).map((entry, index) => ({
+export function ladderOf(
+  level: RuleLevel,
+  syllabus: readonly SyllabusEntry[] = SYLLABUS,
+): readonly RuleSpec[] {
+  return syllabus.filter((entry) => entry.level === level).map((entry, index) => ({
     ...entry,
     order: index + 1,
   }));

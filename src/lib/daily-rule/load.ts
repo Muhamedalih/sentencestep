@@ -1,6 +1,7 @@
 import { fetchStoredClips } from "@/lib/sentence-bank/clips";
 import { clipRequestsFor } from "@/lib/sentence-bank/lesson-clips";
 import type { SupportLocale } from "@/lib/i18n/locales";
+import type { TargetLanguage } from "@/lib/learn-language";
 import { fetchProgressCached } from "@/lib/progress/cached";
 import { fetchLessonById } from "@/lib/supabase/queries/content";
 import {
@@ -10,11 +11,12 @@ import {
 } from "@/lib/supabase/queries/learner-rules";
 
 import {
-  ALL_RULES,
+  languageOfRuleId,
   ladderForLevel,
   LEVEL_NUMBER,
   MAX_WORDS_BY_LEVEL,
   ruleById,
+  rulesOf,
   teachingLevel,
 } from "./levels";
 import { isPreparedId } from "./prepared";
@@ -58,7 +60,10 @@ export async function loadRuleVisit(args: {
   daily?: boolean;
   /** The repeat of the day's session (the row's button once answered): what was taught and asked today. */
   redo?: boolean;
+  /** The course: English when absent (German: permission germanTrack). */
+  language?: TargetLanguage;
 }): Promise<LoadedRuleVisit | null> {
+  const language = args.language ?? "en";
   let level = args.level;
   let source: SourceSentence[] = [];
   if (args.storyId) {
@@ -69,22 +74,24 @@ export async function loadRuleVisit(args: {
       story.sentences.map((sentence) => ({ id: sentence.id, lessonId: story.id, en: sentence.en })),
     );
   }
-  if (!ladderForLevel(level)) return null;
+  if (!ladderForLevel(level, language)) return null;
 
-  const states = await fetchLearnerRuleStates(args.userId).catch((error: unknown) => {
+  const allStates = await fetchLearnerRuleStates(args.userId).catch((error: unknown) => {
     if (!isMissingRulesSchema(error))
       console.error("[daily-rule] could not read the learner's rules", error);
     return [];
   });
+  // A learner's English and German rules share one table: each course sees only its own.
+  const states = allStates.filter((row) => languageOfRuleId(row.ruleId) === language);
   const met = new Set(states.map((row) => row.ruleId));
-  level = teachingLevel(level, met);
-  const ladder = ladderForLevel(level);
+  level = teachingLevel(level, met, language);
+  const ladder = ladderForLevel(level, language);
   if (!ladder) return null;
   const inLadder = new Set(ladder.map((rule) => rule.id));
-  const extra = ALL_RULES.filter((rule) => met.has(rule.id) && !inLadder.has(rule.id));
+  const extra = rulesOf(language).filter((rule) => met.has(rule.id) && !inLadder.has(rule.id));
 
   // The earlier-rule questions come from the learner's own finished texts at this level, never from anyone else's.
-  const finished = await loadFinishedSentences(args.todayISO, level);
+  const finished = await loadFinishedSentences(args.todayISO, level, language);
 
   // The daily task has no story: its new rule comes from the learner's own finished texts.
   if (args.daily) source = finished;
@@ -118,7 +125,7 @@ export async function loadPracticeVisit(args: {
   const rule = ruleById(args.ruleId);
   if (!rule) return null;
   const level = LEVEL_NUMBER[rule.level];
-  const finished = await loadFinishedSentences(args.todayISO, level);
+  const finished = await loadFinishedSentences(args.todayISO, level, languageOfRuleId(rule.id));
   const visit = planPracticeVisit({
     rule,
     pool: finished,
@@ -132,7 +139,11 @@ export async function loadPracticeVisit(args: {
  * The learner's own finished texts at one level (stories and daily lessons), each sentence with its stored
  * recording. A read that fails answers "no texts": the card then teaches without asking from them.
  */
-async function loadFinishedSentences(todayISO: string, level: number): Promise<SourceSentence[]> {
+async function loadFinishedSentences(
+  todayISO: string,
+  level: number,
+  language: TargetLanguage = "en",
+): Promise<SourceSentence[]> {
   const progress = await fetchProgressCached(todayISO).catch(() => null);
   const lessonIds = [
     ...new Set(
@@ -141,7 +152,7 @@ async function loadFinishedSentences(todayISO: string, level: number): Promise<S
         .map((done) => done.lessonId),
     ),
   ];
-  return fetchLevelSentences(lessonIds, level)
+  return fetchLevelSentences(lessonIds, level, language)
     .then((sentences) =>
       withRecordings(
         sentences.map((sentence) => ({

@@ -6,7 +6,13 @@ import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 
 import { RulePageOne, RulePageTwo } from "@/components/today/rule-pages";
 import { buttonVariants } from "@/components/ui/button";
-import { ladderForLevel, LEVEL_LABEL, LEVEL_NUMBER, ruleById } from "@/lib/daily-rule/levels";
+import {
+  ladderForLevel,
+  languageOfRuleId,
+  LEVEL_LABEL,
+  LEVEL_NUMBER,
+  ruleById,
+} from "@/lib/daily-rule/levels";
 import { fill, ruleStrings } from "@/lib/daily-rule/strings";
 import type { RuleTeach } from "@/lib/daily-rule/teach-types";
 import { unitTitle } from "@/lib/daily-rule/units";
@@ -70,7 +76,7 @@ export function RuleLibraryDetail({
   const kicker = rule
     ? `${fill(copy.ruleNumber, {
         n: rule.order,
-        total: ladderForLevel(LEVEL_NUMBER[rule.level])?.length ?? 0,
+        total: ladderForLevel(LEVEL_NUMBER[rule.level], languageOfRuleId(rule.id))?.length ?? 0,
       })} · ${unitTitle(rule.unit, locale)}`
     : copy.ruleTitle;
 

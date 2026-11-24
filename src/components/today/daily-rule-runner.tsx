@@ -14,7 +14,12 @@ import { useAudioClip } from "@/hooks/use-audio-clip";
 import { useEnterToContinue } from "@/hooks/use-enter-to-continue";
 import { recordDailyRuleAction } from "@/lib/daily-rule/actions";
 import type { RuleSpec } from "@/lib/daily-rule/ladder";
-import { ladderForLevel, LEVEL_NUMBER, ruleById } from "@/lib/daily-rule/levels";
+import {
+  ladderForLevel,
+  languageOfRuleId,
+  LEVEL_NUMBER,
+  ruleById,
+} from "@/lib/daily-rule/levels";
 import { glueEndings } from "@/lib/daily-rule/marks";
 import type { RuleOutcome } from "@/lib/daily-rule/schedule";
 import { fill, ruleStrings, type RuleStrings } from "@/lib/daily-rule/strings";
@@ -126,7 +131,8 @@ export function DailyRuleRunner({
   function kickerOf(ruleId: string): string {
     const rule = ruleById(ruleId);
     if (!rule) return "";
-    const total = ladderForLevel(LEVEL_NUMBER[rule.level])?.length ?? ladderSize;
+    const total =
+      ladderForLevel(LEVEL_NUMBER[rule.level], languageOfRuleId(rule.id))?.length ?? ladderSize;
     return `${fill(copy.ruleNumber, { n: rule.order, total })} · ${unitTitle(rule.unit, locale)}`;
   }
 
@@ -424,7 +430,9 @@ function Question({
 
   function check(): void {
     if (final || value.trim() === "") return;
-    const result = diagnoseAny(value, answers);
+    // The hints name English endings (-s, -ed, a / an): a German answer is only right or wrong.
+    const diagnosed = diagnoseAny(value, answers);
+    const result = languageOfRuleId(item.ruleId) === "de" && diagnosed !== "correct" ? "other" : diagnosed;
     if (result === "correct") {
       setPhase("right");
       return;

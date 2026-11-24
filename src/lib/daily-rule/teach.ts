@@ -14,6 +14,7 @@
  * teach-b2.ts, one file per level. Keyed by rule id, and the ids never change (they are stored per learner).
  */
 
+import { TEACH_DE } from "./de/teach";
 import { TEACH_A1 } from "./teach-a1";
 import { TEACH_A2 } from "./teach-a2";
 import { TEACH_B2 } from "./teach-b2";
@@ -941,6 +942,7 @@ export const TEACH: Readonly<Record<string, RuleTeach>> = {
   ...TEACH_A1,
   ...TEACH_A2,
   ...TEACH_B2,
+  ...TEACH_DE,
 };
 
 /** What a rule card teaches, by rule id; undefined for an id the ladders do not have. */
