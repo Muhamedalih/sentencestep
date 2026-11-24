@@ -87,6 +87,29 @@ function precededByDativePrep(c: Ctx, i: number): boolean {
 
 const isQuestion = (c: Ctx) => c.text.trim().endsWith("?");
 
+/**
+ * The last word of the clause that starts at token i (up to the next comma, or the end of the sentence): in a
+ * subordinate clause this is where the verb stands. -1 when the clause has no word after its first.
+ */
+function clauseEnd(c: Ctx, i: number): number {
+  const from = c.tokens[i]?.start ?? 0;
+  const comma = c.text.indexOf(",", from);
+  let end = c.w.length - 1;
+  if (comma >= 0) {
+    end = i;
+    for (let k = i + 1; k < c.w.length && c.tokens[k]!.start < comma; k++) end = k;
+  }
+  return end > i + 1 ? end : -1;
+}
+
+/** The final verbs of the clauses that a word of `starters` opens. */
+function finalVerbs(c: Ctx, starters: ReadonlySet<string>, from = 0): number[] {
+  return pos(c.w, starters)
+    .filter((i) => i >= from)
+    .map((i) => clauseEnd(c, i))
+    .filter((i) => i >= 0);
+}
+
 const PERFECT_AUX = set("habe hast hat haben habt bin bist ist sind seid");
 const HABEN = set("habe hast hat haben habt");
 const SEIN = set("bin bist ist sind seid");
@@ -259,13 +282,16 @@ const MATCHERS = {
   "de-war-hatte": (c) => pos(c.w, set("war warst waren wart hatte hattest hatten hattet")),
   "de-dat-article": (c) => pos(c.w, set("dem einem keinem meinem deinem seinem ihrem unserem")),
   "de-dat-pronoun": (c) => pos(c.w, set("mir dir ihm ihnen")),
+  // The word after the verb: the dative pronoun or article that the verb takes.
   "de-dat-verbs": (c) =>
     pos(
       c.w,
       set(
-        "hilft hilfst helfe helfen gefällt gehört gehören dankt danken schmeckt fehlt passt antwortet gratuliere gratuliert",
+        "hilft hilfst helfe helfen gefällt gefallen gehört gehören dankt danken schmeckt fehlt passt antwortet gratuliere gratuliert",
       ),
-    ),
+    )
+      .map((i) => i + 1)
+      .filter((i) => set("mir dir ihm ihr uns euch ihnen dem der den").has(c.w[i] ?? "")),
   "de-prep-dat-article": (c) => {
     const out: number[] = [];
     for (let i = 0; i < c.w.length - 1; i++)
@@ -291,16 +317,17 @@ const MATCHERS = {
   "de-irregular-comparison": (c) =>
     pos(c.w, set("besser besten lieber liebsten mehr meisten höher höchsten näher nächsten")),
   "de-so-wie": (c) => pos(c.w, set("wie")).filter((i) => c.w.slice(Math.max(0, i - 3), i).some((x) => set("so genauso ebenso").has(x))),
-  "de-weil": (c) => pos(c.w, set("weil")),
-  "de-dass": (c) => pos(c.w, set("dass")),
-  "de-wenn": (c) => pos(c.w, set("wenn")),
-  "de-ob": (c) => pos(c.w, set("ob")).filter((i) => c.w[i - 1] !== "als"),
+  // The rules about a subordinate clause blank its final verb, where the clause puts it.
+  "de-weil": (c) => finalVerbs(c, set("weil")),
+  "de-dass": (c) => finalVerbs(c, set("dass")),
+  "de-wenn": (c) => finalVerbs(c, set("wenn")),
+  "de-ob": (c) => finalVerbs(c, set("ob")),
   "de-als-wenn": (c) =>
     pos(c.w, set("als wenn")).filter((i) => (i === 0 || afterComma(c, i, 3)) && c.w[i + 1] !== "ob"),
   "de-deshalb": (c) => pos(c.w, set("deshalb darum deswegen")),
   "de-denn": (c) => pos(c.w, set("denn")).filter((i) => i > 0 && afterComma(c, i, 3)),
   "de-indirect-question": (c) =>
-    pos(c.w, set("wo wer was wann warum wie wohin woher")).filter((i) => i > 0 && afterComma(c, i, 3)),
+    finalVerbs(c, set("wo wer was wann warum wie wohin woher"), 1).filter((i) => c.text.includes(",")),
   "de-zu-infinitive": (c) =>
     pos(c.w, set("zu")).filter((i) => {
       const next = c.w[i + 1] ?? "";
@@ -409,7 +436,10 @@ const MATCHERS = {
   "de-passive-modal": (c) => {
     const last = lastWordIndex(c);
     if (last < 3 || c.w[last] !== "werden" || !isParticiple(c, last - 1)) return [];
-    return pos(c.w, set("kann muss soll darf will können müssen sollen dürfen wollen könnte musste sollte"));
+    // The blank is the final werden, once a modal verb stands earlier in the sentence.
+    return pos(c.w, set("kann muss soll darf will können müssen sollen dürfen wollen könnte musste sollte")).length > 0
+      ? [last]
+      : [];
   },
   "de-passive-agent": (c) =>
     pos(c.w, set("wurde wurden wird werden worden")).length > 0 ? pos(c.w, set("von durch")) : [],
@@ -417,7 +447,10 @@ const MATCHERS = {
     const states = set(
       "geschlossen geöffnet gebaut repariert verboten erlaubt geplant gedeckt besetzt ausverkauft reserviert organisiert eingeladen gesperrt beendet erledigt vorbereitet",
     );
-    return c.w.map((x, i) => (states.has(x) && set("ist sind war waren").has(c.w[i - 1] ?? "") ? i : -1)).filter((i) => i >= 0);
+    // The blank is the sein before the participle (sein = a state, werden = a process).
+    return c.w
+      .map((x, i) => (states.has(x) && set("ist sind war waren").has(c.w[i - 1] ?? "") ? i - 1 : -1))
+      .filter((i) => i >= 0);
   },
   "de-passive-substitute": (c) => {
     const out = pos(c.w, set("lässt lassen ließ")).filter((i) => c.w[i + 1] === "sich" || c.w[i + 2] === "sich");
