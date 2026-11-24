@@ -49,6 +49,7 @@ export function PassageCard({
     <Link
       href={`/learn/passages/${passage.id}`}
       data-upgrade-next={locked ? `/learn/passages/${passage.id}` : undefined}
+      data-upgrade-title={locked ? passage.title : undefined}
       className="group block outline-none"
       aria-label={
         locked ? t.premium.lockedContentAriaLabel.replace("{title}", passage.title) : undefined

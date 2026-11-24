@@ -42,6 +42,7 @@ export function HomeLessonCard({
       <Link
         href={`/learn/normal/${lesson.id}`}
         data-upgrade-next={locked ? `/learn/normal/${lesson.id}` : undefined}
+        data-upgrade-title={locked ? lesson.title : undefined}
         aria-label={
           locked ? t.premium.lockedContentAriaLabel.replace("{title}", lesson.title) : lesson.title
         }
