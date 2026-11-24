@@ -307,13 +307,66 @@ export const TILE_MIN_WIDTH = 96;
 const WORD_TILE_HEIGHT = 74;
 const SENTENCE_TILE_HEIGHT = 92;
 
-export function tileSize(mode: WordDropMode, word: DropWord, fieldWidth: number): TileSize {
+/** On a wide field (a laptop) the tiles grow by this much, so the words stay as easy to read as on a phone. */
+export const WIDE_FIELD_PX = 600;
+export const WIDE_TILE_SCALE = 1.2;
+
+/** How much bigger a tile is on this field: 1 on a phone, a little more on a laptop. */
+export function tileScaleFor(fieldWidth: number): number {
+  return fieldWidth >= WIDE_FIELD_PX ? WIDE_TILE_SCALE : 1;
+}
+
+export function tileSize(
+  mode: WordDropMode,
+  word: DropWord,
+  fieldWidth: number,
+  scale = 1,
+): TileSize {
   const room = Math.max(TILE_MIN_WIDTH, fieldWidth - 8);
-  if (mode === "sentences") return { w: Math.min(room, 300), h: SENTENCE_TILE_HEIGHT, font: 16 };
+  if (mode === "sentences") {
+    return {
+      w: Math.min(room, Math.round(300 * scale)),
+      h: Math.round(SENTENCE_TILE_HEIGHT * scale),
+      font: Math.round(16 * scale),
+    };
+  }
   const main = mode === "mid" ? word.meaning.length * 11.5 : word.en.length * 12.5;
   const sub = mode === "easy" ? word.meaning.length * 7.5 : 0;
-  const w = Math.ceil(Math.max(TILE_MIN_WIDTH, main + 40, sub + 40));
-  return { w: Math.min(w, room), h: WORD_TILE_HEIGHT, font: 19 };
+  const w = Math.ceil(Math.max(TILE_MIN_WIDTH, main + 40, sub + 40) * scale);
+  return {
+    w: Math.min(w, room),
+    h: Math.round(WORD_TILE_HEIGHT * scale),
+    font: Math.round(19 * scale),
+  };
+}
+
+/** Freeze: every FREEZE_EVERY correct words in a row earns one charge (up to MAX_CHARGES); using it slows the tiles to FREEZE_SLOW of their speed for FREEZE_SECONDS. */
+export const FREEZE_EVERY = 6;
+export const MAX_CHARGES = 3;
+export const FREEZE_SECONDS = 4;
+export const FREEZE_SLOW = 0.18;
+/** While frozen the next tile waits too: the clock that paces the tiles runs at this share of real time. */
+export const FREEZE_SPAWN_CLOCK = 0.3;
+/** Level: every LEVEL_EVERY correct words the round moves up a level (a label and a bar; the speed already follows the learner's own pace). */
+export const LEVEL_EVERY = 8;
+/** Every CHALLENGE_EVERY-th tile of a word round is a challenge word: it always pays the most a word can (the server's per-word ceiling). */
+export const CHALLENGE_EVERY = 7;
+export const CHALLENGE_POINTS = 30;
+
+export function levelFor(correct: number): number {
+  return 1 + Math.floor(Math.max(0, correct) / LEVEL_EVERY);
+}
+
+/** Whether the tile that appears as number `spawned` (0 for the first) is a challenge word; sentences have none. */
+export function isChallengeTile(mode: WordDropMode, spawned: number): boolean {
+  return mode !== "sentences" && spawned % CHALLENGE_EVERY === CHALLENGE_EVERY - 1;
+}
+
+/** The share of the fall left when a word was typed, 0 (it was about to land) to 1 (it had just appeared): the height of its bar on the end page. */
+export function fallLeft(bottom: number, top: number, floor: number): number {
+  const span = floor - top;
+  if (span <= 0) return 0;
+  return Math.max(0, Math.min(1, (floor - bottom) / span));
 }
 
 /** A tile on the field: the left edge, the top, and its size. */

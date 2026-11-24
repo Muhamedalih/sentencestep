@@ -95,6 +95,24 @@ export interface WordDropStrings {
   /** The small card on Home: one line about the game and the button's words. */
   homeLine: string;
   homeCta: string;
+  /** The side list of the words caught this round (laptop), with its empty line and the level label ("{n}"). */
+  caughtTitle: string;
+  caughtEmpty: string;
+  levelLabel: string;
+  /** The freeze power-up button, and the notes that flash on the field: a streak ("{n}" in a row) and a freeze earned. */
+  freezeLabel: string;
+  bannerStreak: string;
+  bannerFreezeGain: string;
+  /** The tag before a word that fell, under the typing line. */
+  missedTag: string;
+  /** The end page's pace chart. */
+  rhythmTitle: string;
+  rhythmHint: string;
+  soundToggle: string;
+  /** The sample on the mode cards of the start page: the meaning of "spouse", and a short sentence with its meaning. */
+  sampleMeaning: string;
+  sampleSentence: string;
+  sampleSentenceMeaning: string;
 }
 
 const AR: WordDropStrings = {
@@ -170,6 +188,19 @@ const AR: WordDropStrings = {
   noChallengeOwn: "جولة كلماتك لا تُرسل كتحدي؛ العب جولة عادية لتتحدى صديقك.",
   homeLine: "كلمات تسقط من فوق، اكتبها قبل ما تنزل",
   homeCta: "العب",
+  caughtTitle: "صدتها",
+  caughtEmpty: "الكلمات اللي تصيدها تظهر هنا بمعناها. اضغط على أي كلمة لتسمعها مرة ثانية.",
+  levelLabel: "المستوى {n}",
+  freezeLabel: "تجميد",
+  bannerStreak: "سلسلة ×{n}",
+  bannerFreezeGain: "+1 تجميد",
+  missedTag: "فاتتك",
+  rhythmTitle: "إيقاعك في الجولة",
+  rhythmHint: "كلما ارتفع العمود كنت أسرع، والنقطة الحمراء كلمة فاتتك",
+  soundToggle: "الصوت",
+  sampleMeaning: "الزوج",
+  sampleSentence: "my aunt is a nurse",
+  sampleSentenceMeaning: "عمتي ممرضة",
 };
 
 const ES: WordDropStrings = {
@@ -246,6 +277,20 @@ const ES: WordDropStrings = {
     "Una ronda con tus palabras no se envía como reto; juega una ronda normal para retar a un amigo.",
   homeLine: "Las palabras caen: escríbelas antes de que bajen",
   homeCta: "Jugar",
+  caughtTitle: "Atrapadas",
+  caughtEmpty:
+    "Las palabras que atrapes aparecen aquí con su significado. Toca una para oírla otra vez.",
+  levelLabel: "Nivel {n}",
+  freezeLabel: "Congelar",
+  bannerStreak: "Racha ×{n}",
+  bannerFreezeGain: "+1 congelar",
+  missedTag: "Perdida",
+  rhythmTitle: "Tu ritmo en la ronda",
+  rhythmHint: "Cuanto más alta la barra, más rápido fuiste; el punto rojo es una palabra perdida",
+  soundToggle: "Sonido",
+  sampleMeaning: "el cónyuge",
+  sampleSentence: "my aunt is a nurse",
+  sampleSentenceMeaning: "mi tía es enfermera",
 };
 
 const TR: WordDropStrings = {
@@ -322,6 +367,19 @@ const TR: WordDropStrings = {
     "Kendi kelimelerinle oynanan tur meydan okuma olarak gönderilmez; arkadaşına meydan okumak için normal bir tur oyna.",
   homeLine: "Kelimeler düşer, inmeden önce yaz",
   homeCta: "Oyna",
+  caughtTitle: "Yakalananlar",
+  caughtEmpty: "Yakaladığın kelimeler anlamıyla burada görünür. Tekrar dinlemek için birine dokun.",
+  levelLabel: "Seviye {n}",
+  freezeLabel: "Dondur",
+  bannerStreak: "Seri ×{n}",
+  bannerFreezeGain: "+1 dondur",
+  missedTag: "Kaçtı",
+  rhythmTitle: "Turdaki ritmin",
+  rhythmHint: "Çubuk yükseldikçe daha hızlıydın; kırmızı nokta kaçan kelime",
+  soundToggle: "Ses",
+  sampleMeaning: "eş",
+  sampleSentence: "my aunt is a nurse",
+  sampleSentenceMeaning: "teyzem hemşire",
 };
 
 export function wordDropStrings(locale: SupportLocale | null): WordDropStrings {

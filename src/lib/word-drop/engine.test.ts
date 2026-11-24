@@ -1,8 +1,18 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { MAX_POINTS_PER_WORD } from "@/lib/word-drop/scores";
 import {
   BASE_GAP_MS,
+  CHALLENGE_EVERY,
+  CHALLENGE_POINTS,
+  FREEZE_SLOW,
+  LEVEL_EVERY,
+  fallLeft,
+  isChallengeTile,
+  levelFor,
+  tileScaleFor,
+  tileSize,
   SPEED_MAX,
   SPEED_MIN,
   accuracyPercent,
@@ -146,4 +156,33 @@ test("the pace stays humane: a new word every 4.8 s at the start, never faster t
   assert.ok(words >= 35);
   // One miss costs several words of progress.
   assert.ok(speedAfterCorrect(speedAfterMiss(1)) < 1);
+});
+
+test("a challenge word pays the server's ceiling and sentences have none", () => {
+  assert.equal(CHALLENGE_POINTS, MAX_POINTS_PER_WORD);
+  assert.equal(isChallengeTile("easy", CHALLENGE_EVERY - 1), true);
+  assert.equal(isChallengeTile("easy", 0), false);
+  assert.equal(isChallengeTile("mid", 2 * CHALLENGE_EVERY - 1), true);
+  assert.equal(isChallengeTile("sentences", CHALLENGE_EVERY - 1), false);
+  // The challenge never pays more than a plain word at the top of a combo.
+  assert.equal(pointsFor(99), CHALLENGE_POINTS);
+});
+
+test("the level rises every LEVEL_EVERY correct words and a freeze only slows", () => {
+  assert.equal(levelFor(0), 1);
+  assert.equal(levelFor(LEVEL_EVERY - 1), 1);
+  assert.equal(levelFor(LEVEL_EVERY), 2);
+  assert.equal(levelFor(3 * LEVEL_EVERY), 4);
+  assert.ok(FREEZE_SLOW > 0 && FREEZE_SLOW < 1);
+});
+
+test("tiles grow on a laptop-wide field and the bar of a word reads how much fall was left", () => {
+  assert.equal(tileScaleFor(360), 1);
+  assert.ok(tileScaleFor(800) > 1);
+  const phone = tileSize("easy", word("balance"), 800);
+  const wide = tileSize("easy", word("balance"), 800, tileScaleFor(800));
+  assert.ok(wide.w > phone.w && wide.h > phone.h && wide.font > phone.font);
+  assert.equal(fallLeft(100, 0, 400), 0.75);
+  assert.equal(fallLeft(400, 0, 400), 0);
+  assert.equal(fallLeft(10, 0, 0), 0);
 });
