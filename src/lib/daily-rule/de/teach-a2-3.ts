@@ -185,7 +185,7 @@ export const TEACH_DE_A2_3: Readonly<Record<string, RuleTeach>> = {
   },
   "de-a2-37": {
     idea: lines(
-      "More imperative forms: du uses the stem (Steh auf!), ihr stem + t (Steht auf!), Sie the infinitive + Sie (Stehen Sie auf!). The prefix of a separable verb goes to the end.",
+      "More imperative forms: du the stem (Steh auf!), ihr stem + t (Steht auf!), Sie infinitive + Sie (Stehen Sie auf!). A prefix goes to the end.",
       "المزيد من صيغ الأمر: مع du الجذر (Steh auf!)، ومع ihr الجذر + t (Steht auf!)، ومع Sie المصدر + Sie (Stehen Sie auf!). وبادئة الفعل المنفصل تذهب إلى الآخر.",
       "Más formas del imperativo: con du la raíz (Steh auf!), con ihr raíz + t (Steht auf!), con Sie infinitivo + Sie (Stehen Sie auf!). El prefijo del verbo separable va al final.",
       "Emir kipinin diğer biçimleri: du için kök (Steh auf!), ihr için kök + t (Steht auf!), Sie için mastar + Sie (Stehen Sie auf!). Ayrılabilen fiilin öneki sona gider.",
@@ -335,7 +335,7 @@ export const TEACH_DE_A2_3: Readonly<Record<string, RuleTeach>> = {
   },
   "de-a2-42": {
     idea: lines(
-      "A relative clause tells more about a noun. It starts with der, die, das (die in the plural), which matches the noun, and the verb goes to the end: Der Mann, der dort steht, ist mein Vater.",
+      "A relative clause tells more about a noun. It starts with der, die or das, like the noun, and the verb goes last: Der Mann, der dort steht, ist nett.",
       "الجملة الموصولة تزيد معلومات عن اسم. تبدأ بـ der أو die أو das (وdie للجمع) حسب الاسم، ويذهب الفعل إلى الآخر: Der Mann, der dort steht, ist mein Vater.",
       "Una oración de relativo da más información sobre un sustantivo. Empieza con der, die, das (die en plural) según el sustantivo y el verbo va al final: Der Mann, der dort steht, ist mein Vater.",
       "İlgi cümlesi bir isim hakkında bilgi verir. İsme uyan der, die, das (çoğulda die) ile başlar ve fiil sona gider: Der Mann, der dort steht, ist mein Vater.",

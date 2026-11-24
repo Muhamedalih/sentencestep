@@ -35,7 +35,7 @@ export const TEACH_DE_A2_2: Readonly<Record<string, RuleTeach>> = {
   },
   "de-a2-17": {
     idea: lines(
-      "After ein, eine, kein, mein the adjective shows the gender where the article does not: ein alter Mann (-er), eine alte Frau (-e), ein altes Haus (-es). In the other cases it takes -e or -en.",
+      "After ein, eine, kein the adjective shows the gender where the article does not: ein alter Mann, eine alte Frau, ein altes Haus.",
       "بعد ein وeine وkein وmein تُظهر الصفة الجنس حيث لا تُظهره الأداة: ein alter Mann (-er)، eine alte Frau (-e)، ein altes Haus (-es). وفي الحالات الأخرى تأخذ -e أو -en.",
       "Tras ein, eine, kein, mein el adjetivo muestra el género donde el artículo no lo hace: ein alter Mann (-er), eine alte Frau (-e), ein altes Haus (-es). En los demás casos toma -e o -en.",
       "ein, eine, kein, mein'den sonra, artikelin göstermediği yerde sıfat cinsiyeti gösterir: ein alter Mann (-er), eine alte Frau (-e), ein altes Haus (-es). Diğer durumlarda -e veya -en alır.",

@@ -101,8 +101,20 @@ const A2: readonly SyllabusEntry[] = [
   a2(14, "de-a2-dative", "stehen / stellen, liegen / legen", "preposition", "none"),
   a2(15, "de-a2-dative", "possessives in the dative", "determiner", "de-dat-possessive"),
   // 3 · adjectives
-  a2(16, "de-a2-adjectives", "adjective endings after der / die / das", "adjective", "de-adj-definite"),
-  a2(17, "de-a2-adjectives", "adjective endings after ein / eine", "adjective", "de-adj-indefinite"),
+  a2(
+    16,
+    "de-a2-adjectives",
+    "adjective endings after der / die / das",
+    "adjective",
+    "de-adj-definite",
+  ),
+  a2(
+    17,
+    "de-a2-adjectives",
+    "adjective endings after ein / eine",
+    "adjective",
+    "de-adj-indefinite",
+  ),
   a2(18, "de-a2-adjectives", "adjective endings with no article", "adjective", "none"),
   a2(19, "de-a2-adjectives", "the comparative: -er … als", "comparison", "de-comparative"),
   a2(20, "de-a2-adjectives", "the superlative: am -sten", "comparison", "de-superlative"),
@@ -139,7 +151,13 @@ const A2: readonly SyllabusEntry[] = [
   a2(47, "de-a2-konjunktiv", "würde + infinitive", "conditional", "de-wuerde"),
   a2(48, "de-a2-konjunktiv", "hätte / wäre", "conditional", "de-haette-waere"),
   a2(49, "de-a2-konjunktiv", "polite requests: könnte / dürfte", "modal", "de-koennte"),
-  a2(50, "de-a2-konjunktiv", "unreal conditions: wenn … würde", "conditional", "de-unreal-condition"),
+  a2(
+    50,
+    "de-a2-konjunktiv",
+    "unreal conditions: wenn … würde",
+    "conditional",
+    "de-unreal-condition",
+  ),
   a2(51, "de-a2-konjunktiv", "wishes: ich wünschte", "conditional", "de-wish"),
   // 8 · expressions
   a2(52, "de-a2-expressions", "nicht nur … sondern auch", "linking", "de-pair-conjunction"),
@@ -196,7 +214,13 @@ const B2: readonly SyllabusEntry[] = [
   b2(35, "de-b2-relative", "relative clauses with a preposition", "relative", "de-relative-prep"),
   b2(36, "de-b2-relative", "was / wo in relative clauses", "relative", "de-relative-was-wo"),
   b2(37, "de-b2-relative", "the participle with -end", "adjective", "de-participle-one"),
-  b2(38, "de-b2-relative", "the past participle as an adjective", "adjective", "de-participle-adjective"),
+  b2(
+    38,
+    "de-b2-relative",
+    "the past participle as an adjective",
+    "adjective",
+    "de-participle-adjective",
+  ),
   b2(39, "de-b2-relative", "long phrases before the noun", "adjective", "de-extended-attribute"),
   // 6 · style
   b2(40, "de-b2-style", "prepositions with the genitive", "preposition", "de-prep-genitive-b2"),

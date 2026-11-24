@@ -51,7 +51,14 @@ export const DE_UNITS: readonly UnitSpec[] = [
     "El tiempo y la vida diaria",
     "Zaman ve günlük hayat",
   ),
-  unit("de-a2-perfekt", "A2-B1", "The Perfekt", "الماضي التام (Perfekt)", "El Perfekt", "Perfekt (geçmiş zaman)"),
+  unit(
+    "de-a2-perfekt",
+    "A2-B1",
+    "The Perfekt",
+    "الماضي التام (Perfekt)",
+    "El Perfekt",
+    "Perfekt (geçmiş zaman)",
+  ),
   unit("de-a2-dative", "A2-B1", "The dative", "حالة الجر (Dativ)", "El dativo", "Dativ (-e hâli)"),
   unit("de-a2-adjectives", "A2-B1", "Adjectives", "الصفات", "Adjetivos", "Sıfatlar"),
   unit(
@@ -62,7 +69,14 @@ export const DE_UNITS: readonly UnitSpec[] = [
     "Oraciones subordinadas",
     "Yan cümleler",
   ),
-  unit("de-a2-verbs", "A2-B1", "More about verbs", "المزيد عن الأفعال", "Más sobre los verbos", "Fiiller hakkında daha fazlası"),
+  unit(
+    "de-a2-verbs",
+    "A2-B1",
+    "More about verbs",
+    "المزيد عن الأفعال",
+    "Más sobre los verbos",
+    "Fiiller hakkında daha fazlası",
+  ),
   unit(
     "de-a2-nouns",
     "A2-B1",
@@ -87,7 +101,14 @@ export const DE_UNITS: readonly UnitSpec[] = [
     "Estructuras útiles",
     "Kullanışlı kalıplar",
   ),
-  unit("de-b2-past", "B2", "Past and future", "الماضي والمستقبل", "Pasado y futuro", "Geçmiş ve gelecek"),
+  unit(
+    "de-b2-past",
+    "B2",
+    "Past and future",
+    "الماضي والمستقبل",
+    "Pasado y futuro",
+    "Geçmiş ve gelecek",
+  ),
   unit("de-b2-passive", "B2", "The passive", "المبني للمجهول", "La pasiva", "Edilgen çatı"),
   unit(
     "de-b2-konjunktiv",
@@ -97,7 +118,14 @@ export const DE_UNITS: readonly UnitSpec[] = [
     "Konjunktiv y estilo indirecto",
     "Konjunktiv ve dolaylı anlatım",
   ),
-  unit("de-b2-linking", "B2", "Linking clauses", "ربط الجمل", "Enlazar oraciones", "Cümleleri bağlamak"),
+  unit(
+    "de-b2-linking",
+    "B2",
+    "Linking clauses",
+    "ربط الجمل",
+    "Enlazar oraciones",
+    "Cümleleri bağlamak",
+  ),
   unit(
     "de-b2-relative",
     "B2",

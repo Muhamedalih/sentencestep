@@ -20,9 +20,6 @@ interface Ctx {
 const set = (words: string): ReadonlySet<string> => new Set(words.split(/\s+/).filter(Boolean));
 
 const DAT_PREPS = set("mit bei zu von aus nach seit gegenüber");
-const PREPS_ALL = set(
-  "mit für in an auf von bei zu über um aus nach durch gegen ohne unter vor hinter neben zwischen seit",
-);
 const WEEKDAYS = set(
   "montag dienstag mittwoch donnerstag freitag samstag sonntag wochenende morgen abend mittag nachmittag vormittag",
 );
@@ -61,7 +58,10 @@ function isParticiple(c: Ctx, i: number): boolean {
   if (i === 0 || isCapitalAt(c, i) || NOT_PARTICIPLE.has(word)) return false;
   if (NO_GE_PARTICIPLE.has(word)) return true;
   if (word.length > 6 && word.endsWith("iert")) return true;
-  if (/^(an|auf|aus|ein|mit|vor|zu|zurück|ab|fest|weg|her|hin|nach|um)ge[a-zäöüß]+(t|en)$/.test(word)) return true;
+  if (
+    /^(an|auf|aus|ein|mit|vor|zu|zurück|ab|fest|weg|her|hin|nach|um)ge[a-zäöüß]+(t|en)$/.test(word)
+  )
+    return true;
   return /^ge[a-zäöüß]{2,}(t|en)$/.test(word);
 }
 
@@ -144,10 +144,6 @@ const PRAET_MIXED = set(
 );
 
 const KONJ1 = set("sei seien seiest könne müsse wolle solle dürfe wisse");
-const KONJ2 = set(
-  "wäre wären wärst wärt hätte hätten hättest hättet würde würden würdest würdet könnte könnten könntest dürfte dürften müsste müssten wüsste wüssten sollte sollten wollte",
-);
-
 const ADJ_PREP: Readonly<Record<string, ReadonlySet<string>>> = {
   stolz: set("auf"),
   abhängig: set("von"),
@@ -201,26 +197,38 @@ const MATCHERS = {
       ? [0]
       : [],
   "de-ja-nein-doch": (c) =>
-    pos(c.w, set("ja nein doch")).filter((i) => i === 0 || c.text.slice(0, c.tokens[i]!.start).includes("?")),
+    pos(c.w, set("ja nein doch")).filter(
+      (i) => i === 0 || c.text.slice(0, c.tokens[i]!.start).includes("?"),
+    ),
   "de-nicht": (c) => pos(c.w, set("nicht")),
   "de-nicht-kein": (c) => pos(c.w, set("kein keine keinen nicht")),
-  "de-es-gibt": (c) => pos(c.w, set("gibt")).filter((i) => c.w[i - 1] === "es" || c.w[i + 1] === "es"),
+  "de-es-gibt": (c) =>
+    pos(c.w, set("gibt")).filter((i) => c.w[i - 1] === "es" || c.w[i + 1] === "es"),
   "de-vowel-i": (c) =>
     pos(c.w, set("isst sprichst spricht gibst gibt nimmst nimmt hilfst hilft triffst trifft")),
   "de-vowel-ie": (c) => pos(c.w, set("siehst sieht liest siehst")),
   "de-vowel-ae": (c) =>
-    pos(c.w, set("fährst fährt schläfst schläft läufst läuft trägst trägt wäschst wäscht hältst hält")),
+    pos(
+      c.w,
+      set("fährst fährt schläfst schläft läufst läuft trägst trägt wäschst wäscht hältst hält"),
+    ),
   "de-wissen-werden": (c) => pos(c.w, set("weiß weißt wisst wissen wirst werdet")),
   "de-separable-end": (c) => {
     const last = lastWordIndex(c);
-    return c.w.length >= 3 && last > 0 && SEPARABLE_PREFIX.has(c.w[last]!) && !set("zu um").has(c.w[last]!)
+    return c.w.length >= 3 &&
+      last > 0 &&
+      SEPARABLE_PREFIX.has(c.w[last]!) &&
+      !set("zu um").has(c.w[last]!)
       ? [last]
       : [];
   },
   "de-koennen": (c) => pos(c.w, set("kann kannst können könnt")),
   "de-muessen-wollen": (c) => pos(c.w, set("muss musst müssen müsst will willst wollen wollt")),
   "de-moechten-duerfen-sollen": (c) =>
-    pos(c.w, set("möchte möchtest möchten möchtet darf darfst dürfen dürft soll sollst sollen sollt")),
+    pos(
+      c.w,
+      set("möchte möchtest möchten möchtet darf darfst dürfen dürft soll sollst sollen sollt"),
+    ),
   "de-gern": (c) => pos(c.w, set("gern gerne")),
   "de-akk-article": (c) =>
     pos(c.w, set("den einen keinen meinen deinen")).filter((i) => !precededByDativePrep(c, i)),
@@ -229,7 +237,9 @@ const MATCHERS = {
   "de-prep-dat": (c) => pos(c.w, set("mit bei zu aus von nach")),
   "de-two-way-wo": (c) =>
     pos(c.w, set("in an auf unter über vor hinter neben zwischen"))
-      .filter((i) => set("dem der einem einer meinem meiner deinem ihrem seinem").has(c.w[i + 1] ?? ""))
+      .filter((i) =>
+        set("dem der einem einer meinem meiner deinem ihrem seinem").has(c.w[i + 1] ?? ""),
+      )
       .map((i) => i + 1),
   "de-two-way-wohin": (c) =>
     pos(c.w, set("in an auf unter über vor hinter neben zwischen"))
@@ -239,7 +249,8 @@ const MATCHERS = {
     const out: number[] = [];
     for (let i = 0; i < c.w.length - 1; i++) {
       const next = c.w[i + 1]!;
-      if (c.w[i] === "um" && (/^\d/.test(next) || c.w.slice(i + 1, i + 4).includes("uhr"))) out.push(i);
+      if (c.w[i] === "um" && (/^\d/.test(next) || c.w.slice(i + 1, i + 4).includes("uhr")))
+        out.push(i);
       if (c.w[i] === "am" && WEEKDAYS.has(next)) out.push(i);
       if (c.w[i] === "im" && MONTHS.has(next)) out.push(i);
     }
@@ -271,7 +282,12 @@ const MATCHERS = {
   "de-participle-separable": (c) => {
     const out: number[] = [];
     for (let i = 0; i < c.w.length; i++)
-      if (/^(an|auf|aus|ein|mit|vor|zu|zurück|ab|fest|weg|her|hin|nach|um)ge[a-zäöüß]+(t|en)$/.test(c.w[i]!) && i > 0)
+      if (
+        /^(an|auf|aus|ein|mit|vor|zu|zurück|ab|fest|weg|her|hin|nach|um)ge[a-zäöüß]+(t|en)$/.test(
+          c.w[i]!,
+        ) &&
+        i > 0
+      )
         out.push(i);
     return out;
   },
@@ -302,7 +318,8 @@ const MATCHERS = {
         out.push(i + 1);
     return out;
   },
-  "de-dat-possessive": (c) => pos(c.w, set("meinem meiner deinem deiner seinem ihrem unserem eurem")),
+  "de-dat-possessive": (c) =>
+    pos(c.w, set("meinem meiner deinem deiner seinem ihrem unserem eurem")),
   "de-adj-definite": (c) => adjectiveAfter(c, set("der die das den dem des"), /(e|en)$/),
   "de-adj-indefinite": (c) =>
     adjectiveAfter(
@@ -311,23 +328,32 @@ const MATCHERS = {
       /(er|es|e|en|em)$/,
     ),
   "de-comparative": (c) =>
-    pos(c.w, set("als")).flatMap((i) => (i > 0 && /er$/.test(c.w[i - 1]!) && c.w[i - 1]!.length > 4 ? [i - 1] : [])),
+    pos(c.w, set("als")).flatMap((i) =>
+      i > 0 && /er$/.test(c.w[i - 1]!) && c.w[i - 1]!.length > 4 ? [i - 1] : [],
+    ),
   "de-superlative": (c) =>
     pos(c.w, set("am")).flatMap((i) => (/(sten|ten|esten)$/.test(c.w[i + 1] ?? "") ? [i + 1] : [])),
   "de-irregular-comparison": (c) =>
     pos(c.w, set("besser besten lieber liebsten mehr meisten höher höchsten näher nächsten")),
-  "de-so-wie": (c) => pos(c.w, set("wie")).filter((i) => c.w.slice(Math.max(0, i - 3), i).some((x) => set("so genauso ebenso").has(x))),
+  "de-so-wie": (c) =>
+    pos(c.w, set("wie")).filter((i) =>
+      c.w.slice(Math.max(0, i - 3), i).some((x) => set("so genauso ebenso").has(x)),
+    ),
   // The rules about a subordinate clause blank its final verb, where the clause puts it.
   "de-weil": (c) => finalVerbs(c, set("weil")),
   "de-dass": (c) => finalVerbs(c, set("dass")),
   "de-wenn": (c) => finalVerbs(c, set("wenn")),
   "de-ob": (c) => finalVerbs(c, set("ob")),
   "de-als-wenn": (c) =>
-    pos(c.w, set("als wenn")).filter((i) => (i === 0 || afterComma(c, i, 3)) && c.w[i + 1] !== "ob"),
+    pos(c.w, set("als wenn")).filter(
+      (i) => (i === 0 || afterComma(c, i, 3)) && c.w[i + 1] !== "ob",
+    ),
   "de-deshalb": (c) => pos(c.w, set("deshalb darum deswegen")),
   "de-denn": (c) => pos(c.w, set("denn")).filter((i) => i > 0 && afterComma(c, i, 3)),
   "de-indirect-question": (c) =>
-    finalVerbs(c, set("wo wer was wann warum wie wohin woher"), 1).filter((i) => c.text.includes(",")),
+    finalVerbs(c, set("wo wer was wann warum wie wohin woher"), 1).filter(() =>
+      c.text.includes(","),
+    ),
   "de-zu-infinitive": (c) =>
     pos(c.w, set("zu")).filter((i) => {
       const next = c.w[i + 1] ?? "";
@@ -335,14 +361,26 @@ const MATCHERS = {
         next.length >= 5 &&
         next.endsWith("en") &&
         !isCapitalAt(c, i + 1) &&
-        !set("einen keinen meinen deinen seinen unseren ihren vielen allen diesen jenen den").has(next)
+        !set("einen keinen meinen deinen seinen unseren ihren vielen allen diesen jenen den").has(
+          next,
+        )
       );
     }),
   "de-modal-past": (c) =>
-    pos(c.w, set("konnte konntest konnten musste musstest mussten wollte wollten durfte durften sollte sollten mochte")),
-  "de-reflexive": (c) => pos(c.w, set("sich")).concat(pos(c.w, set("mich dich")).filter((i) => c.w[0] === "ich" || c.w[0] === "du")),
+    pos(
+      c.w,
+      set(
+        "konnte konntest konnten musste musstest mussten wollte wollten durfte durften sollte sollten mochte",
+      ),
+    ),
+  "de-reflexive": (c) =>
+    pos(c.w, set("sich")).concat(
+      pos(c.w, set("mich dich")).filter(() => c.w[0] === "ich" || c.w[0] === "du"),
+    ),
   "de-reflexive-dative": (c) =>
-    pos(c.w, set("mir dir")).filter((i) => set("die das den meine meinen deine").has(c.w[i + 1] ?? "")),
+    pos(c.w, set("mir dir")).filter((i) =>
+      set("die das den meine meinen deine").has(c.w[i + 1] ?? ""),
+    ),
   "de-future": (c) => {
     const last = lastWordIndex(c);
     return last > 1 && c.w[last]!.endsWith("en") && !isParticiple(c, last)
@@ -363,15 +401,21 @@ const MATCHERS = {
     return out;
   },
   "de-da-compound": (c) =>
-    pos(c.w, set("darauf daran darüber davon dafür dazu womit wofür worauf woran worüber wovon wozu")),
+    pos(
+      c.w,
+      set("darauf daran darüber davon dafür dazu womit wofür worauf woran worüber wovon wozu"),
+    ),
   "de-genitive-article": (c) => pos(c.w, set("des eines meines deines seines ihres unseres")),
   "de-n-declension": (c) => {
     const names = set(
       "jungen menschen herrn kollegen studenten nachbarn namen kunden polizisten affen bären löwen franzosen touristen patienten journalisten",
     );
-    return c.w.map((x, i) => (names.has(x) && isCapitalAt(c, i) && i > 0 ? i : -1)).filter((i) => i >= 0);
+    return c.w
+      .map((x, i) => (names.has(x) && isCapitalAt(c, i) && i > 0 ? i : -1))
+      .filter((i) => i >= 0);
   },
-  "de-relative-nom": (c) => pos(c.w, set("der die das")).filter((i) => i > 0 && afterComma(c, i, 3)),
+  "de-relative-nom": (c) =>
+    pos(c.w, set("der die das")).filter((i) => i > 0 && afterComma(c, i, 3)),
   "de-relative-akk": (c) => pos(c.w, set("den")).filter((i) => i > 0 && afterComma(c, i, 3)),
   "de-relative-dat": (c) =>
     pos(c.w, set("dem denen")).filter((i) => i > 0 && afterComma(c, i, 14) && !isCapitalAt(c, i)),
@@ -379,7 +423,9 @@ const MATCHERS = {
   "de-demonstrative": (c) =>
     pos(
       c.w,
-      set("dieser diese dieses diesen diesem jeder jede jedes jeden jedem welcher welche welches welchen"),
+      set(
+        "dieser diese dieses diesen diesem jeder jede jedes jeden jedem welcher welche welches welchen",
+      ),
     ),
   "de-wuerde": (c) => pos(c.w, set("würde würdest würden würdet")),
   "de-haette-waere": (c) => pos(c.w, set("hätte hättest hätten hättet wäre wärst wären wärt")),
@@ -406,7 +452,10 @@ const MATCHERS = {
     }),
   "de-clause-final-aux": (c) => {
     const last = lastWordIndex(c);
-    return last > 2 && c.text.includes(",") && PERFECT_AUX.has(c.w[last]!) && isParticiple(c, last - 1)
+    return last > 2 &&
+      c.text.includes(",") &&
+      PERFECT_AUX.has(c.w[last]!) &&
+      isParticiple(c, last - 1)
       ? [last]
       : [];
   },
@@ -437,7 +486,10 @@ const MATCHERS = {
     const last = lastWordIndex(c);
     if (last < 3 || c.w[last] !== "werden" || !isParticiple(c, last - 1)) return [];
     // The blank is the final werden, once a modal verb stands earlier in the sentence.
-    return pos(c.w, set("kann muss soll darf will können müssen sollen dürfen wollen könnte musste sollte")).length > 0
+    return pos(
+      c.w,
+      set("kann muss soll darf will können müssen sollen dürfen wollen könnte musste sollte"),
+    ).length > 0
       ? [last]
       : [];
   },
@@ -449,27 +501,37 @@ const MATCHERS = {
     );
     // The blank is the sein before the participle (sein = a state, werden = a process).
     return c.w
-      .map((x, i) => (states.has(x) && set("ist sind war waren").has(c.w[i - 1] ?? "") ? i - 1 : -1))
+      .map((x, i) =>
+        states.has(x) && set("ist sind war waren").has(c.w[i - 1] ?? "") ? i - 1 : -1,
+      )
       .filter((i) => i >= 0);
   },
   "de-passive-substitute": (c) => {
-    const out = pos(c.w, set("lässt lassen ließ")).filter((i) => c.w[i + 1] === "sich" || c.w[i + 2] === "sich");
+    const out = pos(c.w, set("lässt lassen ließ")).filter(
+      (i) => c.w[i + 1] === "sich" || c.w[i + 2] === "sich",
+    );
     for (let i = 0; i < c.w.length; i++)
       if (/bar$/.test(c.w[i]!) && c.w[i]!.length > 6 && !isCapitalAt(c, i)) out.push(i);
     return out.sort((a, b) => a - b);
   },
   "de-sein-zu": (c) =>
     pos(c.w, set("zu")).filter(
-      (i) => set("ist sind war waren").has(c.w[i - 1] ?? "") || set("ist sind war waren").has(c.w[i - 2] ?? ""),
+      (i) =>
+        set("ist sind war waren").has(c.w[i - 1] ?? "") ||
+        set("ist sind war waren").has(c.w[i - 2] ?? ""),
     ),
   "de-impersonal-passive": (c) =>
     c.w[0] === "es" && set("wird wurde").has(c.w[1] ?? "") ? [1] : [],
   "de-konj2-past": (c) => {
     const last = lastWordIndex(c);
-    return last > 2 && isParticiple(c, last) ? pos(c.w, set("hätte hättest hätten wäre wärst wären")) : [];
+    return last > 2 && isParticiple(c, last)
+      ? pos(c.w, set("hätte hättest hätten wäre wärst wären"))
+      : [];
   },
   "de-konj2-modal": (c) => {
-    const modals = set("gekonnt gemusst gewollt gedurft gesollt können müssen wollen dürfen sollen");
+    const modals = set(
+      "gekonnt gemusst gewollt gedurft gesollt können müssen wollen dürfen sollen",
+    );
     const last = lastWordIndex(c);
     return last > 2 && modals.has(c.w[last]!) ? pos(c.w, set("hätte hättest hätten hättet")) : [];
   },
@@ -477,15 +539,21 @@ const MATCHERS = {
   "de-konj1": (c) => pos(c.w, KONJ1),
   "de-reported-speech": (c) => {
     if (!c.w.some((x) => SPEECH_VERBS.has(x))) return [];
-    return pos(c.w, set("sei seien habe hätte wäre könne müsse wolle solle dürfe wisse werde")).filter((i) => i > 1);
+    return pos(
+      c.w,
+      set("sei seien habe hätte wäre könne müsse wolle solle dürfe wisse werde komme gehe"),
+    ).filter((i) => i > 1);
   },
   "de-reported-konj2": (c) => {
     if (!c.w.some((x) => SPEECH_VERBS.has(x))) return [];
     return pos(c.w, set("würde würden hätten wären hätte wäre")).filter((i) => i > 1);
   },
   "de-inverted-condition": (c) =>
-    c.text.includes(",") && set("wäre hätte würde könnte wüsste hätten wären").has(c.w[0] ?? "") ? [0] : [],
-  "de-sollte": (c) => (set("sollte sollten falls").has(c.w[0] ?? "") && c.text.includes(",") ? [0] : []),
+    c.text.includes(",") && set("wäre hätte würde könnte wüsste hätten wären").has(c.w[0] ?? "")
+      ? [0]
+      : [],
+  "de-sollte": (c) =>
+    set("sollte sollten falls").has(c.w[0] ?? "") && c.text.includes(",") ? [0] : [],
   "de-obwohl": (c) => pos(c.w, set("obwohl")),
   "de-trotzdem": (c) => pos(c.w, set("trotzdem")),
   "de-damit": (c) => pos(c.w, set("damit")).filter((i) => i > 0 && afterComma(c, i, 3)),
@@ -497,25 +565,36 @@ const MATCHERS = {
   "de-indem": (c) => pos(c.w, set("indem")),
   "de-waehrend": (c) =>
     pos(c.w, set("während")).filter(
-      (i) => afterComma(c, i, 3) || set("ich du er sie es wir ihr man der die das").has(c.w[i + 1] ?? ""),
+      (i) =>
+        afterComma(c, i, 3) ||
+        set("ich du er sie es wir ihr man der die das").has(c.w[i + 1] ?? ""),
     ),
   "de-nachdem": (c) => pos(c.w, set("nachdem")),
   "de-bevor": (c) => pos(c.w, set("bevor ehe")),
-  "de-sobald": (c) => pos(c.w, set("sobald solange seitdem seit sooft")).filter((i) => c.w[i] !== "seit" || set("ich du er sie es wir ihr man").has(c.w[i + 1] ?? "")),
+  "de-sobald": (c) =>
+    pos(c.w, set("sobald solange seitdem seit sooft")).filter(
+      (i) => c.w[i] !== "seit" || set("ich du er sie es wir ihr man").has(c.w[i + 1] ?? ""),
+    ),
   "de-sodass": (c) => pos(c.w, set("sodass")),
   "de-dessen": (c) => pos(c.w, set("dessen deren")),
   "de-relative-prep": (c) => {
     const preps = set("mit für in an auf von bei zu über um aus nach durch gegen ohne");
     const out: number[] = [];
     for (let i = 1; i < c.w.length - 1; i++)
-      if (preps.has(c.w[i]!) && afterComma(c, i, 3) && set("dem der denen den die das").has(c.w[i + 1]!)) out.push(i + 1);
+      if (
+        preps.has(c.w[i]!) &&
+        afterComma(c, i, 3) &&
+        set("dem der denen den die das").has(c.w[i + 1]!)
+      )
+        out.push(i + 1);
     return out;
   },
   "de-relative-was-wo": (c) => pos(c.w, set("was wo")).filter((i) => i > 0 && afterComma(c, i, 3)),
   "de-participle-one": (c) => {
     const out: number[] = [];
     for (let i = 1; i < c.w.length; i++)
-      if (!isCapitalAt(c, i) && /[a-zäöüß]{4,}ende[rsnm]?$/.test(c.w[i]!) && c.w[i]!.length >= 8) out.push(i);
+      if (!isCapitalAt(c, i) && /[a-zäöüß]{4,}ende[rsnm]?$/.test(c.w[i]!) && c.w[i]!.length >= 8)
+        out.push(i);
     return out;
   },
   "de-participle-adjective": (c) => {
@@ -548,18 +627,25 @@ const MATCHERS = {
     }
     return out;
   },
-  "de-prep-genitive-b2": (c) => pos(c.w, set("wegen trotz statt anstatt innerhalb außerhalb aufgrund anlässlich")),
+  "de-prep-genitive-b2": (c) =>
+    pos(c.w, set("wegen trotz statt anstatt innerhalb außerhalb aufgrund anlässlich")),
   "de-nominalization": (c) => {
     const out: number[] = [];
     for (let i = 1; i < c.w.length; i++)
-      if (isCapitalAt(c, i) && /(ung|keit|heit|schaft|tion|ität)(en)?$/.test(c.w[i]!) && c.w[i]!.length > 6) out.push(i);
+      if (
+        isCapitalAt(c, i) &&
+        /(ung|keit|heit|schaft|tion|ität)(en)?$/.test(c.w[i]!) &&
+        c.w[i]!.length > 6
+      )
+        out.push(i);
     return out;
   },
   "de-da-dass": (c) =>
     c.w.includes("dass")
       ? pos(c.w, set("darauf daran darüber davon dafür dagegen dazu darum"))
       : [],
-  "de-particles": (c) => pos(c.w, set("doch mal eben halt eigentlich bloß ruhig wohl")).filter((i) => i > 0),
+  "de-particles": (c) =>
+    pos(c.w, set("doch mal eben halt eigentlich bloß ruhig wohl")).filter((i) => i > 0),
   "de-adjective-prep": (c) => {
     const out: number[] = [];
     for (let i = 0; i < c.w.length - 1; i++) {

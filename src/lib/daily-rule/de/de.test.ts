@@ -13,7 +13,7 @@ import { diagnoseAny, normalizeAnswer, tokenize } from "@/lib/daily-rule/tokens"
 import { unitById } from "@/lib/daily-rule/units";
 
 const ARABIC = /[؀-ۿ]/;
-// While the course is being written: DE_ONLY="de-a1" (a regular expression) checks only the matching rule ids.
+// DE_ONLY="de-a1" (a regular expression) checks only the matching rule ids, for a quick run while editing.
 const ONLY = new RegExp(process.env.DE_ONLY ?? "");
 const RULES = ALL_DE_RULES.filter((rule) => ONLY.test(rule.id));
 
@@ -31,7 +31,10 @@ test("the German syllabus: 150 rules, A1 45, A2–B1 60, B2 45, ids de-a1-01 ...
     );
   }
   for (const rule of ALL_DE_RULES) {
-    assert.ok(rule.id.length >= 4 && rule.id.length <= 12, `${rule.id} fits the learner_rules column`);
+    assert.ok(
+      rule.id.length >= 4 && rule.id.length <= 12,
+      `${rule.id} fits the learner_rules column`,
+    );
     assert.equal(languageOfRuleId(rule.id), "de");
     assert.equal(ruleById(rule.id)?.id, rule.id);
   }
