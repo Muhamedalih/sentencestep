@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { flushSync } from "react-dom";
 import Link from "next/link";
-import { Check, Volume2, X } from "lucide-react";
+import { Check, Snowflake, Volume2, VolumeX, X } from "lucide-react";
 
 import { useLocale } from "@/components/providers/locale-provider";
 import { todayLocalISODate } from "@/lib/progress/streak";
@@ -25,6 +25,13 @@ import type { RoundKind, WordDropReport } from "@/lib/word-drop/tracking";
 import { renderShareCard, shareImage, shareLink } from "@/lib/word-drop/share-card";
 import type { DailyBoard } from "@/lib/word-drop/store";
 import {
+  CHALLENGE_POINTS,
+  FREEZE_EVERY,
+  FREEZE_SECONDS,
+  FREEZE_SLOW,
+  FREEZE_SPAWN_CLOCK,
+  LEVEL_EVERY,
+  MAX_CHARGES,
   MAX_ON_SCREEN,
   MIN_HARD_WORDS,
   MIN_SENTENCES,
@@ -34,13 +41,17 @@ import {
   WORD_DROP_MODES,
   accuracyPercent,
   createDeck,
+  fallLeft,
   findSpot,
+  isChallengeTile,
+  levelFor,
   mergePools,
   pickTarget,
   pointsForText,
   spawnGapMs,
   speedAfterCorrect,
   speedAfterMiss,
+  tileScaleFor,
   tileSize,
   wordCountOf,
   wordsPerMinute,
@@ -48,20 +59,32 @@ import {
   type DropWord,
   type WordDropMode,
 } from "@/lib/word-drop/engine";
+import {
+  isSoundOn,
+  playBuffered,
+  preloadClip,
+  setSoundOn,
+  sfx,
+  unlockAudio,
+} from "@/lib/word-drop/sound";
 import { wordDropStrings } from "@/lib/word-drop/strings";
 import { cn } from "@/lib/utils";
 
-/** The page's own look: the black finish-page identity (pure black, big numerals, green for right, red for missed, pale word tiles). */
+import { WORD_DROP_CSS } from "./word-drop-styles";
+
+/** The page's own look: a deep ink board, one cobalt accent, red only for danger, pale word tiles. */
 const PALETTE = {
-  "--wd-green": "oklch(0.72 0.19 150)",
-  "--wd-green-ink": "oklch(0.48 0.14 150)",
-  "--wd-red": "oklch(0.62 0.22 27)",
-  "--wd-line": "oklch(0.25 0 0)",
-  "--wd-panel": "oklch(0.11 0 0)",
-  "--wd-mute": "oklch(0.62 0.005 260)",
+  "--wd-bg": "oklch(0.14 0.016 265)",
+  "--wd-board": "oklch(0.175 0.022 265)",
+  "--wd-line": "oklch(0.27 0.015 265)",
+  "--wd-mute": "oklch(0.66 0.01 265)",
+  "--wd-acc": "oklch(0.72 0.15 262)",
+  "--wd-acc-ink": "oklch(0.45 0.17 262)",
+  "--wd-acc-a": "oklch(0.72 0.15 262 / 0.2)",
+  "--wd-red": "oklch(0.65 0.21 25)",
   "--wd-tile": "oklch(0.925 0.012 85)",
-  "--wd-tile-ink": "oklch(0.2 0.01 260)",
-  "--wd-tile-mute": "oklch(0.5 0.01 260)",
+  "--wd-tile-ink": "oklch(0.2 0.02 265)",
+  "--wd-tile-mute": "oklch(0.5 0.015 265)",
 } as CSSProperties;
 
 const BEST_KEY = "wordDropBest";
@@ -92,6 +115,8 @@ interface Live {
   h: number;
   font: number;
   y: number;
+  /** A challenge word: it always pays the most a word can. */
+  challenge: boolean;
   el: HTMLDivElement | null;
 }
 
@@ -130,6 +155,12 @@ interface Round {
   prevLen: number;
   /** The letters now in the input (the screen's own copy lives in state). */
   typedValue: string;
+  /** Freeze: charges earned, seconds of freeze left, and the correct words in a row that earn the next charge. */
+  charges: number;
+  freezeLeft: number;
+  streak: number;
+  /** One entry per word that was typed (how much of the fall was left, 0 to 1) or fell (null), in order: the end page's pace chart. */
+  rhythm: (number | null)[];
 }
 
 interface Hud {
@@ -137,7 +168,27 @@ interface Hud {
   lives: number;
   combo: number;
   seconds: number;
+  correct: number;
+  charges: number;
+  frozen: boolean;
 }
+
+/** A word caught or missed this round, for the side list. */
+interface Caught {
+  id: number;
+  word: DropWord;
+  miss: boolean;
+}
+
+const EMPTY_HUD: Hud = {
+  score: 0,
+  lives: START_LIVES,
+  combo: 0,
+  seconds: ROUND_SECONDS,
+  correct: 0,
+  charges: 0,
+  frozen: false,
+};
 
 interface Result {
   score: number;
@@ -148,6 +199,7 @@ interface Result {
   missed: DropWord[];
   /** Points above the previous best (this browser's), or null when this was not a new best. */
   beat: number | null;
+  rhythm: (number | null)[];
 }
 
 /** Fire-and-forget: a report that fails is not worth a word to the learner, who is already playing. */
@@ -176,11 +228,6 @@ function writeBest(score: number): void {
 /** What a note says when a word lands or falls: the word and, when it has one, its meaning. */
 function popLabel(word: DropWord): string {
   return word.meaning ? `${word.en} · ${word.meaning}` : word.en;
-}
-
-function clock(seconds: number): string {
-  const whole = Math.max(0, Math.ceil(seconds));
-  return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, "0")}`;
 }
 
 interface WordDropGameProps {
@@ -242,12 +289,14 @@ export function WordDropGame({
   }>({ seed, kind: seed ? seed.kind : "free", mode, own: false });
   const [daily, setDaily] = useState<DailyOutcome | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const [hud, setHud] = useState<Hud>({
-    score: 0,
-    lives: START_LIVES,
-    combo: 0,
-    seconds: ROUND_SECONDS,
-  });
+  const [hud, setHud] = useState<Hud>(EMPTY_HUD);
+  /** The line under the typing line (the word just caught or missed), the side list, the note flashed on the field, and the sound switch. */
+  const [caption, setCaption] = useState<Caught | null>(null);
+  const [log, setLog] = useState<Caught[]>([]);
+  const [banner, setBanner] = useState<{ id: number; text: string } | null>(null);
+  const [soundOn, setSoundState] = useState(true);
+  /** The refused letter, shown for a moment in red above the caret. */
+  const [ghost, setGhost] = useState<{ id: number; ch: string } | null>(null);
   const [liveView, setLiveView] = useState<Live[]>([]);
   const [pops, setPops] = useState<Pop[]>([]);
   const [typed, setTyped] = useState("");
@@ -265,6 +314,7 @@ export function WordDropGame({
   const audio = useRef<HTMLAudioElement | null>(null);
   const timers = useRef<number[]>([]);
   const popSeq = useRef(0);
+  const noteSeq = useRef(0);
   const lastHud = useRef<Hud | null>(null);
 
   const mineOn = !seed && useMine && personal.length >= MIN_PERSONAL;
@@ -319,6 +369,63 @@ export function WordDropGame({
     [clipPlayer],
   );
 
+  /** A word's recording: from the decoded copy when it is ready (instant), otherwise the audio element fetches it. */
+  const playWord = useCallback(
+    (url: string | null) => {
+      if (!url) return;
+      if (!playBuffered(url)) playClip(url);
+    },
+    [playClip],
+  );
+
+  const flashBanner = useCallback(
+    (text: string) => {
+      noteSeq.current += 1;
+      const id = noteSeq.current;
+      setBanner({ id, text });
+      later(1600, () => setBanner((current) => (current?.id === id ? null : current)));
+    },
+    [later],
+  );
+
+  /** A burst of small squares and one ring from the middle of a caught tile: the field reacts to the catch. */
+  const burst = useCallback(
+    (cx: number, cy: number) => {
+      const field = fieldRef.current;
+      if (!field || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      const ring = document.createElement("div");
+      ring.className = "wd-rip";
+      ring.style.left = `${cx}px`;
+      ring.style.top = `${cy}px`;
+      field.appendChild(ring);
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          ring.style.transform = "scale(14)";
+          ring.style.opacity = "0";
+        }),
+      );
+      later(850, () => ring.remove());
+      for (let i = 0; i < 10; i += 1) {
+        const dot = document.createElement("div");
+        dot.className = "wd-pt";
+        dot.style.left = `${cx}px`;
+        dot.style.top = `${cy}px`;
+        dot.style.background = i % 3 === 0 ? "var(--wd-tile)" : "var(--wd-acc)";
+        field.appendChild(dot);
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 40 + Math.random() * 50;
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => {
+            dot.style.transform = `translate(${Math.cos(angle) * dist}px, ${Math.sin(angle) * dist}px) rotate(${i * 60}deg) scale(0.4)`;
+            dot.style.opacity = "0";
+          }),
+        );
+        later(700, () => dot.remove());
+      }
+    },
+    [later],
+  );
+
   const popAt = useCallback(
     (text: string, frac: number, y: number, bad: boolean) => {
       popSeq.current += 1;
@@ -335,6 +442,9 @@ export function WordDropGame({
       lives: r.lives,
       combo: r.combo,
       seconds: Math.max(0, Math.ceil(r.remaining)),
+      correct: r.correct,
+      charges: r.charges,
+      frozen: r.freezeLeft > 0,
     };
     const prev = lastHud.current;
     if (
@@ -342,7 +452,10 @@ export function WordDropGame({
       prev.score === next.score &&
       prev.lives === next.lives &&
       prev.combo === next.combo &&
-      prev.seconds === next.seconds
+      prev.seconds === next.seconds &&
+      prev.correct === next.correct &&
+      prev.charges === next.charges &&
+      prev.frozen === next.frozen
     ) {
       return;
     }
@@ -366,6 +479,7 @@ export function WordDropGame({
         bestCombo: r.best,
         missed: r.missed,
         beat,
+        rhythm: r.rhythm,
       });
       setSaved(new Set());
       setDaily(null);
@@ -403,7 +517,7 @@ export function WordDropGame({
     (r: Round, now: number): boolean => {
       const word = r.deck.peek();
       const fieldWidth = fieldRef.current?.clientWidth ?? 320;
-      const size = tileSize(r.mode, word, fieldWidth);
+      const size = tileSize(r.mode, word, fieldWidth, tileScaleFor(fieldWidth));
       // A seeded round draws each tile's place from its own number; a free round just rolls.
       const rand = seed ? seededRandom(`${seed.raw}.p${r.spawned}`) : Math.random;
       const x = findSpot({
@@ -424,14 +538,18 @@ export function WordDropGame({
         h: size.h,
         font: size.font,
         y: SPAWN_Y,
+        challenge: isChallengeTile(r.mode, r.spawned - 1),
         el: null,
       });
       r.lastSpawn = now;
       setLiveView([...r.live]);
-      if (r.mode === "hard") playClip(word.audioUrl);
+      // This word's recording, and the next one's, are decoded now: by the time a word is typed it plays at once.
+      preloadClip(word.audioUrl);
+      preloadClip(r.deck.peek().audioUrl);
+      if (r.mode === "hard") playWord(word.audioUrl);
       return true;
     },
-    [playClip, seed],
+    [playWord, seed],
   );
 
   const missWord = useCallback(
@@ -441,8 +559,15 @@ export function WordDropGame({
       r.deck.requeue(live.word);
       r.lives -= 1;
       r.combo = 0;
+      r.streak = 0;
+      r.rhythm.push(null);
       r.factor = speedAfterMiss(r.factor);
       setLiveView([...r.live]);
+      sfx.miss();
+      noteSeq.current += 1;
+      const missedNote: Caught = { id: noteSeq.current, word: live.word, miss: true };
+      setCaption(missedNote);
+      setLog((current) => [missedNote, ...current].slice(0, 7));
       // The word the learner was part-way through may be the one that just fell: drop the stale letters so the input is not stuck.
       const target = pickTarget(
         r.typedValue,
@@ -467,6 +592,16 @@ export function WordDropGame({
     [finish, popAt, syncHud],
   );
 
+  const spendFreeze = useCallback(() => {
+    const r = round.current;
+    if (!r || !r.running || r.charges < 1 || r.freezeLeft > 0) return;
+    r.charges -= 1;
+    r.freezeLeft = FREEZE_SECONDS;
+    sfx.freeze();
+    flashBanner(strings.freezeLabel);
+    syncHud(r);
+  }, [flashBanner, strings.freezeLabel, syncHud]);
+
   const tick = useCallback(
     (now: number) => {
       const r = round.current;
@@ -476,20 +611,27 @@ export function WordDropGame({
       r.remaining -= dt;
       const height = fieldRef.current?.clientHeight ?? 400;
       const pace = PACE[r.mode];
-      const speed = ((height - FALL_ROOM) / pace.fall) * r.factor;
-      r.elapsedMs += dt * 1000;
+      const frozen = r.freezeLeft > 0;
+      if (frozen) r.freezeLeft = Math.max(0, r.freezeLeft - dt);
+      const speed = ((height - FALL_ROOM) / pace.fall) * r.factor * (frozen ? FREEZE_SLOW : 1);
+      r.elapsedMs += dt * 1000 * (frozen ? FREEZE_SPAWN_CLOCK : 1);
       if (r.live.length < pace.max && r.elapsedMs - r.lastSpawn > spawnGapMs(r.factor) * pace.gap) {
         spawn(r, r.elapsedMs);
       }
+      let danger = 0;
       for (const live of [...r.live]) {
         live.y += speed * dt;
+        const close = Math.max(0, Math.min(1, (live.y + live.h - height * 0.6) / (height * 0.4)));
+        danger = Math.max(danger, close);
         if (live.el) {
           live.el.style.transform = `translateY(${live.y}px)`;
+          live.el.style.setProperty("--wd-d", close.toFixed(2));
           const hintEl = live.el.querySelector<HTMLElement>("[data-hint]");
           if (hintEl) hintEl.textContent = live.y > height * 0.45 ? `${live.word.en[0]} …` : "";
         }
         if (live.y + live.h > height - BOTTOM_MARGIN) missWord(r, live);
       }
+      fieldRef.current?.style.setProperty("--wd-danger", danger.toFixed(2));
       syncHud(r);
       if (r.remaining <= 0) {
         finish(r);
@@ -560,9 +702,15 @@ export function WordDropGame({
       mode,
       prevLen: 0,
       typedValue: "",
+      charges: 0,
+      freezeLeft: 0,
+      streak: 0,
+      rhythm: [],
     };
     round.current = r;
     lastHud.current = null;
+    unlockAudio();
+    preloadClip(r.deck.peek().audioUrl);
     const kind: RoundKind = seed ? seed.kind : "free";
     setPlayed({ seed: roundSeed, kind, mode, own });
     report({ event: "started", mode, kind, level });
@@ -594,34 +742,88 @@ export function WordDropGame({
       setLiveView([]);
       setResult(null);
       setDaily(null);
-      setHud({ score: 0, lives: START_LIVES, combo: 0, seconds: ROUND_SECONDS });
+      setHud(EMPTY_HUD);
+      setCaption(null);
+      setLog([]);
+      setBanner(null);
     });
+    fieldRef.current?.style.setProperty("--wd-danger", "0");
     inputRef.current?.focus({ preventScroll: true });
     spawn(r, 0);
     frame.current = requestAnimationFrame(tick);
   }, [clipPlayer, freePool, level, mineOn, mode, personal, pool, seed, sentencePool, spawn, tick]);
 
+  useEffect(() => {
+    setSoundState(isSoundOn());
+  }, []);
+
+  useEffect(() => {
+    const field = fieldRef.current;
+    if (!field || hit === 0) return;
+    field.classList.remove("shake");
+    void field.offsetWidth;
+    field.classList.add("shake");
+    const id = window.setTimeout(() => field.classList.remove("shake"), 320);
+    return () => window.clearTimeout(id);
+  }, [hit]);
+
+  // Space spends a freeze charge (not in sentences mode, where it is a letter of the sentence).
+  useEffect(() => {
+    if (screen !== "play" || played.mode === "sentences") return;
+    function onKey(event: KeyboardEvent) {
+      if (event.code !== "Space" || event.ctrlKey || event.metaKey || event.altKey) return;
+      event.preventDefault();
+      spendFreeze();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [screen, played.mode, spendFreeze]);
+
   const complete = useCallback(
     (r: Round, live: Live) => {
       r.live = r.live.filter((other) => other.uid !== live.uid);
+      const levelBefore = levelFor(r.correct);
       r.correct += 1;
       r.combo += 1;
+      r.streak += 1;
       r.best = Math.max(r.best, r.combo);
       // The recording of the word plays once it is typed right (Hard already played it as the tile appeared).
-      if (r.mode === "easy" || r.mode === "mid") playClip(live.word.audioUrl);
+      if (r.mode === "easy" || r.mode === "mid") playWord(live.word.audioUrl);
+      sfx.chime(r.combo);
       r.chars += live.word.en.replace(/ /g, "").length;
-      r.score += pointsForText(r.combo, wordCountOf(live.word.en));
+      const points = live.challenge
+        ? CHALLENGE_POINTS
+        : pointsForText(r.combo, wordCountOf(live.word.en));
+      r.score += points;
       r.factor = speedAfterCorrect(r.factor);
+      const height = fieldRef.current?.clientHeight ?? 400;
+      r.rhythm.push(fallLeft(live.y + live.h, SPAWN_Y + live.h, height - BOTTOM_MARGIN));
       setLiveView([...r.live]);
       popAt(
-        popLabel(live.word),
+        `+${points}`,
         live.x / Math.max(1, fieldRef.current?.clientWidth ?? 320),
-        live.y,
+        live.y - 8,
         false,
       );
+      burst(live.x + live.w / 2, live.y + live.h / 2);
+      noteSeq.current += 1;
+      const caughtNote: Caught = { id: noteSeq.current, word: live.word, miss: false };
+      setCaption(caughtNote);
+      setLog((current) => [caughtNote, ...current].slice(0, 7));
+      if (r.streak % FREEZE_EVERY === 0 && r.charges < MAX_CHARGES) {
+        r.charges += 1;
+        flashBanner(strings.bannerFreezeGain);
+      } else if (r.combo > 0 && r.combo % 5 === 0) {
+        flashBanner(strings.bannerStreak.replace("{n}", String(r.combo)));
+      }
+      const levelAfter = levelFor(r.correct);
+      if (levelAfter > levelBefore) {
+        sfx.level();
+        flashBanner(strings.levelLabel.replace("{n}", String(levelAfter)));
+      }
       syncHud(r);
     },
-    [playClip, popAt, syncHud],
+    [burst, flashBanner, playWord, popAt, strings, syncHud],
   );
 
   function onType(value: string) {
@@ -650,7 +852,14 @@ export function WordDropGame({
         r.wrong += 1;
         next = clean.slice(0, -1);
         setShake(true);
+        sfx.bad();
+        noteSeq.current += 1;
+        const ghostId = noteSeq.current;
+        setGhost({ id: ghostId, ch: clean.slice(-1) });
+        later(320, () => setGhost((current) => (current?.id === ghostId ? null : current)));
         later(260, () => setShake(false));
+      } else {
+        sfx.tick();
       }
     }
     const exact = r.live.filter((live) => live.word.en === next).sort((a, b) => b.y - a.y)[0];
@@ -669,7 +878,7 @@ export function WordDropGame({
   }
 
   async function saveMissed(word: DropWord) {
-    playClip(word.audioUrl);
+    playWord(word.audioUrl);
     // A sentence is not a word of the bank: only the clip (none for a sentence) and the screen's own list.
     if (!bankOpen || saved.has(word.id) || word.en.includes(" ")) return;
     const answer = await recordBankWordAction({
@@ -749,198 +958,186 @@ export function WordDropGame({
     sentences: { name: strings.sentences, hint: strings.sentencesHint },
   };
 
+  const sampleWord = "spouse";
+  const levelNow = levelFor(hud.correct);
+
+  function modeSample(m: WordDropMode) {
+    const letters = [...sampleWord];
+    if (m === "easy") {
+      return (
+        <>
+          <span className="mw">
+            {letters.map((c, i) => (
+              <i key={i} style={{ animationDelay: `${i * 0.16}s` }}>
+                {c}
+              </i>
+            ))}
+          </span>
+          <small dir="auto">{strings.sampleMeaning}</small>
+        </>
+      );
+    }
+    if (m === "sentences") {
+      return (
+        <>
+          <span className="sent">{strings.sampleSentence}</span>
+          <small dir="auto">{strings.sampleSentenceMeaning}</small>
+        </>
+      );
+    }
+    const slots = (
+      <span className="ms">
+        {letters.map((c, i) => (
+          <i key={i}>
+            <b style={{ animationDelay: `${i * 0.16}s` }}>{c}</b>
+          </i>
+        ))}
+      </span>
+    );
+    if (m === "mid") {
+      return (
+        <>
+          <span className="ar" dir="auto">
+            {strings.sampleMeaning}
+          </span>
+          {slots}
+        </>
+      );
+    }
+    return (
+      <>
+        <span className="wd-spk">
+          <Volume2 className="size-3.5" aria-hidden="true" />
+        </span>
+        {slots}
+      </>
+    );
+  }
+
   return (
     // h-app: the site's own height that follows a phone's keyboard (see KeyboardViewport), so the input stays above the keys.
     <div
       dir="ltr"
       style={PALETTE}
-      className="h-app fixed inset-x-0 top-0 z-50 flex flex-col overflow-hidden bg-black text-white"
+      className="wd-root h-app fixed inset-x-0 top-0 z-50 overflow-hidden text-white"
     >
-      <style>{`
-        @keyframes wd-rise{0%{opacity:0;transform:translateY(0)}15%{opacity:1}100%{opacity:0;transform:translateY(-34px)}}
-        @keyframes wd-shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
-        @keyframes wd-flash{0%{opacity:.8}100%{opacity:0}}
-        @media (prefers-reduced-motion:reduce){.wd-anim{animation-duration:.01s !important}}
-      `}</style>
+      <style>{WORD_DROP_CSS}</style>
 
-      <div
-        className={cn(
-          "mx-auto flex min-h-0 w-full max-w-md flex-1 flex-col",
-          // Tablet and laptop: the play field gets room, the start and end pages become two columns.
-          screen === "play" ? "md:max-w-3xl" : "md:max-w-5xl",
-        )}
-      >
+      <div className="wd-stage">
         {screen === "start" && (
           <div className="flex min-h-0 flex-1 flex-col">
-            <div className="flex items-center justify-between px-5 pt-5">
-              <span className="text-xs font-semibold tracking-[0.14em] text-[var(--wd-mute)] uppercase">
-                Word Drop
-              </span>
-              <Link
-                href="/learn"
-                aria-label={strings.exit}
-                className="grid size-9 place-items-center rounded-full border border-[var(--wd-line)] text-[var(--wd-mute)] hover:text-white"
-              >
+            <div className="wd-top">
+              <span className="wd-eyebrow">Word Drop</span>
+              <Link href="/learn" aria-label={strings.exit} className="wd-xbtn">
                 <X className="size-4" aria-hidden="true" />
               </Link>
             </div>
-            <div
-              className={cn(
-                "flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-5 pt-6 pb-4 md:px-8 md:pt-10",
-                !seed && "md:grid md:grid-cols-2 md:content-start md:items-start md:gap-x-12",
-                seed && "md:mx-auto md:w-full md:max-w-xl",
-              )}
-            >
-              <h1
-                dir="auto"
-                className="text-right text-[34px] leading-[1.2] font-extrabold md:col-span-2 md:text-[48px]"
-              >
-                {seed?.kind === "daily"
-                  ? strings.dailyHeadline1
-                  : seed?.kind === "friend"
-                    ? strings.friendHeadline1
-                    : strings.headline1}
-                <br />
-                <span className="text-[var(--wd-green)]">
+            <div className="wd-st">
+              <div className="wd-st-left">
+                <h1 dir="auto">
                   {seed?.kind === "daily"
-                    ? strings.dailyHeadline2
+                    ? strings.dailyHeadline1
                     : seed?.kind === "friend"
-                      ? strings.friendHeadline2
-                      : strings.headline2}
-                </span>
-              </h1>
-              {seed && (
-                <div className="rounded-[18px] border border-[var(--wd-green)] px-4 py-3.5 text-right">
-                  <p dir="auto" className="text-[15px] font-bold">
-                    {seed.kind === "daily" ? strings.dailyMode : strings.friendMode}
-                  </p>
-                  {seed.kind === "friend" && beat !== null && (
-                    <p
-                      dir="auto"
-                      className="mt-1 text-[22px] font-extrabold text-[var(--wd-green)]"
-                    >
-                      {strings.toBeat.replace("{n}", String(beat))}
-                    </p>
-                  )}
-                </div>
-              )}
-              {poolEmpty && (
-                <p
-                  dir="auto"
-                  role="status"
-                  className="rounded-[18px] border border-[var(--wd-red)] px-4 py-3.5 text-right text-[15px]"
-                >
-                  {strings.emptyPool}
+                      ? strings.friendHeadline1
+                      : strings.headline1}
+                  <br />
+                  <span>
+                    {seed?.kind === "daily"
+                      ? strings.dailyHeadline2
+                      : seed?.kind === "friend"
+                        ? strings.friendHeadline2
+                        : strings.headline2}
+                  </span>
+                </h1>
+                <p className="src" dir="auto">
+                  {strings.source}
                 </p>
-              )}
-              <div
-                className={cn("flex flex-col gap-2.5 md:gap-3", seed && "hidden")}
-                role="radiogroup"
-              >
-                {modes.map((m, index) => {
-                  const disabled = m === "hard" && !hardOk;
-                  const selected = mode === m && !disabled;
-                  return (
-                    <button
-                      key={m}
-                      type="button"
-                      role="radio"
-                      aria-checked={selected}
-                      disabled={disabled}
-                      onClick={() => setMode(m)}
-                      className={cn(
-                        "grid grid-cols-[auto_1fr] items-center gap-4 rounded-[18px] border bg-black px-4 py-3.5 text-right transition-colors",
-                        selected ? "border-[var(--wd-green)]" : "border-[var(--wd-line)]",
-                        disabled && "opacity-45",
-                      )}
-                    >
-                      <span
-                        className={cn(
-                          "text-[30px] leading-none font-extrabold tabular-nums",
-                          selected ? "text-[var(--wd-green)]" : "text-[var(--wd-line)]",
-                        )}
-                      >
-                        {index + 1}
-                      </span>
-                      <span dir="auto">
-                        <span
-                          className={cn(
-                            "block text-[17px] font-bold",
-                            selected && "text-[var(--wd-green)]",
-                          )}
-                        >
-                          {modeLabel[m].name}
-                        </span>
-                        <span className="block text-[13px] text-[var(--wd-mute)]">
-                          {disabled ? strings.hardUnavailable : modeLabel[m].hint}
-                        </span>
-                      </span>
-                    </button>
-                  );
-                })}
               </div>
-              <div className="contents md:flex md:flex-col md:gap-6">
+
+              <div className="wd-st-right">
+                {seed && (
+                  <div className="wd-seedcard">
+                    <p dir="auto" className="text-[15px] font-bold">
+                      {seed.kind === "daily" ? strings.dailyMode : strings.friendMode}
+                    </p>
+                    {seed.kind === "friend" && beat !== null && (
+                      <p
+                        dir="auto"
+                        className="mt-1 text-[22px] font-extrabold text-[var(--wd-acc)]"
+                      >
+                        {strings.toBeat.replace("{n}", String(beat))}
+                      </p>
+                    )}
+                  </div>
+                )}
+                {poolEmpty && (
+                  <p
+                    dir="auto"
+                    role="status"
+                    className="rounded-[18px] border border-[var(--wd-red)] px-4 py-3.5 text-right text-[15px]"
+                  >
+                    {strings.emptyPool}
+                  </p>
+                )}
+                {!seed && (
+                  <div className="flex flex-col gap-2.5" role="radiogroup">
+                    {modes.map((m) => {
+                      const disabled = m === "hard" && !hardOk;
+                      const selected = mode === m && !disabled;
+                      return (
+                        <button
+                          key={m}
+                          type="button"
+                          role="radio"
+                          aria-checked={selected}
+                          disabled={disabled}
+                          onClick={() => setMode(m)}
+                          className="wd-mode"
+                        >
+                          <div className="wd-mini">{modeSample(m)}</div>
+                          <span dir="auto" className="mt">
+                            <b>{modeLabel[m].name}</b>
+                            <span>{disabled ? strings.hardUnavailable : modeLabel[m].hint}</span>
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
                 {!seed && personal.length >= MIN_PERSONAL && mode !== "sentences" && (
                   <button
                     type="button"
                     role="switch"
                     aria-checked={useMine}
                     onClick={() => setUseMine((on) => !on)}
-                    className={cn(
-                      "grid grid-cols-[1fr_auto] items-center gap-4 rounded-[18px] border bg-black px-4 py-3 text-right transition-colors",
-                      useMine ? "border-[var(--wd-green)]" : "border-[var(--wd-line)]",
-                    )}
+                    className="wd-rowbox"
                   >
                     <span dir="auto">
-                      <span
-                        className={cn(
-                          "block text-[15px] font-bold",
-                          useMine && "text-[var(--wd-green)]",
-                        )}
-                      >
-                        {strings.myWordsTitle}
-                      </span>
-                      <span className="block text-[12.5px] text-[var(--wd-mute)]">
+                      <b>{strings.myWordsTitle}</b>
+                      <span className="l">
                         {strings.myWordsLine.replace("{n}", String(personal.length))}
                       </span>
                     </span>
-                    <span
-                      aria-hidden="true"
-                      className={cn(
-                        "flex h-6 w-11 items-center rounded-full border px-0.5 transition-colors",
-                        useMine
-                          ? "justify-end border-[var(--wd-green)] bg-[var(--wd-green)]"
-                          : "justify-start border-[var(--wd-line)]",
-                      )}
-                    >
-                      <span
-                        className={cn(
-                          "size-4 rounded-full",
-                          useMine ? "bg-black" : "bg-[var(--wd-mute)]",
-                        )}
-                      />
+                    <span className="wd-sw" aria-hidden="true">
+                      <i />
                     </span>
                   </button>
                 )}
                 {!seed && (
-                  <div className="flex flex-col gap-3 rounded-[18px] border border-[var(--wd-line)] px-4 py-3.5">
-                    <div dir="auto" className="text-right">
-                      <p className="text-[15px] font-bold">{strings.dailyTitle}</p>
-                      <p className="text-[12.5px] text-[var(--wd-mute)]">{strings.dailyLine}</p>
+                  <div className="wd-rowbox" style={{ gridTemplateColumns: "1fr" }}>
+                    <div dir="auto">
+                      <b>{strings.dailyTitle}</b>
+                      <span className="l">{strings.dailyLine}</span>
                     </div>
                     {board && board.countries.length > 0 && (
-                      <div className="border-t border-[var(--wd-line)]">
+                      <div>
                         {board.countries.slice(0, 3).map((row, index) => (
-                          <div
-                            key={row.country}
-                            dir="auto"
-                            className="grid grid-cols-[28px_1fr_auto] items-baseline gap-3 border-b border-[var(--wd-line)] py-2.5 text-[14px]"
-                          >
+                          <div key={row.country} dir="auto" className="wd-row3">
                             <span
                               dir="ltr"
                               className={cn(
                                 "font-extrabold tabular-nums",
-                                index === 0 ? "text-[var(--wd-green)]" : "text-[var(--wd-mute)]",
+                                index === 0 ? "text-[var(--wd-acc)]" : "text-[var(--wd-mute)]",
                               )}
                             >
                               {index + 1}
@@ -958,102 +1155,111 @@ export function WordDropGame({
                         ))}
                       </div>
                     )}
-                    <Link
-                      href={dailyHref}
-                      prefetch={false}
-                      className="grid min-h-12 place-items-center rounded-2xl border border-[var(--wd-line)] text-[15px] font-bold hover:border-[var(--wd-green)] hover:text-[var(--wd-green)]"
-                    >
+                    <Link href={dailyHref} prefetch={false} className="wd-btn">
                       {strings.dailyStart}
                     </Link>
                   </div>
                 )}
               </div>
-            </div>
-            <div className="flex flex-col gap-2.5 px-5 pb-5 md:mx-auto md:w-full md:max-w-md md:px-0 md:pb-8">
-              <p dir="auto" className="text-center text-[12.5px] text-[var(--wd-mute)]">
-                {strings.source}
-              </p>
-              <button
-                type="button"
-                onClick={start}
-                disabled={poolEmpty || (mode !== "sentences" && pool.length === 0)}
-                className="min-h-[54px] rounded-2xl border border-[var(--wd-green)] bg-black text-[17px] font-bold text-[var(--wd-green)] transition-colors hover:bg-[var(--wd-green)] hover:text-black active:bg-[var(--wd-green)] active:text-black disabled:opacity-45"
-              >
-                {strings.start}
-              </button>
+
+              <div className="wd-st-foot">
+                <button
+                  type="button"
+                  onClick={start}
+                  disabled={poolEmpty || (mode !== "sentences" && pool.length === 0)}
+                  className="wd-btn main"
+                >
+                  {strings.start}
+                </button>
+              </div>
             </div>
           </div>
         )}
 
         {screen === "play" && (
-          <div className="flex min-h-0 flex-1 flex-col">
-            <div className="flex items-end justify-between px-5 pt-4 pb-3">
-              <div>
-                <div className="text-[38px] leading-none font-extrabold tabular-nums">
-                  {hud.score}
-                </div>
-                <div className="mt-1 text-xs text-[var(--wd-mute)]" dir="auto">
-                  {strings.points}
-                </div>
+          <div className="wd-play">
+            <div className="wd-hud">
+              <div className="wd-score">
+                <b>{hud.score}</b>
+                <small dir="auto">{strings.points}</small>
+                {hud.combo >= 2 && (
+                  <span key={hud.combo} className="wd-combo">
+                    ×{hud.combo}
+                  </span>
+                )}
               </div>
-              {hud.combo >= 2 && (
-                <span className="rounded-full border border-[var(--wd-green)] px-2.5 py-0.5 text-xs font-bold text-[var(--wd-green)] tabular-nums">
-                  ×{hud.combo}
-                </span>
-              )}
-              <div className="flex flex-col items-end gap-2">
-                <div className="flex items-center gap-3">
-                  <div className="flex gap-1.5" aria-label={`${hud.lives}`}>
-                    {Array.from({ length: START_LIVES }, (_, i) => (
-                      <span
-                        key={i}
-                        className={cn(
-                          "h-[5px] w-[22px] rounded-[3px] transition-colors",
-                          i < hud.lives ? "bg-[var(--wd-green)]" : "bg-[var(--wd-line)]",
-                        )}
-                      />
+              <div className="wd-hr">
+                <button
+                  type="button"
+                  onClick={spendFreeze}
+                  aria-label={strings.freezeLabel}
+                  className={cn(
+                    "wd-frz",
+                    hud.frozen && "active",
+                    hud.charges > 0 && !hud.frozen && "ready",
+                  )}
+                >
+                  <Snowflake className="size-3.5" aria-hidden="true" />
+                  <span className="pips">
+                    {Array.from({ length: MAX_CHARGES }, (_, i) => (
+                      <i key={i} className={i < hud.charges ? "on" : undefined} />
                     ))}
-                  </div>
-                  <Link
-                    href="/learn"
-                    aria-label={strings.exit}
-                    className="text-[var(--wd-mute)] hover:text-white"
-                  >
-                    <X className="size-4" aria-hidden="true" />
-                  </Link>
+                  </span>
+                  <span className="lbl" dir="auto">
+                    {strings.freezeLabel}
+                  </span>
+                  {played.mode !== "sentences" && <kbd>Space</kbd>}
+                </button>
+                <div className="wd-lives" aria-label={`${hud.lives}`}>
+                  {Array.from({ length: START_LIVES }, (_, i) => (
+                    <i key={i} className={i >= hud.lives ? "off" : undefined} />
+                  ))}
                 </div>
-                <span className="text-sm font-semibold text-[var(--wd-mute)] tabular-nums">
-                  {clock(hud.seconds)}
-                </span>
+                <button
+                  type="button"
+                  className="wd-xbtn"
+                  aria-pressed={soundOn}
+                  aria-label={strings.soundToggle}
+                  onClick={() => {
+                    const next = !soundOn;
+                    setSoundOn(next);
+                    setSoundState(next);
+                  }}
+                >
+                  {soundOn ? (
+                    <Volume2 className="size-4" aria-hidden="true" />
+                  ) : (
+                    <VolumeX className="size-4" aria-hidden="true" />
+                  )}
+                </button>
+                <Link href="/learn" aria-label={strings.exit} className="wd-xbtn">
+                  <X className="size-4" aria-hidden="true" />
+                </Link>
               </div>
             </div>
 
             <div
               ref={fieldRef}
               onPointerDown={() => inputRef.current?.focus({ preventScroll: true })}
-              className="relative mx-3 min-h-0 flex-1 touch-manipulation overflow-hidden rounded-[20px] border border-[var(--wd-line)] bg-[var(--wd-panel)]"
+              style={{ "--wd-heat": Math.min(1, hud.combo / 12) } as CSSProperties}
+              className={cn("wd-field", hud.frozen && "frozen", lockUid !== null && "has-lock")}
             >
-              <span
-                className="absolute inset-x-0 bottom-0 h-[3px] bg-[var(--wd-red)]"
-                aria-hidden="true"
-              />
-              {hit > 0 && (
-                <span
-                  key={hit}
-                  aria-hidden="true"
-                  className="wd-anim pointer-events-none absolute inset-0 opacity-0"
-                  style={{
-                    boxShadow: "inset 0 -50px 50px -30px var(--wd-red)",
-                    animation: "wd-flash .5s",
-                  }}
-                />
+              <div className="wd-timeline" aria-hidden="true">
+                <i style={{ transform: `scaleX(${Math.max(0, hud.seconds / ROUND_SECONDS)})` }} />
+              </div>
+              <span className="wd-floor" aria-hidden="true" />
+              {hit > 0 && <span key={hit} aria-hidden="true" className="wd-flash" />}
+              {banner && (
+                <div key={banner.id} className="wd-banner" dir="auto">
+                  {banner.text}
+                </div>
               )}
               {liveView.map((live) => {
                 const locked = live.uid === lockUid;
                 const n = locked ? typed.length : 0;
                 const en = live.word.en;
-                const mask = n > 0 ? `${en.slice(0, n)} ${"·".repeat(en.length - n)}` : "";
                 const tileMode = played.mode;
+                const letters = [...en];
                 return (
                   <div
                     key={live.uid}
@@ -1061,38 +1267,47 @@ export function WordDropGame({
                       live.el = el;
                       if (el) el.style.transform = `translateY(${live.y}px)`;
                     }}
-                    className="absolute top-0 will-change-transform"
+                    className={cn(
+                      "wd-tile",
+                      locked && "lock",
+                      live.challenge && "boss",
+                      locked && shake && "bad",
+                    )}
                     style={{ left: live.x, width: live.w }}
                   >
                     <div
-                      className={cn(
-                        "flex w-full flex-col items-center gap-px overflow-hidden rounded-2xl border-2 bg-[var(--wd-tile)] px-3 pt-2 pb-1.5 text-center text-[var(--wd-tile-ink)]",
-                        locked
-                          ? "border-[var(--wd-green)] shadow-[0_0_0_3px_oklch(0.72_0.19_150/0.25)]"
-                          : "border-transparent",
-                      )}
+                      className={cn("wd-card", locked && shake && "wd-nudge")}
+                      style={{ fontSize: live.font, minHeight: live.h }}
                     >
+                      {live.challenge && <span className="wd-x3">{CHALLENGE_POINTS}</span>}
                       {tileMode === "easy" && (
                         <>
-                          <span className="text-[19px] leading-tight font-extrabold whitespace-nowrap">
-                            <span className="text-[var(--wd-green-ink)]">{en.slice(0, n)}</span>
-                            {en.slice(n)}
+                          <span className="wd-w" style={{ fontSize: "1.1em" }}>
+                            {letters.map((c, i) => (
+                              <i key={i} className={cn(i < n && "ok", locked && i === n && "on")}>
+                                {c}
+                              </i>
+                            ))}
                           </span>
-                          <span dir="auto" className="min-h-4 text-xs text-[var(--wd-tile-mute)]">
+                          <span dir="auto" className="wd-m">
                             {live.word.meaning}
                           </span>
                         </>
                       )}
                       {tileMode === "mid" && (
                         <>
-                          <span
-                            dir="auto"
-                            className="text-[19px] leading-tight font-extrabold whitespace-nowrap"
-                          >
+                          <span dir="auto" className="wd-m1" style={{ fontSize: "1.1em" }}>
                             {live.word.meaning}
                           </span>
-                          <span className="min-h-[18px] text-[13px] font-extrabold tracking-[0.16em] text-[var(--wd-green-ink)]">
-                            {mask}
+                          <span className="wd-mask">
+                            {letters.map((c, i) => (
+                              <i
+                                key={i}
+                                className={cn(i < n ? "f" : "e", locked && i === n && "on")}
+                              >
+                                {i < n ? c : "·"}
+                              </i>
+                            ))}
                           </span>
                         </>
                       )}
@@ -1103,35 +1318,32 @@ export function WordDropGame({
                             aria-label={strings.soundLabel}
                             onPointerDown={(event) => {
                               event.preventDefault();
-                              playClip(live.word.audioUrl);
+                              playWord(live.word.audioUrl);
                             }}
-                            className="my-0.5 grid size-[30px] place-items-center rounded-full bg-[var(--wd-tile-ink)] text-[var(--wd-tile)]"
+                            className="wd-spk"
                           >
                             <Volume2 className="size-4" aria-hidden="true" />
                           </button>
-                          <span
-                            data-hint=""
-                            className="min-h-4 text-xs font-semibold text-[var(--wd-tile-mute)]"
-                          />
-                          <span className="min-h-[18px] text-[13px] font-extrabold tracking-[0.16em] text-[var(--wd-green-ink)]">
-                            {mask}
+                          <span data-hint="" className="wd-hint" />
+                          <span className="wd-mask">
+                            {letters.map((c, i) => (
+                              <i
+                                key={i}
+                                className={cn(i < n ? "f" : "e", locked && i === n && "on")}
+                              >
+                                {i < n ? c : "·"}
+                              </i>
+                            ))}
                           </span>
                         </>
                       )}
                       {tileMode === "sentences" && (
                         <>
-                          <span
-                            dir="ltr"
-                            className="text-[16px] leading-snug font-extrabold"
-                            style={{ overflowWrap: "anywhere" }}
-                          >
-                            <span className="text-[var(--wd-green-ink)]">{en.slice(0, n)}</span>
+                          <span dir="ltr" className="wd-sentence">
+                            <span className="ok">{en.slice(0, n)}</span>
                             {en.slice(n)}
                           </span>
-                          <span
-                            dir="auto"
-                            className="line-clamp-2 min-h-4 text-xs text-[var(--wd-tile-mute)]"
-                          >
+                          <span dir="auto" className="wd-m line-clamp-2">
                             {live.word.meaning}
                           </span>
                         </>
@@ -1144,14 +1356,11 @@ export function WordDropGame({
                 <div
                   key={pop.id}
                   dir="auto"
-                  className={cn(
-                    "wd-anim pointer-events-none absolute z-10 text-[13px] font-bold whitespace-nowrap",
-                    pop.bad ? "text-[var(--wd-red)]" : "text-[var(--wd-green)]",
-                  )}
+                  className="wd-pop"
                   style={{
                     left: `${Math.min(70, Math.max(2, pop.frac * 70))}%`,
                     top: pop.y,
-                    animation: "wd-rise .95s ease-out forwards",
+                    color: pop.bad ? "var(--wd-red)" : "var(--wd-acc)",
                   }}
                 >
                   {pop.text}
@@ -1159,12 +1368,65 @@ export function WordDropGame({
               ))}
             </div>
 
-            <div className="px-3 pt-2.5 pb-3">
+            <div
+              className="wd-typer"
+              onPointerDown={() => inputRef.current?.focus({ preventScroll: true })}
+            >
               {wrongScript && (
-                <p dir="auto" className="mb-1.5 text-center text-xs text-[var(--wd-red)]">
+                <p dir="auto" className="wd-warn">
                   {strings.switchKeyboard}
                 </p>
               )}
+              <div className="wd-typed" dir="ltr" aria-hidden="true">
+                {typed.length === 0 ? (
+                  <>
+                    <span className="wd-caretwrap">
+                      <b className="wd-caret" />
+                      {ghost && (
+                        <span key={ghost.id} className="wd-ghost">
+                          {ghost.ch}
+                        </span>
+                      )}
+                    </span>
+                    <span className="ph" dir="auto">
+                      {strings.placeholder}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    {[...typed].map((c, i) => (
+                      <span key={i} className={cn("c", i === typed.length - 1 && "n")}>
+                        {c === " " ? <>&nbsp;</> : c}
+                      </span>
+                    ))}
+                    <span className="wd-caretwrap">
+                      <b className="wd-caret" />
+                      {ghost && (
+                        <span key={ghost.id} className="wd-ghost">
+                          {ghost.ch}
+                        </span>
+                      )}
+                    </span>
+                  </>
+                )}
+              </div>
+              <div className={cn("wd-caption", caption?.miss && "miss")}>
+                {caption && (
+                  <button
+                    key={caption.id}
+                    type="button"
+                    onPointerDown={(event) => {
+                      event.preventDefault();
+                      playWord(caption.word.audioUrl);
+                    }}
+                  >
+                    {caption.miss && <em dir="auto">{strings.missedTag}</em>}
+                    <b>{caption.word.en}</b>
+                    {caption.word.meaning && <span dir="auto">{caption.word.meaning}</span>}
+                    <Volume2 className="size-4" aria-hidden="true" />
+                  </button>
+                )}
+              </div>
               <input
                 ref={inputRef}
                 value={typed}
@@ -1179,146 +1441,195 @@ export function WordDropGame({
                 dir="ltr"
                 placeholder={strings.placeholder}
                 aria-label={strings.placeholder}
-                className={cn(
-                  "wd-anim h-14 w-full rounded-2xl border bg-black px-4 text-center text-[22px] font-bold tracking-wider text-white outline-none placeholder:text-[var(--wd-line)] focus:border-[var(--wd-green)] md:h-16 md:text-[26px]",
-                  shake ? "border-[var(--wd-red)]" : "border-[var(--wd-line)]",
-                )}
-                style={shake ? { animation: "wd-shake .25s" } : undefined}
+                className="wd-inp"
               />
             </div>
+
+            <aside className="wd-side" aria-label={strings.caughtTitle}>
+              <div className="wd-sd-h">
+                <b dir="auto">{strings.caughtTitle}</b>
+                <span dir="auto">{strings.levelLabel.replace("{n}", String(levelNow))}</span>
+              </div>
+              <div className="wd-lvbar" aria-hidden="true">
+                <i style={{ width: `${((hud.correct % LEVEL_EVERY) / LEVEL_EVERY) * 100}%` }} />
+              </div>
+              {log.length === 0 ? (
+                <p className="wd-sd-empty" dir="auto">
+                  {strings.caughtEmpty}
+                </p>
+              ) : (
+                <ul className="wd-log">
+                  {log.map((item) => (
+                    <li key={item.id} className={item.miss ? "miss" : undefined}>
+                      <button
+                        type="button"
+                        onPointerDown={(event) => {
+                          event.preventDefault();
+                          playWord(item.word.audioUrl);
+                        }}
+                      >
+                        <span className="en">{item.word.en}</span>
+                        <span className="ar" dir="auto">
+                          {item.word.meaning}
+                        </span>
+                        <Volume2 className="size-4" aria-hidden="true" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </aside>
           </div>
         )}
 
         {screen === "end" && result && (
-          <div className="flex min-h-0 flex-1 flex-col">
-            <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-5 pt-8 pb-4 md:grid md:grid-cols-2 md:content-start md:items-start md:gap-x-12 md:px-8 md:pt-12">
-              <div
-                dir="ltr"
-                className="flex flex-wrap items-baseline justify-end gap-x-7 gap-y-1 md:col-start-1"
-              >
-                <div className="flex items-baseline gap-2">
-                  <small dir="auto" className="text-[15px] text-[var(--wd-mute)]">
-                    {strings.points}
-                  </small>
-                  <b className="text-[clamp(54px,17vw,76px)] leading-none font-extrabold tabular-nums">
-                    {result.score}
-                  </b>
-                </div>
-                <div className="flex items-baseline gap-2">
-                  <small dir="auto" className="text-[15px] text-[var(--wd-mute)]">
-                    {strings.accuracy}
-                  </small>
-                  <b className="text-[clamp(54px,17vw,76px)] leading-none font-extrabold text-[var(--wd-green)] tabular-nums">
-                    {result.accuracy}%
-                  </b>
+          <div className="wd-en">
+            <div className="wd-en-left">
+              <div>
+                <span className="wd-eyebrow" dir="auto">
+                  {strings.roundEnd}
+                </span>
+                <div className="big">{result.score}</div>
+                <div className="unit" dir="auto">
+                  {strings.points}
                 </div>
               </div>
-
-              <div className="md:col-start-1">
-                <p dir="auto" className="mb-2.5 text-right text-[15px]">
-                  {strings.accuracyLine}
+              {result.beat !== null && (
+                <p dir="auto" className="text-[15px]">
+                  {strings.newBest.replace("{n}", String(result.beat))}
                 </p>
-                <div className="h-2 overflow-hidden rounded-full bg-[var(--wd-panel)]">
-                  <div
-                    className="h-full rounded-full bg-[var(--wd-green)]"
-                    style={{ width: `${result.accuracy}%` }}
-                  />
-                </div>
-                {result.beat !== null && (
-                  <p dir="auto" className="mt-2.5 text-right text-[15px] text-[var(--wd-mute)]">
-                    {strings.newBest.replace("{n}", String(result.beat))}
-                  </p>
-                )}
-                {versusLine() && (
-                  <p
-                    dir="auto"
-                    className={cn(
-                      "mt-2.5 text-right text-[17px] font-bold",
-                      versus !== null && versus > 0 ? "text-[var(--wd-green)]" : "text-white",
-                    )}
-                  >
-                    {versusLine()}
-                  </p>
-                )}
-                {seed?.kind === "daily" && signedIn && daily && !daily.ok && (
-                  <p dir="auto" className="mt-2.5 text-right text-[15px] text-[var(--wd-mute)]">
-                    {daily.reason === "limit" ? strings.rankLimit : strings.rankFailed}
-                  </p>
-                )}
-                {seed?.kind === "daily" && !signedIn && (
-                  <p dir="auto" className="mt-2.5 text-right text-[15px] text-[var(--wd-mute)]">
-                    {strings.signInToRank}
-                  </p>
-                )}
-                {placeLine() && (
-                  <div dir="auto" className="mt-2.5 text-right">
-                    <p className="text-[17px] font-bold text-[var(--wd-green)]">{placeLine()}</p>
-                    {daily?.improved === false && daily.best !== undefined && (
-                      <p className="text-[13px] text-[var(--wd-mute)]">
-                        {strings.dayBest.replace("{n}", String(daily.best))}
-                      </p>
-                    )}
-                  </div>
-                )}
-                {daily?.board && daily.board.countries.length > 0 && (
-                  <div className="mt-3 border-t border-[var(--wd-line)]">
-                    <p dir="auto" className="py-2 text-right text-[12.5px] text-[var(--wd-mute)]">
-                      {strings.countriesTitle}
+              )}
+              {versusLine() && (
+                <p
+                  dir="auto"
+                  className={cn(
+                    "text-[17px] font-bold",
+                    versus !== null && versus > 0 ? "text-[var(--wd-acc)]" : "text-white",
+                  )}
+                >
+                  {versusLine()}
+                </p>
+              )}
+              {seed?.kind === "daily" && signedIn && daily && !daily.ok && (
+                <p dir="auto" className="text-[15px] text-[var(--wd-mute)]">
+                  {daily.reason === "limit" ? strings.rankLimit : strings.rankFailed}
+                </p>
+              )}
+              {seed?.kind === "daily" && !signedIn && (
+                <p dir="auto" className="text-[15px] text-[var(--wd-mute)]">
+                  {strings.signInToRank}
+                </p>
+              )}
+              {placeLine() && (
+                <div dir="auto">
+                  <p className="text-[17px] font-bold text-[var(--wd-acc)]">{placeLine()}</p>
+                  {daily?.improved === false && daily.best !== undefined && (
+                    <p className="text-[13px] text-[var(--wd-mute)]">
+                      {strings.dayBest.replace("{n}", String(daily.best))}
                     </p>
-                    {daily.board.countries.slice(0, 5).map((row, index) => (
-                      <div
-                        key={row.country}
-                        dir="auto"
-                        className="grid grid-cols-[28px_1fr_auto] items-baseline gap-3 border-t border-[var(--wd-line)] py-2.5 text-[14px]"
+                  )}
+                </div>
+              )}
+              {daily?.board && daily.board.countries.length > 0 && (
+                <div>
+                  <p dir="auto" className="py-1 text-[12.5px] text-[var(--wd-mute)]">
+                    {strings.countriesTitle}
+                  </p>
+                  {daily.board.countries.slice(0, 5).map((row, index) => (
+                    <div key={row.country} dir="auto" className="wd-row3">
+                      <span
+                        dir="ltr"
+                        className={cn(
+                          "font-extrabold tabular-nums",
+                          index === 0 ? "text-[var(--wd-acc)]" : "text-[var(--wd-mute)]",
+                        )}
                       >
-                        <span
-                          dir="ltr"
-                          className={cn(
-                            "font-extrabold tabular-nums",
-                            index === 0 ? "text-[var(--wd-green)]" : "text-[var(--wd-mute)]",
-                          )}
-                        >
-                          {index + 1}
-                        </span>
-                        <span>{countryName(row.country, locale)}</span>
-                        <b dir="ltr" className="tabular-nums">
-                          {row.average}
-                        </b>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="grid grid-cols-3 border-y border-[var(--wd-line)] md:col-start-1">
+                        {index + 1}
+                      </span>
+                      <span>{countryName(row.country, locale)}</span>
+                      <b dir="ltr" className="tabular-nums">
+                        {row.average}
+                      </b>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="wd-stats">
                 {[
-                  { n: result.wpm, label: strings.wordsPerMinute },
-                  { n: result.words, label: strings.wordsTyped },
-                  { n: result.bestCombo, label: strings.bestCombo },
-                ].map((item, index) => (
-                  <div
-                    key={item.label}
-                    className={cn(
-                      "px-1 py-3 text-center",
-                      index > 0 && "border-l border-[var(--wd-line)]",
-                    )}
-                  >
-                    <b className="block text-[22px] tabular-nums">{item.n}</b>
-                    <span dir="auto" className="block text-xs text-[var(--wd-mute)]">
-                      {item.label}
-                    </span>
+                  { n: `${result.accuracy}%`, label: strings.accuracy },
+                  { n: String(result.wpm), label: strings.wordsPerMinute },
+                  { n: String(result.words), label: strings.wordsTyped },
+                  { n: String(result.bestCombo), label: strings.bestCombo },
+                ].map((item) => (
+                  <div key={item.label}>
+                    <b>{item.n}</b>
+                    <span dir="auto">{item.label}</span>
                   </div>
                 ))}
               </div>
+              <div className="wd-en-act">
+                {notice && (
+                  <p role="status" dir="auto" className="wd-notice">
+                    {notice}
+                  </p>
+                )}
+                {played.own && (
+                  <p dir="auto" className="text-center text-[12.5px] text-[var(--wd-mute)]">
+                    {strings.noChallengeOwn}
+                  </p>
+                )}
+                <div className={cn("grid gap-2.5", played.seed ? "grid-cols-2" : "grid-cols-1")}>
+                  {played.seed && (
+                    <button type="button" onClick={() => void onChallenge()} className="wd-btn">
+                      {strings.challengeFriend}
+                    </button>
+                  )}
+                  <button type="button" onClick={() => void onShareCard()} className="wd-btn">
+                    {strings.shareResult}
+                  </button>
+                </div>
+                <button type="button" onClick={() => setScreen("start")} className="wd-btn main">
+                  {strings.again}
+                </button>
+                <Link href="/learn" className="wd-btn">
+                  {strings.back}
+                </Link>
+              </div>
+            </div>
 
-              <div className="md:col-start-2 md:row-span-3 md:row-start-1">
-                <p dir="auto" className="mb-2.5 text-right text-[12.5px] text-[var(--wd-mute)]">
+            <div className="wd-en-right">
+              {result.rhythm.length > 0 && (
+                <div className="wd-rh">
+                  <div className="hd">
+                    <span dir="auto">{strings.rhythmHint}</span>
+                    <span dir="auto">{strings.rhythmTitle}</span>
+                  </div>
+                  <div className="wd-bars" aria-hidden="true">
+                    {result.rhythm.map((value, i) =>
+                      value === null ? (
+                        <b key={i} style={{ animationDelay: `${i * 18}ms` }} />
+                      ) : (
+                        <i
+                          key={i}
+                          className={value < 0.3 ? "slow" : undefined}
+                          style={{
+                            height: `${Math.max(8, Math.round(value * 100))}%`,
+                            animationDelay: `${i * 18}ms`,
+                          }}
+                        />
+                      ),
+                    )}
+                  </div>
+                </div>
+              )}
+              <div>
+                <p dir="auto" className="mb-3 text-right text-[13px] text-[var(--wd-mute)]">
                   {result.missed.length === 0
                     ? strings.noMisses
                     : `${strings.missedTitle}${bankOpen && played.mode !== "sentences" ? ` · ${strings.tapToSave}` : ""}`}
                 </p>
                 {result.missed.length > 0 && (
-                  <div className="grid grid-cols-3 gap-2.5 pb-2">
+                  <div className="wd-mg">
                     {result.missed.map((word) => {
                       const isSaved = saved.has(word.id);
                       return (
@@ -1326,20 +1637,14 @@ export function WordDropGame({
                           key={word.id}
                           type="button"
                           onClick={() => void saveMissed(word)}
-                          className={cn(
-                            "relative flex flex-col gap-0.5 rounded-[18px] border-2 bg-[var(--wd-tile)] px-1 pt-3.5 pb-3 text-center text-[var(--wd-tile-ink)]",
-                            isSaved ? "border-[var(--wd-green)]" : "border-transparent",
-                          )}
+                          className={cn("wd-mc", isSaved && "saved")}
                         >
-                          <b className="text-[18px]">{word.en}</b>
-                          <span dir="auto" className="text-[13px] text-[var(--wd-tile-mute)]">
+                          <b>{word.en}</b>
+                          <span dir="auto" className="m">
                             {word.meaning}
                           </span>
                           {isSaved && (
-                            <span
-                              dir="auto"
-                              className="absolute -bottom-2.5 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-full bg-[var(--wd-green)] px-2 py-px text-[10.5px] font-bold whitespace-nowrap text-black"
-                            >
+                            <span dir="auto" className="tag">
                               <Check className="size-3" aria-hidden="true" />
                               {strings.saved}
                             </span>
@@ -1350,53 +1655,6 @@ export function WordDropGame({
                   </div>
                 )}
               </div>
-            </div>
-            <div className="relative flex flex-col gap-2.5 px-5 pb-5 md:mx-auto md:w-full md:max-w-md md:px-0 md:pb-8">
-              {notice && (
-                <p
-                  role="status"
-                  dir="auto"
-                  className="absolute inset-x-5 -top-11 rounded-xl bg-white px-3 py-2 text-center text-[13px] font-semibold text-black"
-                >
-                  {notice}
-                </p>
-              )}
-              {played.own && (
-                <p dir="auto" className="text-center text-[12.5px] text-[var(--wd-mute)]">
-                  {strings.noChallengeOwn}
-                </p>
-              )}
-              <div className={cn("grid gap-2.5", played.seed ? "grid-cols-2" : "grid-cols-1")}>
-                {played.seed && (
-                  <button
-                    type="button"
-                    onClick={() => void onChallenge()}
-                    className="min-h-[50px] rounded-2xl border border-[var(--wd-line)] bg-black px-2 text-[14.5px] font-bold hover:border-[var(--wd-mute)]"
-                  >
-                    {strings.challengeFriend}
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => void onShareCard()}
-                  className="min-h-[50px] rounded-2xl border border-[var(--wd-line)] bg-black px-2 text-[14.5px] font-bold hover:border-[var(--wd-mute)]"
-                >
-                  {strings.shareResult}
-                </button>
-              </div>
-              <button
-                type="button"
-                onClick={() => setScreen("start")}
-                className="min-h-[54px] rounded-2xl border border-[var(--wd-green)] bg-black text-[17px] font-bold text-[var(--wd-green)] transition-colors hover:bg-[var(--wd-green)] hover:text-black active:bg-[var(--wd-green)] active:text-black"
-              >
-                {strings.again}
-              </button>
-              <Link
-                href="/learn"
-                className="grid min-h-[54px] place-items-center rounded-2xl border border-[var(--wd-line)] bg-black text-[15px] font-bold hover:border-[var(--wd-mute)]"
-              >
-                {strings.back}
-              </Link>
             </div>
           </div>
         )}
