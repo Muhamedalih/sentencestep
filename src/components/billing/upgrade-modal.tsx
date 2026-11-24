@@ -12,8 +12,11 @@ import {
   Languages,
   Library,
   ListOrdered,
+  Loader2,
+  Lock,
   MapPin,
-  Sparkles,
+  PencilLine,
+  TrendingUp,
   X,
 } from "lucide-react";
 
@@ -35,11 +38,12 @@ import {
 } from "@/lib/billing/pay-methods";
 import type { PlanView } from "@/lib/billing/plan-views";
 import type { PlanId } from "@/lib/billing/plans";
-import { loadUpgradeModal } from "@/lib/billing/upgrade-modal-actions";
+import { loadUpgradeModal, loadUpgradeProgress } from "@/lib/billing/upgrade-modal-actions";
 import type { UpgradeModalData } from "@/lib/billing/upgrade-modal-actions";
 import { upgradeModalStrings } from "@/lib/billing/upgrade-modal-strings";
 import type { UpgradeModalStrings } from "@/lib/billing/upgrade-modal-strings";
 import { isSupportLocale } from "@/lib/i18n/locales";
+import type { GateProgress } from "@/lib/progress/honest-numbers";
 import { cn } from "@/lib/utils";
 
 /** What opened the pop-up: the address of a plans link, or a locked card's own lesson page. */
@@ -48,6 +52,8 @@ export interface UpgradeModalRequest {
   search: string;
   /** The lesson page a locked card stands for, so paying can lead back to it. */
   next: string | null;
+  /** The title of the locked card that was pressed, shown at the top; null for a plain link. */
+  title: string | null;
   /** Where the press would have gone without the pop-up: used when the pop-up cannot open. */
   fallbackHref: string;
 }
@@ -118,18 +124,28 @@ function ShiningStars({ value, label }: { value: number; label: string }) {
 }
 
 const BIG_BUTTON =
-  "flex h-[68px] w-full items-center justify-center rounded-[20px] bg-[#ececf0] px-4 text-[19px] font-bold text-[#101114] shadow-[0_8px_28px_rgba(255,255,255,0.1),0_6px_18px_rgba(0,0,0,0.5)] outline-none transition duration-150 hover:-translate-y-px hover:bg-white focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#16171d] active:scale-[0.985] disabled:opacity-70 sm:text-[21px]";
+  "upgrade-pulse flex h-[68px] w-full items-center justify-center rounded-[20px] bg-[#ececf0] px-4 text-[19px] font-bold text-[#101114] shadow-[0_8px_28px_rgba(255,255,255,0.1),0_6px_18px_rgba(0,0,0,0.5)] outline-none transition duration-150 hover:-translate-y-px hover:bg-white focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#16171d] active:scale-[0.985] disabled:animate-none disabled:opacity-70 sm:text-[21px]";
 
 /** The egp price of a plan per month, in whole pounds. */
 function egpPerMonth(plan: PlanView): number {
   return Math.round(Number(plan.egp) / PLAN_MONTHS[plan.id]);
 }
 
+/** Starts the pop-up's own reads; whoever opens the pop-up calls it (a press on the mouse already does, a moment before the click). */
+export function startUpgradeModalLoad(
+  request: UpgradeModalRequest,
+): Promise<UpgradeModalData | null> {
+  return loadUpgradeModal(request.search, request.next);
+}
+
 export function UpgradeModal({
   request,
+  dataPromise,
   onClose,
 }: {
   request: UpgradeModalRequest;
+  /** The pop-up's figures (see startUpgradeModalLoad), already on their way when this opens. */
+  dataPromise: Promise<UpgradeModalData | null>;
   onClose: () => void;
 }) {
   const router = useRouter();
@@ -138,34 +154,44 @@ export function UpgradeModal({
   const titleId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
   const [data, setData] = useState<UpgradeModalData | null>(null);
+  const [slow, setSlow] = useState(false);
 
-  // The figures come from the server only now that the pop-up is open; if there are none (the
-  // permission closed, already subscribed, an error) the press goes where it always went.
+  // The pop-up appears whole, once its figures are here (the dimmed page answers the press at once
+  // and a small spinner shows only if that takes a while): never a window with a missing button. If
+  // there are no figures (the permission closed, already subscribed, an error) the press goes where
+  // it always went.
+  const fallbackHref = request.fallbackHref;
   useEffect(() => {
     let active = true;
     const fallback = () => {
       if (!active) return;
       onClose();
-      router.push(request.fallbackHref);
+      router.push(fallbackHref);
     };
-    loadUpgradeModal(request.search, request.next)
+    dataPromise
       .then((result) => {
         if (!active) return;
         if (!result) fallback();
         else setData(result);
       })
       .catch(fallback);
+    const timer = window.setTimeout(() => setSlow(true), 400);
     return () => {
       active = false;
+      window.clearTimeout(timer);
     };
-  }, [request, router, onClose]);
+  }, [dataPromise, fallbackHref, router, onClose]);
+
+  // Focus moves into the pop-up as soon as it is drawn.
+  useEffect(() => {
+    if (data) panelRef.current?.focus();
+  }, [data]);
 
   // Escape closes, Tab stays inside, the page behind does not scroll, and focus goes back where it was.
   useEffect(() => {
     const before = document.activeElement as HTMLElement | null;
     const overflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    panelRef.current?.focus();
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         onClose();
@@ -202,78 +228,107 @@ export function UpgradeModal({
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <div
-        ref={panelRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        tabIndex={-1}
-        className="animate-in fade-in slide-in-from-bottom-6 relative max-h-[94dvh] w-full max-w-[470px] overflow-y-auto rounded-t-[26px] border border-[#2a2c37] bg-[#16171d] px-5 pt-7 pb-[max(1.25rem,env(safe-area-inset-bottom))] text-white duration-200 outline-none sm:rounded-[26px] sm:px-[22px]"
-      >
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label={s.close}
-          className="absolute top-4 right-4 z-10 grid size-9 place-items-center rounded-full border border-[#2f313d] bg-[#1b1c23] text-[#d6d7e0] transition-colors outline-none hover:bg-[#23252e] focus-visible:ring-2 focus-visible:ring-white"
+      {data ? (
+        <div
+          ref={panelRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={titleId}
+          tabIndex={-1}
+          className="animate-in fade-in slide-in-from-bottom-6 relative max-h-[94dvh] w-full max-w-[470px] overflow-y-auto rounded-t-[26px] border border-[#2a2c37] bg-[#16171d] px-5 pt-7 pb-[max(1.25rem,env(safe-area-inset-bottom))] text-white duration-200 outline-none sm:rounded-[26px] sm:px-[22px]"
         >
-          <X className="size-[18px]" aria-hidden="true" />
-        </button>
-
-        {data ? (
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={s.close}
+            className="absolute top-4 right-4 z-10 grid size-9 place-items-center rounded-full border border-[#2f313d] bg-[#1b1c23] text-[#d6d7e0] transition-colors outline-none hover:bg-[#23252e] focus-visible:ring-2 focus-visible:ring-white"
+          >
+            <X className="size-[18px]" aria-hidden="true" />
+          </button>
           <Content
             key={request.search + request.next}
             data={data}
             request={request}
             s={s}
             titleId={titleId}
+            rowDir={locale === "ar" ? "rtl" : "ltr"}
           />
-        ) : (
-          <OfferShell
-            s={s}
-            titleId={titleId}
-            data={null}
-            cta={<div className="h-[68px] animate-pulse rounded-[20px] bg-white/15" />}
+        </div>
+      ) : (
+        slow && (
+          <Loader2
+            role="status"
+            aria-label={s.loading}
+            className="size-8 animate-spin text-white/70"
           />
-        )}
-      </div>
+        )
+      )}
     </div>
   );
 }
 
-/** Step one's text, shared by the loading state and the loaded one. */
-function OfferShell({
+/** Step one: the words, the rating, the things the library gives, the price line and the one button. */
+function OfferStep({
   s,
   titleId,
   data,
+  request,
+  progress,
+  rowDir,
   cta,
 }: {
   s: UpgradeModalStrings;
   titleId: string;
-  data: UpgradeModalData | null;
+  data: UpgradeModalData;
+  request: UpgradeModalRequest;
+  progress: GateProgress | null;
+  rowDir: "rtl" | "ltr";
   cta: ReactNode;
 }) {
-  const best = data?.plans.find((plan) => plan.badge === "best-value") ?? data?.plans.at(-1);
-  const benefits: { icon: ReactNode; text: string }[] = [
-    { icon: <Library className="size-[18px]" aria-hidden="true" />, text: s.benefitStories },
-    { icon: <ListOrdered className="size-[18px]" aria-hidden="true" />, text: s.benefitLessons },
-    { icon: <Languages className="size-[18px]" aria-hidden="true" />, text: s.benefitWordLists },
-    ...(data
+  const best = data.plans.find((plan) => plan.badge === "best-value") ?? data.plans.at(-1);
+  const rows: { icon: ReactNode; title: string; text: string }[] = [
+    {
+      icon: <Library className="size-5" aria-hidden="true" />,
+      title: s.rowStoriesTitle,
+      text: s.rowStoriesText,
+    },
+    {
+      icon: <ListOrdered className="size-5" aria-hidden="true" />,
+      title: s.rowLessonsTitle,
+      text: s.rowLessonsText,
+    },
+    {
+      icon: <Languages className="size-5" aria-hidden="true" />,
+      title: s.rowWordsTitle,
+      text: s.rowWordsText,
+    },
+    ...(data.passagesOpen
       ? [
-          data.passagesOpen
-            ? {
-                icon: <Headphones className="size-[18px]" aria-hidden="true" />,
-                text: s.benefitPassages,
-              }
-            : {
-                icon: <Sparkles className="size-[18px]" aria-hidden="true" />,
-                text: s.benefitNewFeatures,
-              },
+          {
+            icon: <Headphones className="size-5" aria-hidden="true" />,
+            title: s.rowPassagesTitle,
+            text: s.rowPassagesText,
+          },
         ]
       : []),
+    {
+      icon: <TrendingUp className="size-5" aria-hidden="true" />,
+      title: s.rowGrowingTitle,
+      text: s.rowGrowingText,
+    },
   ];
 
   return (
     <>
+      {request.title && (
+        <div className="mr-11 mb-3 flex w-fit max-w-full items-center gap-2 rounded-[10px] border border-[#2a2c37] bg-[#1d1f29] px-2.5 py-1.5 text-xs text-[#a9acc0]">
+          <Lock className="size-3.5 shrink-0" aria-hidden="true" />
+          <span dir="auto" className="shrink-0">
+            {s.contextLabel}
+          </span>
+          <bdi className="truncate font-medium text-white">{request.title}</bdi>
+        </div>
+      )}
       <h2
         id={titleId}
         dir="auto"
@@ -281,46 +336,76 @@ function OfferShell({
       >
         {s.heading}
       </h2>
-      <p dir="auto" className="mb-2.5 text-center text-sm text-[#a9acc0]">
+      <p dir="auto" className="mb-2.5 text-center text-sm text-[#b9bccf]">
         {s.subheading}
       </p>
-      <div className="mb-[18px] flex h-6 items-center justify-center gap-2 text-[12.5px] text-[#a9acc0]">
-        {data?.rating && (
-          <>
-            <span dir="auto">{s.ratingsLine.replace("{count}", data.rating.count)}</span>
-            <span aria-hidden="true">·</span>
-            <b dir="ltr" className="text-sm font-medium text-white">
-              {data.rating.average}
-            </b>
-            <ShiningStars
-              value={Number(data.rating.average)}
-              label={s.ratingAria.replace("{rating}", data.rating.average)}
-            />
-          </>
+      {data.rating && (
+        <div className="mb-3.5 flex items-center justify-center gap-2 text-[12.5px] text-[#a9acc0]">
+          <span dir="auto">{s.ratingsLine.replace("{count}", data.rating.count)}</span>
+          <span aria-hidden="true">·</span>
+          <b dir="ltr" className="text-sm font-medium text-white">
+            {data.rating.average}
+          </b>
+          <ShiningStars
+            value={Number(data.rating.average)}
+            label={s.ratingAria.replace("{rating}", data.rating.average)}
+          />
+        </div>
+      )}
+
+      {/* The learner's own progress, when the second read brings it: it slides open, nothing jumps. */}
+      <div
+        className={cn(
+          "grid transition-[grid-template-rows] duration-300 ease-out",
+          progress ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
         )}
+      >
+        <div className="min-h-0 overflow-hidden">
+          {progress && (
+            <p
+              dir="auto"
+              className="mb-3.5 flex items-center gap-2.5 rounded-[14px] border border-[#2e3558] bg-[#1b1f33] px-3 py-2.5 text-[13.5px] leading-6"
+            >
+              <PencilLine className="size-5 shrink-0 text-[#9aa8ff]" aria-hidden="true" />
+              <span>
+                <Template
+                  text={progress.days === null ? s.progressSentences : s.progressBoth}
+                  values={{
+                    sentences: <Amount strong>{progress.sentences}</Amount>,
+                    days: <Amount strong>{progress.days ?? 0}</Amount>,
+                  }}
+                />
+              </span>
+            </p>
+          )}
+        </div>
       </div>
 
-      <ul className="mb-[18px] overflow-hidden rounded-[18px] border border-[#2a2c37]">
-        {benefits.map((benefit) => (
+      <ul className="mb-3.5 overflow-hidden rounded-[18px] border border-[#2a2c37]">
+        {rows.map((row) => (
           <li
-            key={benefit.text}
+            key={row.title}
+            dir={rowDir}
             className="flex items-center gap-3 border-t border-[#2a2c37] px-3.5 py-3 first:border-t-0"
           >
             <span
               aria-hidden="true"
-              className="grid size-[38px] shrink-0 place-items-center rounded-[11px] border border-[#30323f] bg-[#232530] text-[#e6e7ef]"
+              className="grid size-10 shrink-0 place-items-center rounded-xl border border-[#30323f] bg-[#232530] text-[#e6e7ef]"
             >
-              {benefit.icon}
+              {row.icon}
             </span>
-            <span dir="auto" className="text-[14.5px] leading-6 font-medium">
-              {benefit.text}
+            <span className="min-w-0 flex-1 text-start">
+              <span className="block text-[15px] leading-[1.45] font-medium">{row.title}</span>
+              <span className="mt-px block text-[12.5px] leading-normal text-[#a9acc0]">
+                {row.text}
+              </span>
             </span>
           </li>
         ))}
       </ul>
 
       {best && (
-        <p dir="auto" className="mb-4 text-center text-[13px] leading-7 text-[#a9acc0]">
+        <p dir="auto" className="mb-3.5 text-center text-[13px] leading-7 text-[#a9acc0]">
           <Template
             text={s.compareLine}
             values={{ amount: <Amount strong>{best.perMonth}</Amount> }}
@@ -341,15 +426,18 @@ function Content({
   request,
   s,
   titleId,
+  rowDir,
 }: {
   data: UpgradeModalData;
   request: UpgradeModalRequest;
   s: UpgradeModalStrings;
   titleId: string;
+  rowDir: "rtl" | "ltr";
 }) {
   const { t, locale } = useLocale();
   const formId = useId();
   const [step, setStep] = useState<"offer" | "pay">("offer");
+  const [progress, setProgress] = useState<GateProgress | null>(null);
   const [state, formAction, pending] = useActionState(startCheckout, initialState);
   const best = data.plans.find((plan) => plan.badge === "best-value") ?? data.plans.at(-1)!;
   const startsWithEgypt = data.signedIn && data.egyptWalletOpen && data.preferEgyptWallet;
@@ -371,6 +459,20 @@ function Content({
     return () => window.removeEventListener("pageshow", onPageShow);
   }, []);
 
+  // The learner's own figures are asked once the pop-up is open (never waited for), and only for a signed-in learner.
+  useEffect(() => {
+    if (!data.signedIn) return;
+    let active = true;
+    loadUpgradeProgress()
+      .then((result) => {
+        if (active && result) setProgress(result);
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [data.signedIn]);
+
   const startAmount = startsWithEgypt ? `${egpPerMonth(best)} ${s.egpUnit}` : best.perMonth;
 
   if (step === "offer") {
@@ -387,7 +489,17 @@ function Content({
         </span>
       </Link>
     );
-    return <OfferShell s={s} titleId={titleId} data={data} cta={cta} />;
+    return (
+      <OfferStep
+        s={s}
+        titleId={titleId}
+        data={data}
+        request={request}
+        progress={progress}
+        rowDir={rowDir}
+        cta={cta}
+      />
+    );
   }
 
   const cardDescription = data.showIraqiWallets

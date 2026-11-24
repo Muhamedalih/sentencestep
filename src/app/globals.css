@@ -1223,3 +1223,28 @@ html[data-keyboard] .kb-hide {
     animation: none;
   }
 }
+
+/* The white button of the upgrade pop-up (upgradeModal): a high flash, then a low one, steadily. */
+@keyframes upgrade-pulse {
+  0%,
+  100% {
+    background-color: #e7e8ee;
+    box-shadow:
+      0 0 0 0 rgba(255, 255, 255, 0),
+      0 8px 22px rgba(255, 255, 255, 0.08);
+  }
+  50% {
+    background-color: #f8f8fb;
+    box-shadow:
+      0 0 0 5px rgba(255, 255, 255, 0.08),
+      0 8px 34px rgba(255, 255, 255, 0.3);
+  }
+}
+.upgrade-pulse {
+  animation: upgrade-pulse 2.5s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .upgrade-pulse {
+    animation: none;
+  }
+}
