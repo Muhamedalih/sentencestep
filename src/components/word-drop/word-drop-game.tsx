@@ -554,6 +554,13 @@ export function WordDropGame({
 
   const missWord = useCallback(
     (r: Round, live: Live) => {
+      // Was the learner typing this very word? Then the letters typed so far belong to a word that is gone.
+      const wasTyping =
+        r.typedValue !== "" &&
+        pickTarget(
+          r.typedValue,
+          r.live.map((other) => ({ en: other.word.en, y: other.y, other })),
+        )?.other.uid === live.uid;
       r.live = r.live.filter((other) => other.uid !== live.uid);
       if (!r.missed.some((word) => word.id === live.word.id)) r.missed.push(live.word);
       r.deck.requeue(live.word);
@@ -573,12 +580,12 @@ export function WordDropGame({
         r.typedValue,
         r.live.map((other) => ({ en: other.word.en, y: other.y, other })),
       );
-      if (r.typedValue !== "" && target === null) {
+      if (r.typedValue !== "" && (wasTyping || target === null)) {
         r.typedValue = "";
         r.prevLen = 0;
         setTyped("");
       }
-      setLockUid(target ? target.other.uid : null);
+      setLockUid(wasTyping ? null : target ? target.other.uid : null);
       setHit((count) => count + 1);
       popAt(
         popLabel(live.word),
