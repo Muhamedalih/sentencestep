@@ -170,7 +170,10 @@ async function loadFinishedSentences(
 
 /** Whether a rule is due and nothing has been asked today yet: the Today carry-on sends the learner here first. */
 export async function hasRuleDueToday(userId: string, todayISO: string): Promise<boolean> {
-  const states = await fetchLearnerRuleStates(userId).catch(() => []);
+  // The Today carry-on is the English one: German rules (permission germanTrack) are asked from their own Home.
+  const states = (await fetchLearnerRuleStates(userId).catch(() => [])).filter(
+    (row) => languageOfRuleId(row.ruleId) === "en",
+  );
   const due = states.some((row) => row.dueOn <= todayISO);
   const askedToday = states.some((row) => row.lastReviewedOn === todayISO);
   return due && !askedToday;
