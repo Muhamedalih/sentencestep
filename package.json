@@ -54,7 +54,7 @@
     "check:locale-backfill": "tsx scripts/verify-locale-backfill.ts",
     "prepare": "husky",
     "test:home-cards": "tsx --test src/components/home-cards/*.test.ts src/lib/video-dictation/finishes.test.ts src/lib/weak-words/hints.test.ts",
-    "test:return-loop": "tsx --test src/lib/return-loop/return-loop.test.ts"
+    "test:return-loop": "tsx --test src/lib/return-loop/return-loop.test.ts src/lib/signup-landing/signup-landing.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.117.1",

@@ -66,6 +66,7 @@ export const ROLLOUT_IDS = [
   "germanTrack",
   "wordDrop",
   "upgradeModal",
+  "signupLanding",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -747,6 +748,20 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "Only the way in changes: the prices, the plans, the payment methods, the terms and every check on the server are the ones the plans page uses (the same checkout action).",
       "The pop-up asks the server for its figures only when it opens, so no page gets slower. A visitor who is not signed in, or who already has Premium, is sent to the plans page as before.",
       "The plans page itself, the emails that link to it and the pages shown after paying are untouched.",
+      "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
+    ],
+  },
+  signupLanding: {
+    id: "signupLanding",
+    audience: "learner",
+    title: "After sign-up: straight into the next lesson",
+    description:
+      "A visitor who finishes the opening lesson and signs up from the first-run sign-up page (Google or email) lands directly on their next lesson, chosen by the same rule as Home, instead of on Home. Until now everyone landed on Home, and about 3 in 10 new accounts left there without starting anything (2026-11-25 read).",
+    notes: [
+      "Only the page they land on changes: sign-up, the account, the saved progress, the lesson itself and Home are untouched. Home is one tap away from the lesson as always.",
+      "The next lesson is worked out once, when the sign-up page opens (the lesson catalog only, no account read), and travels in the sign-in link's `next` parameter, which every sign-in already checks stays on our own site. If nothing is found the visitor lands on Home as before.",
+      "It does not run for a visitor who signs in to an account they already have, or who presses “Later”: both still go to Home.",
+      "To compare: USER_SIGNED_UP against the first LESSON_STARTED / STORY_STARTED of the same account within an hour, before and after it is opened.",
       "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
     ],
   },

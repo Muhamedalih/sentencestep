@@ -18,7 +18,9 @@ import { Button } from "@/components/ui/button";
 import { fetchReturnHookAction } from "@/lib/return-loop/actions";
 import { lessonFromPath, writeReturnMarker } from "@/lib/return-loop/marker";
 import { LESSON_MINUTES } from "@/lib/session-end/summary";
+import { fetchSignupLandingAction } from "@/lib/signup-landing/actions";
 import { signInWithGoogle } from "@/lib/supabase/auth-actions";
+import { authPageHref } from "@/lib/supabase/safe-redirect";
 
 /**
  * The page after the opening lesson in the short first run (it replaces OnboardingLessonComplete
@@ -34,6 +36,10 @@ import { signInWithGoogle } from "@/lib/supabase/auth-actions";
  * by name and the "remind me" ask on this page; a visitor without an account leaves a note in their own
  * browser (nothing is sent) so that, if they sign up, Home shows the same card once (see ReturnWelcome).
  *
+ * The signupLanding permission: a visitor who signs up from here (Google or email) lands on their next
+ * lesson, worked out once when this opens and sent along as the sign-in's `next`, instead of on Home.
+ * "Later" and "Sign in" still go to Home.
+ *
  * The Google button is the same form as on the sign-up page. Inside Facebook's and Instagram's own
  * browsers that page can swap it for the "open in your browser" strip (the inAppStrip permission);
  * that strip opens the CURRENT page in the outside browser, which here would be the lesson without
@@ -48,6 +54,27 @@ export function SignupPrompt({ words, accuracy }: { words: number; accuracy: num
   const [hook, setHook] = useState<(ReturnPlanData & { minutes: number }) | null>(null);
   const plan = useReturnPlan("opener", hook);
   const returnLoop = features.rollouts.returnLoop;
+  const signupLanding = features.rollouts.signupLanding;
+  const [landing, setLanding] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!signupLanding || userId) return;
+    const lesson = lessonFromPath(pathname);
+    if (!lesson) return;
+    let cancelled = false;
+    fetchSignupLandingAction({
+      mode: lesson.mode,
+      lessonId: lesson.lessonId,
+      guestStartingLevel: null,
+    })
+      .then((href) => {
+        if (!cancelled) setLanding(href);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [signupLanding, userId, pathname]);
 
   useEffect(() => {
     if (!returnLoop) return;
@@ -151,6 +178,7 @@ export function SignupPrompt({ words, accuracy }: { words: number; accuracy: num
               </ul>
 
               <form action={signInWithGoogle} className="mt-6 w-full">
+                {landing && <input type="hidden" name="next" value={landing} />}
                 <Button
                   type="submit"
                   size="lg"
@@ -161,7 +189,7 @@ export function SignupPrompt({ words, accuracy }: { words: number; accuracy: num
                 </Button>
               </form>
               <Button size="lg" variant="outline" asChild className="mt-3 h-12 w-full">
-                <Link href="/register">{s.emailCta}</Link>
+                <Link href={authPageHref("/register", landing)}>{s.emailCta}</Link>
               </Button>
 
               <p dir="auto" className="mt-5 text-sm">
