@@ -63,6 +63,7 @@ export const videoKinds: Readonly<Record<string, VideoKind>> = {
   "usual-suspects": "english",
   "ponyo-ramen": "other",
   "dreamworks-ante": "other",
+  "kiki-meets-ursula": "other",
 };
 
 /**
@@ -78,4 +79,5 @@ export const wideVideoIds: ReadonlySet<string> = new Set([
   "sea-level-rise",
   "usual-suspects",
   "dreamworks-ante",
+  "kiki-meets-ursula",
 ]);
