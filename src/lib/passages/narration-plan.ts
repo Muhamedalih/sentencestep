@@ -121,6 +121,8 @@ export interface NarrationVoice {
   id: string;
   name: string;
   gender: "female" | "male";
+  /** The language the voice was registered for ("en", "de"); missing = English. */
+  language?: string;
   /** The id ElevenLabs knows the voice by — what "the same voice" means. */
   providerVoiceId: string;
   /** A short sample of the voice an admin can listen to before choosing it. */
