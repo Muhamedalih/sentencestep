@@ -756,7 +756,7 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
     audience: "learner",
     title: "After sign-up: straight into the next lesson",
     description:
-      "A visitor who finishes the opening lesson and signs up from the first-run sign-up page (Google or email) lands directly on their next lesson, chosen by the same rule as Home, instead of on Home. Until now everyone landed on Home, and about 3 in 10 new accounts left there without starting anything (2026-11-25 read).",
+      "A visitor who finishes the opening lesson and signs up from the first-run sign-up page (Google or email) lands directly on their next lesson, chosen by the same rule as Home, instead of on Home. Until now everyone landed on Home, and about 2 in 10 new accounts (21% over 13 days, 27% from Instagram, 18% from Google) did nothing in their first 24 hours (2026-11-25 read).",
     notes: [
       "Only the page they land on changes: sign-up, the account, the saved progress, the lesson itself and Home are untouched. Home is one tap away from the lesson as always.",
       "The next lesson is worked out once, when the sign-up page opens (the lesson catalog only, no account read), and travels in the sign-in link's `next` parameter, which every sign-in already checks stays on our own site. If nothing is found the visitor lands on Home as before.",
