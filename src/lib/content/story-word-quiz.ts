@@ -42,7 +42,7 @@ interface PoolEntry {
 }
 
 function stripPunctuation(word: string): string {
-  return word.replace(/^[^A-Za-z']+|[^A-Za-z']+$/g, "");
+  return word.replace(/^[^\p{L}']+|[^\p{L}']+$/gu, "");
 }
 
 function storyNumber(lessonId: string): number {
