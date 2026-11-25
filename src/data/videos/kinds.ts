@@ -13,6 +13,7 @@ import type { VideoKind } from "@/lib/video-dictation/types";
  */
 export const videoKinds: Readonly<Record<string, VideoKind>> = {
   "if-street-interviews-were-not-staged": "comedy",
+  "kiki-packs-trip": "comedy",
   "what-she-really-means": "comedy",
   "urns-for-true-love": "comedy",
   "nitwit-villager": "comedy",
