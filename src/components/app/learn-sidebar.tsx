@@ -148,16 +148,16 @@ export function LearnSidebar({
                   : pathname.startsWith("/learn/word-drop")
                     ? "word-drop"
                     : pathname.startsWith("/learn/word-lists")
-                    ? "word-lists"
-                    : pathname.startsWith("/learn/words")
-                      ? wordsHub
-                        ? "word-lists"
-                        : "words"
-                      : pathname.startsWith("/learn/library")
-                        ? "library"
-                        : pathname.startsWith("/learn/rules")
-                          ? "rules"
-                          : null;
+                      ? "word-lists"
+                      : pathname.startsWith("/learn/words")
+                        ? wordsHub
+                          ? "word-lists"
+                          : "words"
+                        : pathname.startsWith("/learn/library")
+                          ? "library"
+                          : pathname.startsWith("/learn/rules")
+                            ? "rules"
+                            : null;
 
   // Stories and Ordinary Lessons collapse into one "Stories" nav item, which
   // opens on /learn/normal (Daily Lessons) by default — see the
@@ -396,7 +396,7 @@ export function LearnSidebar({
             navLink,
             <div
               key={`${item.key}-sub-nav`}
-              className="hidden md:flex md:flex-col md:gap-0.5 md:ps-9 md:pe-3"
+              className="hidden md:flex md:flex-col md:gap-0.5 md:ps-6 md:pe-3"
             >
               {subItems.map((subItem) => (
                 <SidebarLink
@@ -404,7 +404,9 @@ export function LearnSidebar({
                   href={subItem.href}
                   isActive={subItem.isSubActive}
                   className={cn(
-                    "rounded-lg px-3 py-2 text-sm font-medium whitespace-nowrap pointer-coarse:min-h-11 pointer-coarse:py-3",
+                    // A long name (Spanish: «Lecciones normales (escritura)») wraps inside its own pill
+                    // instead of running out past the sidebar's edge.
+                    "rounded-lg px-3 py-2 text-sm leading-snug font-medium pointer-coarse:min-h-11 pointer-coarse:py-3",
                     subItem.isSubActive
                       ? "text-foreground bg-foreground/[0.065]"
                       : "text-muted-foreground hover:text-foreground hover:bg-foreground/[0.04]",

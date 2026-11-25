@@ -1,7 +1,9 @@
 import { isAdmin } from "@/lib/admin/access";
 import { hasPremiumAccess } from "@/lib/billing/access";
 import type { EffectiveFeatures } from "@/lib/features/config";
+import { getLocale } from "@/lib/i18n/get-locale";
 import { openablePassages } from "@/lib/passages/access";
+import { localizeSummary } from "@/lib/passages/localize";
 import { fetchPassageProgress, fetchPassageSummaries } from "@/lib/passages/queries";
 import { homeCardPick } from "@/lib/passages/progress";
 import type { PassageLevel, PassageTone } from "@/lib/passages/types";
@@ -61,7 +63,7 @@ export async function loadPassagesHomeCard(
       new Map(progress.map((entry) => [entry.passageId, entry])),
     );
     if (!pick) return null;
-    const { passage } = pick;
+    const passage = localizeSummary(pick.passage, await getLocale());
     return {
       mode: pick.mode,
       sectionsDone: pick.sectionsDone,

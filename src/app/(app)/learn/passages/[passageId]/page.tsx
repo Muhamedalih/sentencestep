@@ -19,6 +19,7 @@ import { getLocale } from "@/lib/i18n/get-locale";
 import { pauseMarksFor } from "@/lib/passages/admin-pauses";
 import { canOpenPassage, openablePassages } from "@/lib/passages/access";
 import { arrangedExam } from "@/lib/passages/exam";
+import { localizePassage } from "@/lib/passages/localize";
 import { resumeSectionIndex } from "@/lib/passages/progress";
 import { fetchPassage, fetchPassageProgress, fetchPassageSummaries } from "@/lib/passages/queries";
 import { getGateFigures } from "@/lib/stats/gate-figures";
@@ -68,14 +69,21 @@ export default async function PassageReaderPage({
   if (!features.passages.enabled) notFound();
 
   const { passageId } = await params;
-  const [passage, summaries, user, locale, isAdminUser] = await Promise.all([
+  const [fetched, summaries, user, locale, isAdminUser] = await Promise.all([
     fetchPassage(passageId),
     fetchPassageSummaries(),
     getCurrentUser(),
     getLocale(),
     isAdmin(),
   ]);
-  if (!passage || passage.sections.length === 0) notFound();
+  if (!fetched || fetched.sections.length === 0) notFound();
+  // The Arabic fields of the passage and of its exam are swapped for the learner's own language when it
+  // is Spanish or Turkish (see lib/passages/localize.ts); `translationAvailable` says whether any exists.
+  const {
+    passage,
+    exam: examSeed,
+    available: translationAvailable,
+  } = localizePassage(fetched, PASSAGE_EXAMS[fetched.id], locale);
   // A draft is an admin's preview: nobody else can open it, nor learn it exists.
   if (passage.status !== "published" && !isAdminUser) notFound();
 
@@ -131,9 +139,9 @@ export default async function PassageReaderPage({
               order={passage.order}
               posterUrl={passage.posterUrl}
               title={passage.title}
-              titleAr={passage.titleAr}
+              titleAr={translationAvailable ? passage.titleAr : ""}
               summary={passage.summary}
-              summaryAr={passage.summaryAr}
+              summaryAr={translationAvailable ? passage.summaryAr : ""}
               fromPrice={fromPrice}
               pay={pay}
               progress={progress}
@@ -181,13 +189,11 @@ export default async function PassageReaderPage({
         passage={passage}
         // The full exam after the last part (the "passageExam" permission): five new questions,
         // read from the code on the server, so only this passage's five ever reach the browser.
-        exam={
-          features.rollouts.passageExam ? arrangedExam(passage.id, PASSAGE_EXAMS[passage.id]) : []
-        }
+        exam={features.rollouts.passageExam ? arrangedExam(passage.id, examSeed) : []}
         pauseMarks={pauseMarks}
         initialSectionIndex={resumeSectionIndex(progress, passage.sections.length)}
-        // Only Arabic translations are written so far (see PassageSentence.ar).
-        translationAvailable={locale === "ar"}
+        // Arabic, Spanish and Turkish translations are written (see PassageSentence.ar).
+        translationAvailable={translationAvailable}
         nextPassage={next ? { id: next.id, title: next.title } : null}
         // The taste of the day finished: the end screen offers the full plan (see lib/hybrid/moments.ts).
         hybridMoment={

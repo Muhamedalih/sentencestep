@@ -83,8 +83,12 @@ export function PassageCard({
           >
             {passage.title}
           </h3>
-          {locale === "ar" && (
-            <p className="mt-1.5 text-sm text-white/75" dir="rtl" lang="ar">
+          {locale !== null && passage.titleAr !== "" && (
+            <p
+              className="mt-1.5 text-sm text-white/75"
+              dir={locale === "ar" ? "rtl" : "ltr"}
+              lang={locale}
+            >
               {passage.titleAr}
             </p>
           )}

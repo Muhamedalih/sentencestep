@@ -76,17 +76,16 @@ export function PassageLocked({
   /** The lean card's extras when the "leanGate" permission is open for this visitor (see getGateLean). */
   lean?: GateLean | null;
 }) {
-  const { t, locale } = useLocale();
-  const arabic = locale === "ar";
+  const { t } = useLocale();
 
   return (
     <PremiumGate
       preview={<PosterArt tone={tone} order={order} posterUrl={posterUrl} />}
       badge={t.passages.lockedBadge}
       title={title}
-      supportTitle={arabic ? titleAr : undefined}
+      supportTitle={titleAr || undefined}
       description={summary}
-      supportDescription={arabic ? summaryAr : undefined}
+      supportDescription={summaryAr || undefined}
       heading={t.passages.gateHeading}
       subheading={t.premium.gateSubheading}
       benefits={[
