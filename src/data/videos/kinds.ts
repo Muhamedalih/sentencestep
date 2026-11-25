@@ -62,6 +62,7 @@ export const videoKinds: Readonly<Record<string, VideoKind>> = {
   "sea-level-rise": "english",
   "usual-suspects": "english",
   "ponyo-ramen": "other",
+  "kikis-room-with-a-view": "other",
   "dreamworks-ante": "other",
   "kiki-meets-ursula": "other",
 };
