@@ -55,6 +55,20 @@ export default async function StoriesLibraryPage() {
     isAdminUser && !learnerView
       ? await getDraftLessonSummaries("stories", locale ?? undefined, language).catch(() => [])
       : [];
+  // A German story (id "de-<english id>") wears the drawing of its English twin: copied, nothing new is drawn.
+  const coverTitles: Record<string, string> = {};
+  if (language === "de") {
+    const englishDrafts = await getDraftLessonSummaries("stories", locale ?? undefined, "en").catch(
+      () => [],
+    );
+    const englishTitles = new Map(
+      [...lessons, ...englishDrafts].map((lesson) => [lesson.id, lesson.title] as const),
+    );
+    for (const lesson of draftLessons) {
+      const title = englishTitles.get(lesson.id.replace(/^de-/, ""));
+      if (title) coverTitles[lesson.id] = title;
+    }
+  }
   const listedLessons =
     language === "de"
       ? draftLessons
@@ -98,6 +112,7 @@ export default async function StoriesLibraryPage() {
         openTodayId={openTodayId}
         recallCount={recallCount}
         readiness={readiness}
+        coverTitles={coverTitles}
       />
       {/* The dashboard layout's floating pill covers this page on desktop
           already (max-sm:hidden) — this is only the mobile fallback, same
