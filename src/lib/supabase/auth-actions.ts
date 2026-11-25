@@ -120,7 +120,7 @@ export async function signUp(
   const t = locale ? getDictionary(locale) : fallbackDictionary;
 
   if (!email || !password) return { error: t.auth.errors.missingFields };
-  if (password.length < 6) return { error: t.auth.errors.passwordTooShort };
+  if (password.length < 8) return { error: t.auth.errors.passwordTooShort };
   if (hasAngleBrackets(displayName)) return { error: angleBracketsError(locale) };
 
   // Bot-signup protection — see verify.ts's own doc comment for why this
@@ -300,7 +300,7 @@ export async function updatePasswordAction(
   const t = locale ? getDictionary(locale) : fallbackDictionary;
 
   if (!password || !confirmPassword) return { error: t.auth.errors.missingFields };
-  if (password.length < 6) return { error: t.auth.errors.passwordTooShort };
+  if (password.length < 8) return { error: t.auth.errors.passwordTooShort };
   if (password !== confirmPassword) return { error: t.auth.errors.passwordMismatch };
 
   try {

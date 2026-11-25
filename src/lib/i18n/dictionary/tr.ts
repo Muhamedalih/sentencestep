@@ -361,7 +361,7 @@ export const tr: Dictionary = {
     registerSubtitle: "Ücretsiz dersler ücretsiz kalır: bu yalnızca ilerlemenizi kaydeder.",
     displayNameLabel: "Görünen ad",
     optional: "(isteğe bağlı)",
-    passwordHint: "En az 6 karakter.",
+    passwordHint: "En az 8 karakter.",
     creatingAccount: "Hesap oluşturuluyor…",
     hasAccount: "Zaten bir hesabınız var mı?",
     notConfiguredHeading: "Giriş henüz kullanılamıyor",
@@ -370,7 +370,7 @@ export const tr: Dictionary = {
     errors: {
       invalidCredentials: "E-posta veya şifre yanlış.",
       accountExists: "Bu e-posta adresiyle zaten bir hesap var.",
-      passwordTooShort: "Şifre en az 6 karakter olmalıdır.",
+      passwordTooShort: "Şifre en az 8 karakter olmalıdır.",
       invalidEmail: "Geçerli bir e-posta adresi girin.",
       emailRateLimited: "Çok fazla onay e-postası istendi. Bir süre bekleyip tekrar deneyin.",
       confirmationEmailFailed:

@@ -369,7 +369,7 @@ export const es: Dictionary = {
       "Las lecciones gratuitas siguen siendo gratuitas: esto solo guarda tu progreso.",
     displayNameLabel: "Nombre para mostrar",
     optional: "(opcional)",
-    passwordHint: "Al menos 6 caracteres.",
+    passwordHint: "Al menos 8 caracteres.",
     creatingAccount: "Creando cuenta…",
     hasAccount: "¿Ya tienes una cuenta?",
     notConfiguredHeading: "El inicio de sesión aún no está disponible",
@@ -378,7 +378,7 @@ export const es: Dictionary = {
     errors: {
       invalidCredentials: "Correo electrónico o contraseña incorrectos.",
       accountExists: "Ya existe una cuenta con este correo electrónico.",
-      passwordTooShort: "La contraseña debe tener al menos 6 caracteres.",
+      passwordTooShort: "La contraseña debe tener al menos 8 caracteres.",
       invalidEmail: "Ingresa una dirección de correo electrónico válida.",
       emailRateLimited:
         "Se han solicitado demasiados correos de confirmación. Espera un momento e inténtalo de nuevo.",

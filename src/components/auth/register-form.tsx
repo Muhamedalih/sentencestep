@@ -128,7 +128,7 @@ export function RegisterForm({
               name="password"
               autoComplete="new-password"
               required
-              minLength={6}
+              minLength={8}
               aria-invalid={Boolean(state?.error)}
               showLabel={t.auth.showPassword}
               hideLabel={t.auth.hidePassword}
