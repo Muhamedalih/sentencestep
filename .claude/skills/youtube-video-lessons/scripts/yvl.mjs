@@ -2,7 +2,7 @@
 /**
  * One entry point for the youtube-video-lessons skill:
  *   node .claude/skills/youtube-video-lessons/scripts/yvl.mjs <command> [options]
- * Commands, in workflow order: inspect, capture, split, plan, fill, check, build, verify.
+ * Commands, in workflow order: inspect, capture, split, plan, fill, i18n, check, build, verify.
  * Every command prints a short readout and keeps its working files in <VIDEO_PREP_HOME>/drafts
  * (default C:/Looma-tools/video-prep/drafts), outside the repo.
  */
@@ -17,6 +17,7 @@ const COMMANDS = {
   split: ["split.mjs", "captions/transcript/text -> short sentences, punctuation kept (step 3)"],
   plan: ["plan.mjs", "sentences + loudness -> start/end of every sentence, spec.json, listen list (step 4; --anchors: by the caption word times)"],
   fill: ["fill.mjs", "<slug>.ar.txt (Arabic + meanings + metadata) -> spec.json (step 5)"],
+  i18n: ["i18n.mjs", "<slug>.es.txt + <slug>.tr.txt (Spanish and Turkish sentences + meanings) -> src/data/videos/i18n/es.json, tr.json (step 5b)"],
   check: ["check.mjs", "static gates: schema, timeline, text, meanings, coverage, audio consistency (step 6)"],
   build: ["build.mjs", "spec -> src/data/videos/<slug>.ts through the repo's own build.mjs, then the repo tests (step 7)"],
   verify: ["verify.mjs", "play the lesson in the official embed with the app's stop rules; report every stop (step 8)"],

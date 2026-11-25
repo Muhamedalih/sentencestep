@@ -25,6 +25,7 @@ import {
   splitWords,
   writeJson,
 } from "../lib/util.mjs";
+import { i18nProblems } from "./i18n.mjs";
 import { atPictureEnd, pictureEnd, surroundings, voicedIntervals, voicedWithin } from "../lib/envelope.mjs";
 import { SPEECH_RATE, rateOff, syllables, typingProblems } from "../lib/text.mjs";
 
@@ -279,6 +280,8 @@ export async function run(args) {
   }
 
   const { errors, warns, infos } = checkLesson(L, ctx);
+  // Spanish and Turkish rows (src/data/videos/i18n): a lesson built without them shows those learners Arabic.
+  if (kind === "built") errors.push(...i18nProblems(repo, L.sentences.map((s, i) => ({ key: s.id || `${L.id}-s${i + 1}`, en: s.en }))));
   console.log(`CHECK ${id} (${kind}): ${L.sentences.length} sentences, clip ${L.clipStart}-${L.clipEnd} s of ${L.durationSeconds} s, textSource ${L.textSource || "(none)"}`);
   errors.forEach((m) => console.log(`ERROR ${m}`));
   warns.forEach((m) => console.log(`WARN  ${m}`));

@@ -72,6 +72,7 @@ import {
 import { VIDEO_KINDS } from "./types";
 import type { VideoKind, VideoLesson, VideoLevel } from "./types";
 import { validateVideoLesson } from "./validate";
+import { localizedSentenceRow } from "./localize";
 import { bareWord, splitWords } from "./words";
 
 test("words: split on whitespace and match a word without its punctuation", () => {
@@ -1049,4 +1050,18 @@ test("the training words: the mistyped ones first, then the longest, each word o
   assert.equal(buildTrainingWords(sentences, [], 2).length, 2);
   const hand = buildTrainingWords(sentences, [], 8).find((item) => item.word === "hand");
   assert.equal(hand?.meaning, "اليد");
+});
+
+test("every sentence of every lesson has a Spanish and a Turkish row with one meaning per word", () => {
+  // Without a row the page quietly shows that learner Arabic. `yvl i18n` writes the rows of a new lesson.
+  const missing: string[] = [];
+  for (const lesson of videoLessons) {
+    for (const sentence of lesson.sentences) {
+      for (const locale of ["es", "tr"] as const) {
+        const row = localizedSentenceRow(sentence.id, splitWords(sentence.en).length, locale);
+        if (!row || !row.text.trim() || row.words.some((word) => !word.trim())) missing.push(`${locale}:${sentence.id}`);
+      }
+    }
+  }
+  assert.deepEqual(missing, []);
 });
