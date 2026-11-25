@@ -1,3 +1,5 @@
+import { englishTopicTitle } from "@/lib/english-topic-title";
+
 /**
  * The colour of a topic's book on the banner's shelf. Hand-picked from the topics' cover palettes
  * (see src/components/words/word-cover-art.tsx) so neighbouring books differ, with no yellow. A
@@ -36,8 +38,9 @@ const BY_LEVEL: Record<number, string> = { 1: "#2e8f6c", 2: "#3f6fb0", 3: "#5b4f
 export const SPINE_TEXT = "#f7f5f0";
 
 export function spineColor(title: string, level: number): string {
+  const key = englishTopicTitle(title);
   return (
-    (Object.prototype.hasOwnProperty.call(SPINE, title) ? SPINE[title] : undefined) ??
+    (Object.prototype.hasOwnProperty.call(SPINE, key) ? SPINE[key] : undefined) ??
     BY_LEVEL[level] ??
     BY_LEVEL[1]!
   );
@@ -45,5 +48,5 @@ export function spineColor(title: string, level: number): string {
 
 /** Whether a topic has a colour of its own (for the test that every published topic has one). */
 export function hasSpineColor(title: string): boolean {
-  return Object.prototype.hasOwnProperty.call(SPINE, title);
+  return Object.prototype.hasOwnProperty.call(SPINE, englishTopicTitle(title));
 }
