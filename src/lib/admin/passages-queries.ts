@@ -299,10 +299,32 @@ async function germanTwinRolesOf(
   const { assigned, voices, defaultNarratorVoiceId } = english.setup;
   return germanTwinRoles(germanLines, english.sentences, (role) => {
     // A character with no voice of their own is read by the narrator: no gender to ask for.
-    const voiceId =
-      assigned.get(role) ?? (role === NARRATOR_ROLE ? defaultNarratorVoiceId : null);
+    const voiceId = assigned.get(role) ?? (role === NARRATOR_ROLE ? defaultNarratorVoiceId : null);
     return (voiceId && voices.get(voiceId)?.gender) || null;
   });
+}
+
+/** The registered German voices, women first, each with the sample clip of the audition sentence. */
+export async function listGermanVoices(): Promise<AdminVoiceOption[]> {
+  const { data, error } = await createServiceRoleClient()
+    .from("voices")
+    .select("id, name, gender, language, sample_audio_url")
+    .eq("source", "elevenlabs")
+    .eq("language", "de");
+  if (error) throw error;
+  return (data ?? [])
+    .map((voice) =>
+      option({
+        id: voice.id,
+        name: voice.name,
+        gender: voice.gender,
+        language: voice.language,
+        sampleAudioUrl: voice.sample_audio_url,
+      }),
+    )
+    .sort((a, b) =>
+      a.gender === b.gender ? a.name.localeCompare(b.name) : a.gender === "female" ? -1 : 1,
+    );
 }
 
 export interface VoiceCast {

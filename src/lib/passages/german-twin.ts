@@ -2,6 +2,13 @@ import { NARRATOR_ROLE } from "@/lib/passages/voice-aliases";
 
 export type VoiceGender = "female" | "male";
 
+/**
+ * The sentence every German voice reads for the audition card in Admin → Passages: the clips
+ * (voices.sample_audio_url of the German voices) were made from exactly this text.
+ */
+export const GERMAN_AUDITION_SENTENCE =
+  "Natürlich. Es ist die Gitarre deines Großvaters. Er hat mir jedes Jahr ein Lied vorgespielt.";
+
 /** The id prefix of a German passage: `de-<slug>` is the German version of the English passage `<slug>`. */
 export const GERMAN_PASSAGE_PREFIX = "de-";
 
