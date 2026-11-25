@@ -41,18 +41,21 @@ export function StoryCoverCard({
   completed,
   isPremiumUser,
   openToday = false,
+  coverTitle,
 }: {
   lesson: Lesson;
   completed: boolean;
   isPremiumUser: boolean;
   openToday?: boolean;
+  /** The title whose drawing the cover wears when it is not the story's own (a German story wears its English twin's). */
+  coverTitle?: string;
 }) {
   const { dir, t } = useLocale();
   const { rollouts } = useFeatures();
   const reducedMotion = useReducedMotion() ?? false;
   const locked = !lesson.isFree && !isPremiumUser && !openToday;
   const difficulty = difficultyForLevel(lesson.level);
-  const scene = storyScene(lesson.title, rollouts.storyCoversNew);
+  const scene = storyScene(coverTitle ?? lesson.title, rollouts.storyCoversNew);
   const tones = scene?.palette ?? PALETTES[FALLBACK_PALETTE[lesson.level] ?? "green"]!;
   const supportTitle = lesson.supportTitle ?? lesson.title;
   const badge =

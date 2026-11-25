@@ -48,6 +48,7 @@ export function StoriesLibrary({
   openTodayId = null,
   recallCount = 0,
   readiness = {},
+  coverTitles = {},
 }: {
   lessons: Lesson[];
   isPremiumUser: boolean;
@@ -57,6 +58,8 @@ export function StoriesLibrary({
   recallCount?: number;
   /** How much of each unfinished story the learner has typed before, by story id (see readinessByLesson). Empty for everyone the words bank is closed to. */
   readiness?: Record<string, Readiness>;
+  /** The English title whose drawing a story wears, by story id: a German story (id "de-…") wears its English twin's cover. */
+  coverTitles?: Record<string, string>;
 }) {
   const { rollouts } = useFeatures();
   const { isCompleted, isLoaded } = useProgress();
@@ -179,6 +182,7 @@ export function StoriesLibrary({
                 completed={isLoaded && isCompleted("stories", lesson.id)}
                 isPremiumUser={isPremiumUser}
                 openToday={lesson.id === openTodayId}
+                coverTitle={coverTitles[lesson.id]}
               />
             ))}
           </motion.div>

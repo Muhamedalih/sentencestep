@@ -14,6 +14,8 @@ import { WordsBanner } from "@/components/words/words-banner";
 import { getDraftLessonSummaries } from "@/lib/content";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { localISODateInTimeZone, TIMEZONE_COOKIE } from "@/lib/features/learner-date";
+import { loadGermanToday } from "@/lib/today/german";
+import type { ProgressState } from "@/lib/progress/types";
 import { loadStreakCalendar } from "@/lib/features/home-engagement";
 import { addDays } from "@/lib/features/streak-freeze";
 import type { SupportLocale } from "@/lib/i18n/locales";
@@ -72,19 +74,34 @@ async function PassagesSlot({ data }: { data: Promise<PassagesHomeData | null> }
   return resolved ? <PassagesSectionCard data={resolved} index={3} /> : null;
 }
 
-async function TasksSlot({ user, todayISO }: { user: CurrentUser | null; todayISO: string }) {
+async function TasksSlot({
+  user,
+  todayISO,
+  locale,
+  timeZone,
+  progress,
+}: {
+  user: CurrentUser | null;
+  todayISO: string;
+  locale: SupportLocale | null;
+  timeZone: string | undefined;
+  progress: ProgressState | undefined;
+}) {
   if (!user) return null;
   const features = await getEffectiveFeatures();
-  const streak = await loadStreakCalendar(
-    user.id,
-    addDays(todayISO, -STRIP_LOOKBACK_DAYS),
-    todayISO,
-    todayISO,
-    features,
-  );
-  // The English Home's box with no quests: just the week and the streak (the German track has no
-  // Today session yet; the streak is one habit for the whole account, so it is shared with English).
-  return <TasksBox today={todayISO} quests={null} streak={streak} />;
+  const [quests, streak] = await Promise.all([
+    loadGermanToday({ userId: user.id, locale, timeZone, todayISO, progress }),
+    loadStreakCalendar(
+      user.id,
+      addDays(todayISO, -STRIP_LOOKBACK_DAYS),
+      todayISO,
+      todayISO,
+      features,
+    ),
+  ]);
+  // The English Home's daily-tasks box, with the German track's three tasks (see lib/today/german.ts).
+  // The streak is one habit for the whole account, so it is shared with English.
+  return <TasksBox today={todayISO} quests={quests} streak={streak} />;
 }
 
 /**
@@ -130,7 +147,13 @@ export async function GermanHomeCards({
       >
         <div className="hc-rise">
           <Suspense fallback={<CardSkeleton feature="strip" className="xl:h-[4.4rem]" />}>
-            <TasksSlot user={user} todayISO={todayISO} />
+            <TasksSlot
+              user={user}
+              todayISO={todayISO}
+              locale={locale}
+              timeZone={timeZone}
+              progress={initialProgress}
+            />
           </Suspense>
         </div>
         {!calm && (
