@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { NotConfiguredNotice } from "@/components/admin/not-configured-notice";
+import { GermanVoiceAudition } from "@/components/admin/german-voice-audition";
 import { PassageImport } from "@/components/admin/passage-import";
 import { PassageOrder } from "@/components/admin/passage-order";
 import { PassageVoiceCast } from "@/components/admin/passage-voice-cast";
 import { PassagesTable } from "@/components/admin/passages-table";
-import { getVoiceCast, listAdminPassages } from "@/lib/admin/passages-queries";
+import { getVoiceCast, listAdminPassages, listGermanVoices } from "@/lib/admin/passages-queries";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
 export const metadata: Metadata = {
@@ -16,7 +17,11 @@ export const metadata: Metadata = {
 export default async function AdminPassagesPage() {
   if (!isSupabaseConfigured()) return <NotConfiguredNotice />;
 
-  const [passages, voiceCast] = await Promise.all([listAdminPassages(), getVoiceCast()]);
+  const [passages, voiceCast, germanVoices] = await Promise.all([
+    listAdminPassages(),
+    getVoiceCast(),
+    listGermanVoices(),
+  ]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -33,6 +38,7 @@ export default async function AdminPassagesPage() {
         </p>
       </div>
 
+      <GermanVoiceAudition voices={germanVoices} />
       <PassageOrder passages={passages} />
       <PassageVoiceCast cast={voiceCast} />
       <PassagesTable passages={passages} />
