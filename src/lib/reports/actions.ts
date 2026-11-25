@@ -1,5 +1,6 @@
 "use server";
 
+import { allowRequest } from "@/lib/security/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/supabase/auth";
 
@@ -26,6 +27,8 @@ export async function submitProblemReport(input: {
 
   const user = await getCurrentUser();
   if (!user || !user.email) return { ok: false, code: "not_signed_in" };
+  // A signed-in learner files a handful of reports at most; more is a script filling the inbox.
+  if (!allowRequest(`report:${user.id}`, 10, 60 * 60 * 1000)) return { ok: false, code: "generic" };
 
   const supabase = await createClient();
   const row = {

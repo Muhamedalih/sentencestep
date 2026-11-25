@@ -18,7 +18,21 @@ export function safeNextPath(next: FormDataEntryValue | string | null): string {
   const value = typeof next === "string" ? next : "";
   const secondCharIsSlashLike = value[1] === "/" || value[1] === "\\";
   const isSafeRelativePath = value.startsWith("/") && !secondCharIsSlashLike;
-  return isSafeRelativePath ? value : "/learn";
+  if (!isSafeRelativePath) return "/learn";
+
+  // A browser deletes tabs and line breaks from a URL before it reads it, so "/<TAB>/evil.com" is
+  // really "//evil.com" (and a control character can smuggle a second header line). Any control
+  // character, space or backslash anywhere in the path means it is not a plain path of ours.
+  if (/[\u0000-\u0020\u007f-\u009f\\\u2028\u2029]/.test(value)) return "/learn";
+
+  // Final proof, the way a browser reads it: resolved against our own origin it must stay there.
+  try {
+    const base = "https://safe-redirect.invalid";
+    if (new URL(value, base).origin !== base) return "/learn";
+  } catch {
+    return "/learn";
+  }
+  return value;
 }
 
 /**

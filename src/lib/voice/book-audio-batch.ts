@@ -2,6 +2,10 @@
 
 import { lookupCachedWordAudioUrls, resolveWordCacheVoiceId } from "@/lib/voice/voice-audio";
 
+/** Generous bounds for one reading page (see resolveBookPageAudioAction). */
+const MAX_PAGE_ITEMS = 300;
+const MAX_PAGE_WORDS = 3000;
+
 /**
  * Books-only batched, cache-only audio lookup for a whole reading PAGE (a
  * handful of sentences plus every trackable word in them) in ONE or two
@@ -38,9 +42,13 @@ export async function resolveBookPageAudioAction(input: {
   /** Every trackable word across the page's sentences, keyed by contentId (`${sentenceId}::${normalizedWord}`) with its own raw (un-normalized) text. */
   words: { contentId: string; word: string }[];
 }): Promise<{ sentenceAudio: Record<string, string>; wordAudio: Record<string, string> }> {
+  // A reading page holds a few dozen sentences; a longer list is not a page, and every item is a
+  // database lookup key, so the arrays are bounded before they reach the query.
+  const sentences = Array.isArray(input.sentences) ? input.sentences.slice(0, MAX_PAGE_ITEMS) : [];
+  const words = Array.isArray(input.words) ? input.words.slice(0, MAX_PAGE_WORDS) : [];
   const [sentenceAudio, wordAudio] = await Promise.all([
-    resolveSharedTextAudio(input.sentences, input.narratorVoiceId),
-    resolveBatchedWordAudio(input.words, input.narratorVoiceId),
+    resolveSharedTextAudio(sentences, input.narratorVoiceId),
+    resolveBatchedWordAudio(words, input.narratorVoiceId),
   ]);
 
   return { sentenceAudio, wordAudio };

@@ -1,3 +1,4 @@
+import { trustedOrigin } from "@/lib/security/trusted-origin";
 import { getSiteUrl } from "@/lib/site-url";
 
 /**
@@ -23,7 +24,10 @@ export function getRequestOrigin(request: Request): string {
         ? forwardedProto
         : url.protocol.replace(":", "");
     try {
-      return new URL(`${proto}://${host}`).origin;
+      // A host that is not this site's own (a forged Host or X-Forwarded-Host reaching the server some
+      // other way) never becomes the address of a redirect or an e-mailed link: it falls back to the
+      // configured site address (see trusted-origin.ts).
+      return trustedOrigin(new URL(`${proto}://${host}`).origin);
     } catch {
       // A malformed host header: fall through to the fixed site origin below.
     }

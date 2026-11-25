@@ -1,5 +1,6 @@
 import { createPublicClient } from "@/lib/supabase/public-client";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { safeFilterTerm } from "@/lib/supabase/filter-text";
 import { fetchBookContentCounts } from "@/lib/supabase/queries/book-content";
 import { fetchCompletedBookIds, fetchInProgressBooks } from "@/lib/supabase/queries/book-progress";
 import { getContentTranslations, resolveScalarField } from "@/lib/i18n/content-translations";
@@ -360,7 +361,9 @@ export async function searchBooks(query: string): Promise<Book[]> {
         .select("*")
         .eq("status", "published")
         .eq("type", "book")
-        .or(`title.ilike.%${trimmed}%,author.ilike.%${trimmed}%`),
+        .or(
+          `title.ilike.%${safeFilterTerm(trimmed) || "-"}%,author.ilike.%${safeFilterTerm(trimmed) || "-"}%`,
+        ),
       supabase.from("categories").select("id").eq("is_active", true).ilike("name", `%${trimmed}%`),
     ]);
     if (titleAuthorResult.error) throw titleAuthorResult.error;

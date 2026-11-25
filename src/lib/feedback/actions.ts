@@ -1,5 +1,9 @@
 "use server";
 
+import { headers } from "next/headers";
+
+import { allowRequest } from "@/lib/security/rate-limit";
+import { clientIpFrom } from "@/lib/security/client-ip";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { createServiceRoleClient, isServiceRoleConfigured } from "@/lib/supabase/service-role";
 import {
@@ -38,6 +42,19 @@ export async function submitAppRatingAction(input: {
   /** A guest's optional address to be answered at. Ignored for a signed-in learner, whose account email is used. */
   contactEmail?: string;
 }): Promise<void> {
+  // Open to guests and counted into the public average, so a script could otherwise stuff the box.
+  // Generous per address (many learners share one mobile address), tight per browser id. A refused
+  // rating is dropped quietly, exactly like an out-of-range one.
+  const ip = clientIpFrom(await headers());
+  const anon = typeof input.anonId === "string" ? input.anonId.slice(0, 100) : "";
+  if (
+    !allowRequest(`rating:ip:${ip}`, 30, 60 * 60 * 1000) ||
+    (anon && !allowRequest(`rating:anon:${anon}`, 6, 60 * 60 * 1000))
+  ) {
+    console.warn("[app-rating] rate limited");
+    return;
+  }
+
   const user = await getCurrentUser();
   const record = buildAppRatingRecord(input, user && { id: user.id, email: user.email });
   if (!record) {

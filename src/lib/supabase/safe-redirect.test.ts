@@ -36,6 +36,22 @@ test("safeNextPath: the backslash bypass (/\\evil.com) falls back to /learn", ()
   assert.equal(safeNextPath("/\\/evil.com"), "/learn");
 });
 
+test("safeNextPath: tab, newline and other control characters can never hide a second slash", () => {
+  // Browsers strip tabs and line breaks from a URL, so "/<TAB>/evil.com" is "//evil.com" to them.
+  for (const bad of [
+    "/\t/evil.com",
+    "/\n/evil.com",
+    "/\r/evil.com",
+    "/\u0000/evil.com",
+    "/ /evil.com",
+    "/learn\r\nSet-Cookie: x=1",
+    "/learn\u2028",
+    "/a\\b",
+  ]) {
+    assert.equal(safeNextPath(bad), "/learn", JSON.stringify(bad));
+  }
+});
+
 test("safeNextPath: query strings and fragments on a real relative path are preserved", () => {
   assert.equal(safeNextPath("/learn?tab=stories"), "/learn?tab=stories");
   assert.equal(safeNextPath("/learn#top"), "/learn#top");

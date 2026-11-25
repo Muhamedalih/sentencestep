@@ -1,3 +1,4 @@
+import { isAllowedPushEndpoint, isPlausiblePushKey } from "@/lib/push/endpoint";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 
@@ -24,6 +25,16 @@ export async function savePushSubscription(
   userId: string,
   subscription: PushSubscriptionInput,
 ): Promise<void> {
+  // The server later POSTs to this address, so only a real browser push service is accepted (see
+  // endpoint.ts). send.ts checks again before every send, because a signed-in learner can also write
+  // this table directly.
+  if (
+    !isAllowedPushEndpoint(subscription?.endpoint) ||
+    !isPlausiblePushKey(subscription.keys?.p256dh, 200) ||
+    !isPlausiblePushKey(subscription.keys?.auth, 100)
+  ) {
+    throw new Error("Not a valid push subscription.");
+  }
   const supabase = await createClient();
   const { error } = await supabase.from("push_subscriptions").upsert(
     {

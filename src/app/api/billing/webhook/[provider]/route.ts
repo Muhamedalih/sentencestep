@@ -3,6 +3,10 @@ import { NextResponse } from "next/server";
 import { getPaymentRuntime, toWebhookDeps } from "@/lib/billing/payments/runtime";
 import type { PaymentRuntime } from "@/lib/billing/payments/runtime";
 import { handleProviderWebhook } from "@/lib/billing/payments/webhook-handler";
+import { readBytesCapped } from "@/lib/security/read-body";
+
+/** A provider's webhook is a small JSON document; anything bigger is not one. */
+const MAX_WEBHOOK_BYTES = 256 * 1024;
 
 /**
  * Where the configured payment provider's webhooks land
@@ -32,7 +36,8 @@ export async function POST(
     return NextResponse.json({ error: "Unknown payment provider." }, { status: 404 });
   }
 
-  const rawBody = new Uint8Array(await request.arrayBuffer());
+  const rawBody = await readBytesCapped(request, MAX_WEBHOOK_BYTES);
+  if (rawBody === null) return NextResponse.json({ error: "too_large" }, { status: 413 });
   const { status, body } = await handleProviderWebhook(
     toWebhookDeps(runtime),
     rawBody,
