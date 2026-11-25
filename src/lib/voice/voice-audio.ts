@@ -137,7 +137,7 @@ async function lookupContentText(
     const { data } = await supabase.from("sentences").select("en").eq("lesson_id", lessonId);
     for (const row of data ?? []) {
       for (const rawToken of row.en.split(/\s+/)) {
-        const clean = rawToken.replace(/^[^A-Za-z']+|[^A-Za-z']+$/g, "");
+        const clean = rawToken.replace(/^[^\p{L}']+|[^\p{L}']+$/gu, "");
         // Returns rawWord itself (not `clean`) once its presence in this
         // lesson's real sentences is confirmed — this loop only exists to
         // verify the client-supplied word is genuine lesson content (the

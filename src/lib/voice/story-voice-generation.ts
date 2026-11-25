@@ -421,6 +421,33 @@ export async function resolveStoryNarratorVoice(
   return { voiceId: voiceRow.id, providerVoiceId: voiceRow.provider_voice_id };
 }
 
+/** Voices made offline with the local Voice Studio (German lessons and stories) are filed under this `voices.source`. */
+const VOICE_STUDIO_SOURCE = "voice-studio";
+
+/**
+ * The voice a Story's target WORDS are heard in — what the learner-facing page hands the word quiz
+ * and the "words from this lesson" screen. Normally the ElevenLabs narrator (resolveStoryNarratorVoice).
+ * But a story narrated by a Voice Studio voice (every German story) has no ElevenLabs narrator:
+ * resolveStoryNarratorVoice ignores its voice and answers with the English default narrator, whose
+ * clips of a German word do not exist — so the word stayed silent. Its words were recorded in the
+ * story's own voice (word clips are filed under that voice), so that voice is the one to ask for.
+ * Read-only; never used to generate anything (generation keeps resolveStoryNarratorVoice).
+ */
+export async function resolveStoryWordVoiceId(
+  supabase: DbClient,
+  lessonVoiceId: string | null,
+): Promise<string | null> {
+  if (lessonVoiceId) {
+    const { data: ownVoice } = await supabase
+      .from("voices")
+      .select("id, source")
+      .eq("id", lessonVoiceId)
+      .maybeSingle();
+    if (ownVoice?.source === VOICE_STUDIO_SOURCE) return ownVoice.id;
+  }
+  return (await resolveStoryNarratorVoice(supabase, lessonVoiceId))?.voiceId ?? null;
+}
+
 interface KeyedSentence {
   sentence: SentenceRow;
   voiceId: string;

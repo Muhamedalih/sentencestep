@@ -37,7 +37,7 @@ import { getDefaultNormalLessonVoiceId, getDefaultVoiceId } from "@/lib/admin/vo
 import { createPublicClient } from "@/lib/supabase/public-client";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { resolveVoiceId } from "@/lib/voice/resolution";
-import { resolveStoryNarratorVoice } from "@/lib/voice/story-voice-generation";
+import { resolveStoryWordVoiceId } from "@/lib/voice/story-voice-generation";
 import { resolveWordAudioForText } from "@/lib/voice/isolated-word-audio";
 import { lookupCachedAudioUrl } from "@/lib/voice/voice-audio";
 import { getSpeakerVoiceMap } from "@/lib/voice/speaker-voices";
@@ -273,11 +273,11 @@ export default async function LessonPage({
     // sentences. Skipped entirely outside Stories, and when this lesson has
     // no target vocabulary at all, to avoid two extra queries for nothing.
     mode === "stories" && unit.vocabulary && unit.vocabulary.length > 0
-      ? resolveStoryNarratorVoice(createPublicClient(), unit.voiceId ?? null)
+      ? resolveStoryWordVoiceId(createPublicClient(), unit.voiceId ?? null)
       : Promise.resolve(null),
   ]);
   const resolvedVoiceId = resolveVoiceId(unit.voiceId, defaultVoiceId);
-  const storyNarratorVoiceId = storyNarratorVoice?.voiceId ?? null;
+  const storyNarratorVoiceId = storyNarratorVoice ?? null;
 
   // Pre-resolves the first sentence's pronunciation URL here, server-side,
   // if it's already been generated for this voice before — the measured
