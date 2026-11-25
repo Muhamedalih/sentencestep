@@ -10,6 +10,7 @@ import { isLearnerViewOn } from "@/lib/hybrid/learner-view";
 import { viewerTaste } from "@/lib/hybrid/viewer";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { canOpenPassage, openablePassages } from "@/lib/passages/access";
+import { localizeSummary } from "@/lib/passages/localize";
 import { recommendedPassageId } from "@/lib/passages/progress";
 import {
   fetchGermanPassageSummaries,
@@ -39,10 +40,12 @@ export default async function PassagesPage() {
   ]);
   // In German (permission germanTrack, an admin's choice) the list is the German passages instead,
   // which are all drafts for now.
-  const passages =
+  const pageLocale = await getLocale();
+  const passages = (
     isAdminUser && (await getLearnLanguage()) === "de"
       ? await fetchGermanPassageSummaries()
-      : englishPassages;
+      : englishPassages
+  ).map((summary) => localizeSummary(summary, pageLocale));
   // A Premium passage opens for subscribers and admins only; "Up next" never points anyone at a
   // lock. The subscription is only looked up when some passage is Premium (none is, until an
   // admin makes one so), so a list of free passages costs nothing extra.

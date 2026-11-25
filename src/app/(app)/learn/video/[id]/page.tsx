@@ -4,10 +4,12 @@ import { notFound, redirect } from "next/navigation";
 import { VideoSession } from "@/components/video-dictation/video-session";
 import { isAdmin } from "@/lib/admin/access";
 import { getEffectiveFeatures } from "@/lib/features/queries";
+import { getLocale } from "@/lib/i18n/get-locale";
 import { flattenSections } from "@/lib/video-dictation/arrange";
 import { getVideoArrangement } from "@/lib/video-dictation/arrangement-store";
 import { withSavedTimings } from "@/lib/video-dictation/timings-store";
 import { arrangeVideoLessons, getVideoLessons } from "@/lib/video-dictation/content";
+import { localizeVideoLesson } from "@/lib/video-dictation/localize";
 import { loadVideoWordClips } from "@/lib/video-dictation/word-clips";
 
 export const metadata: Metadata = { title: "Video" };
@@ -37,7 +39,9 @@ export default async function VideoPracticePage({ params }: { params: Promise<{ 
   const at = order.indexOf(lesson.id);
   const next = at >= 0 ? order[at + 1] : undefined;
   // The times an Admin saved by hand replace the ones written in the video's file (one cached read, shared).
-  const timed = await withSavedTimings(lesson);
+  // The meanings beside the English come in the learner's own language (Spanish and Turkish have their
+  // own files; Arabic is how the lesson is written).
+  const timed = localizeVideoLesson(await withSavedTimings(lesson), await getLocale());
   // The new finish screen ("videoFinish", Admins only until opened) names the next video.
   const nextTitle = next
     ? (lessons.find((candidate) => candidate.id === next)?.title ?? null)

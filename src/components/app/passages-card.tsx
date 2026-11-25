@@ -76,8 +76,12 @@ export function PassagesCard({
           lang="en"
         >
           {passage.title}
-          {locale === "ar" && (
-            <bdi lang="ar" dir="rtl" className="text-muted-foreground text-sm font-normal">
+          {locale !== null && passage.titleAr !== "" && (
+            <bdi
+              lang={locale}
+              dir={locale === "ar" ? "rtl" : "ltr"}
+              className="text-muted-foreground text-sm font-normal"
+            >
               {passage.titleAr}
             </bdi>
           )}
