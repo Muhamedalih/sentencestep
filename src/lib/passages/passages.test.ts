@@ -1847,3 +1847,47 @@ test("moving a passage by one place", () => {
   assert.deepEqual(movedBy(ids, 2, 1), ids, "the last cannot go down");
   assert.deepEqual(ids, ["a", "b", "c"], "the original list is left alone");
 });
+
+// --- German passages: who is a woman and who is a man, from the English twin -----------
+
+import { englishTwinId, germanTwinRoles, isGermanPassage } from "@/lib/passages/german-twin";
+
+test("a German passage is the `de-` twin of an English one", () => {
+  assert.equal(isGermanPassage("de-the-wrong-number"), true);
+  assert.equal(isGermanPassage("the-wrong-number"), false);
+  assert.equal(englishTwinId("de-the-wrong-number"), "the-wrong-number");
+  assert.equal(englishTwinId("the-wrong-number"), null);
+});
+
+test("German characters take their man/woman from the English character who says the same lines", () => {
+  const english = [
+    { speaker: null },
+    { speaker: "Mrs. Walker" },
+    { speaker: "Dylan" },
+    { speaker: "Mrs. Walker" },
+    { speaker: null },
+  ];
+  const german = [
+    { speaker: null },
+    { speaker: "Frau Walker" },
+    { speaker: "Dylan" },
+    { speaker: "Frau Walker" },
+    { speaker: null },
+  ];
+  const genders: Record<string, "female" | "male"> = {
+    "Mrs. Walker": "female",
+    Dylan: "male",
+    narrator: "male",
+  };
+  const roles = germanTwinRoles(german, english, (role) => genders[role] ?? null);
+  assert.deepEqual(roles.get("Frau Walker"), { twin: "Mrs. Walker", gender: "female" });
+  assert.deepEqual(roles.get("Dylan"), { twin: "Dylan", gender: "male" });
+  assert.deepEqual(roles.get(NARRATOR_ROLE), { twin: NARRATOR_ROLE, gender: "male" });
+});
+
+test("an English role without a voice of its own gives no gender, and passages that don't line up give nothing", () => {
+  const roles = germanTwinRoles([{ speaker: "E-Mail" }], [{ speaker: "Email" }], () => null);
+  assert.deepEqual(roles.get("E-Mail"), { twin: "Email", gender: null });
+  assert.equal(germanTwinRoles([{ speaker: null }], [{ speaker: null }, { speaker: null }], () => "male").size, 0);
+  assert.equal(germanTwinRoles([], [], () => "male").size, 0);
+});

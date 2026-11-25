@@ -244,6 +244,12 @@ export function PassageNarrationPanel({ passage }: { passage: AdminPassageDetail
                     {isNarrator ? "reads the story · " : ""}
                     {plural(role.lines, "line")} · {role.clips} narrated
                   </p>
+                  {role.wantedGender && (
+                    <p className="mt-0.5 text-xs font-medium text-sky-700 dark:text-sky-300">
+                      {role.wantedGender === "female" ? "A woman" : "A man"} — like{" "}
+                      {isNarrator ? "the English narrator" : role.twinName} in English
+                    </p>
+                  )}
                 </div>
 
                 <div className="flex min-w-0 items-center gap-2">
@@ -259,20 +265,24 @@ export function PassageNarrationPanel({ passage }: { passage: AdminPassageDetail
                         ? `Site default${passage.defaultNarrator ? ` — ${passage.defaultNarrator.name}` : " (none set)"}`
                         : "Same as the narrator"}
                     </option>
-                    <optgroup label="Female voices">
-                      {female.map((voice) => (
-                        <option key={voice.id} value={voice.id}>
-                          {voice.name}
-                        </option>
-                      ))}
-                    </optgroup>
-                    <optgroup label="Male voices">
-                      {male.map((voice) => (
-                        <option key={voice.id} value={voice.id}>
-                          {voice.name}
-                        </option>
-                      ))}
-                    </optgroup>
+                    {role.wantedGender !== "male" && (
+                      <optgroup label="Female voices">
+                        {female.map((voice) => (
+                          <option key={voice.id} value={voice.id}>
+                            {voice.name}
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
+                    {role.wantedGender !== "female" && (
+                      <optgroup label="Male voices">
+                        {male.map((voice) => (
+                          <option key={voice.id} value={voice.id}>
+                            {voice.name}
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
                   </select>
                   {speaking?.sampleAudioUrl && (
                     <Button

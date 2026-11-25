@@ -50,6 +50,7 @@ function voiceOf(row: {
   id: string;
   name: string;
   gender: "female" | "male";
+  language?: string | null;
   provider_voice_id: string;
   sample_audio_url: string | null;
 }): NarrationVoice {
@@ -57,6 +58,7 @@ function voiceOf(row: {
     id: row.id,
     name: row.name,
     gender: row.gender,
+    language: row.language ?? "en",
     providerVoiceId: row.provider_voice_id,
     sampleAudioUrl: row.sample_audio_url,
   };
@@ -124,7 +126,7 @@ export async function loadPassageNarration(
     supabase.from("passage_speaker_voices").select("speaker, voice_id").eq("passage_id", passageId),
     supabase
       .from("voices")
-      .select("id, name, gender, provider_voice_id, sample_audio_url")
+      .select("id, name, gender, language, provider_voice_id, sample_audio_url")
       .eq("source", "elevenlabs"),
     supabase
       .from("elevenlabs_settings")
@@ -272,12 +274,18 @@ export async function loadAllPassageVoices(supabase: Db): Promise<AllPassageVoic
     supabase.from("passages").select("id, title").order("level").order("order_index"),
     supabase
       .from("voices")
-      .select("id, name, gender, provider_voice_id, sample_audio_url")
+      .select("id, name, gender, language, provider_voice_id, sample_audio_url")
       .eq("source", "elevenlabs"),
     supabase.from("elevenlabs_settings").select("default_story_voice_id").eq("id", 1).maybeSingle(),
   ]);
-  const passages = check("the passages", passagesResult) ?? [];
-  const voiceRows = check("the voices", voicesResult) ?? [];
+  // The German passages (de-…) have their own German voices, chosen per passage: the
+  // "voices for all passages" card is for the English ones and must never touch them.
+  const passages = (check("the passages", passagesResult) ?? []).filter(
+    (passage) => !passage.id.startsWith("de-"),
+  );
+  const voiceRows = (check("the voices", voicesResult) ?? []).filter(
+    (voice) => (voice.language ?? "en") !== "de",
+  );
   const settings = check("the ElevenLabs settings", settingsResult);
 
   // PostgREST returns at most a thousand rows a request: read them page by page.

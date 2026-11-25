@@ -3,10 +3,17 @@ import {
   loadPassageNarration,
   planPassageNarration,
 } from "@/lib/passages/narration";
+import {
+  englishTwinId,
+  germanTwinRoles,
+  isGermanPassage,
+  type TwinRole,
+} from "@/lib/passages/german-twin";
 import { narrationCost, rolesOf } from "@/lib/passages/narration-plan";
 import { IN_CHUNK_SIZE, chunk } from "@/lib/passages/queries";
 import type { PassageLevel, PassageTone } from "@/lib/passages/types";
 import { summarizeVoiceCast } from "@/lib/passages/voice-cast";
+import { NARRATOR_ROLE } from "@/lib/passages/voice-aliases";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 
 /**
@@ -130,6 +137,8 @@ export interface AdminVoiceOption {
   id: string;
   name: string;
   gender: "female" | "male";
+  /** "de" for the German voices, "en" for the rest. */
+  language: string;
   sampleAudioUrl: string | null;
 }
 
@@ -144,6 +153,10 @@ export interface AdminPassageRole {
   voiceId: string | null;
   /** The voice that will actually speak the role; null when none can be worked out. */
   speaking: AdminVoiceOption | null;
+  /** German passages only: whether this role is a woman or a man, taken from the English passage it translates — so the voice list offers only that gender. Null = not known (an English passage, or a role the English one gives no voice). */
+  wantedGender: "female" | "male" | null;
+  /** German passages only: the English character this role is ("Mrs. Walker" for "Frau Walker"). */
+  twinName: string | null;
 }
 
 export interface AdminPassageDetail {
@@ -165,8 +178,10 @@ export interface AdminPassageDetail {
   lines: number;
   clips: number;
   roles: AdminPassageRole[];
-  /** Every ElevenLabs voice an admin can give a role, by name. */
+  /** Every ElevenLabs voice an admin can give a role, by name — German voices for a German passage, the others for an English one. */
   voices: AdminVoiceOption[];
+  /** "de" for a German passage, "en" otherwise. */
+  language: "de" | "en";
   /** The site's default narration voice (Admin -> Voice): what reads the story when the passage has no narrator of its own. */
   defaultNarrator: AdminVoiceOption | null;
   /** What is wrong with the voice setup, in plain words; narration is refused while there is anything. */
@@ -181,11 +196,13 @@ const option = (voice: {
   id: string;
   name: string;
   gender: "female" | "male";
+  language?: string;
   sampleAudioUrl: string | null;
 }): AdminVoiceOption => ({
   id: voice.id,
   name: voice.name,
   gender: voice.gender,
+  language: voice.language ?? "en",
   sampleAudioUrl: voice.sampleAudioUrl,
 });
 
@@ -215,9 +232,14 @@ export async function getAdminPassage(id: string): Promise<AdminPassageDetail | 
   if (sectionsResult.error) throw sectionsResult.error;
 
   const plan = planPassageNarration(narration);
+  const language = isGermanPassage(id) ? "de" : "en";
   const voices = [...narration.setup.voices.values()]
     .map(option)
+    .filter((voice) => (language === "de") === (voice.language === "de"))
     .sort((a, b) => a.name.localeCompare(b.name));
+
+  // A German passage: who is a woman and who a man comes from the English passage it translates.
+  const twinRoles = await germanTwinRolesOf(supabase, id, narration.sentences);
 
   const roles: AdminPassageRole[] = rolesOf(narration.sentences).map((role) => {
     const own = plan.all.filter((job) => job.role === role);
@@ -229,6 +251,8 @@ export async function getAdminPassage(id: string): Promise<AdminPassageDetail | 
       characters: narrationCost(own).characters,
       voiceId: narration.setup.assigned.get(role) ?? null,
       speaking: speaking ? option(speaking) : null,
+      wantedGender: twinRoles.get(role)?.gender ?? null,
+      twinName: twinRoles.get(role)?.twin ?? null,
     };
   });
 
@@ -254,11 +278,31 @@ export async function getAdminPassage(id: string): Promise<AdminPassageDetail | 
     clips: plan.all.filter((job) => job.hasClip).length,
     roles,
     voices,
+    language,
     defaultNarrator: defaultNarrator ? option(defaultNarrator) : null,
     problems: plan.problems,
     model: narration.settings.model,
     missing: narrationCost(plan.jobs),
   };
+}
+
+/** The man/woman of every role of a German passage, from its English twin (empty for any other passage). */
+async function germanTwinRolesOf(
+  supabase: ReturnType<typeof createServiceRoleClient>,
+  passageId: string,
+  germanLines: readonly { speaker: string | null }[],
+): Promise<Map<string, TwinRole>> {
+  const englishId = englishTwinId(passageId);
+  if (!englishId) return new Map();
+  const english = await loadPassageNarration(supabase, englishId);
+  if (!english) return new Map();
+  const { assigned, voices, defaultNarratorVoiceId } = english.setup;
+  return germanTwinRoles(germanLines, english.sentences, (role) => {
+    // A character with no voice of their own is read by the narrator: no gender to ask for.
+    const voiceId =
+      assigned.get(role) ?? (role === NARRATOR_ROLE ? defaultNarratorVoiceId : null);
+    return (voiceId && voices.get(voiceId)?.gender) || null;
+  });
 }
 
 export interface VoiceCast {
