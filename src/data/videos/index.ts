@@ -1,4 +1,5 @@
 import type { VideoLesson } from "@/lib/video-dictation/types";
+import { kikiPacksTrip } from "./kiki-packs-trip";
 import { myFather } from "./my-father";
 import { dreamworksAnte } from "./dreamworks-ante";
 import { howlsBreakfast } from "./howls-breakfast";
@@ -98,4 +99,5 @@ export const videoLessons: readonly VideoLesson[] = [
   howlsBreakfast,
   dreamworksAnte,
   myFather,
+  kikiPacksTrip,
 ];
