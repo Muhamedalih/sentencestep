@@ -17,9 +17,9 @@ export const kikiMeetsUrsula: VideoLesson = {
     {
       id: "kiki-meets-ursula-s1",
       startSeconds: 0,
-      endSeconds: 3.2,
-      en: "There you are!",
-      ar: "ها أنتِ هنا!",
+      endSeconds: 19.8,
+      en: "There you are! Hello? Anyone home? Is anybody here? Anybody? Hello? Anybody here!?",
+      ar: "ها أنتِ هنا! مرحبًا؟ هل من أحد في البيت؟ هل أحد هنا؟ أحد؟ مرحبًا؟ هل أحد هنا؟",
       wordTranslations: [
         {
           en: "There",
@@ -33,28 +33,10 @@ export const kikiMeetsUrsula: VideoLesson = {
           en: "are",
           ar: "هنا",
         },
-      ],
-    },
-    {
-      id: "kiki-meets-ursula-s2",
-      startSeconds: 3.4,
-      endSeconds: 5.1,
-      en: "Hello?",
-      ar: "مرحبًا؟",
-      wordTranslations: [
         {
           en: "Hello",
           ar: "مرحبًا",
         },
-      ],
-    },
-    {
-      id: "kiki-meets-ursula-s3",
-      startSeconds: 5.3,
-      endSeconds: 7.8,
-      en: "Anyone home?",
-      ar: "هل من أحد في البيت؟",
-      wordTranslations: [
         {
           en: "Anyone",
           ar: "هل من أحد",
@@ -63,15 +45,6 @@ export const kikiMeetsUrsula: VideoLesson = {
           en: "home",
           ar: "في البيت",
         },
-      ],
-    },
-    {
-      id: "kiki-meets-ursula-s4",
-      startSeconds: 8,
-      endSeconds: 12,
-      en: "Is anybody here?",
-      ar: "هل أحد هنا؟",
-      wordTranslations: [
         {
           en: "Is",
           ar: "هل",
@@ -84,41 +57,14 @@ export const kikiMeetsUrsula: VideoLesson = {
           en: "here",
           ar: "هنا",
         },
-      ],
-    },
-    {
-      id: "kiki-meets-ursula-s5",
-      startSeconds: 12.2,
-      endSeconds: 14.3,
-      en: "Anybody?",
-      ar: "أحد؟",
-      wordTranslations: [
         {
           en: "Anybody",
           ar: "أحد",
         },
-      ],
-    },
-    {
-      id: "kiki-meets-ursula-s6",
-      startSeconds: 14.5,
-      endSeconds: 16.6,
-      en: "Hello?",
-      ar: "مرحبًا؟",
-      wordTranslations: [
         {
           en: "Hello",
           ar: "مرحبًا",
         },
-      ],
-    },
-    {
-      id: "kiki-meets-ursula-s7",
-      startSeconds: 16.8,
-      endSeconds: 19.8,
-      en: "Anybody here!?",
-      ar: "هل أحد هنا؟",
-      wordTranslations: [
         {
           en: "Anybody",
           ar: "هل أحد",
@@ -130,7 +76,7 @@ export const kikiMeetsUrsula: VideoLesson = {
       ],
     },
     {
-      id: "kiki-meets-ursula-s8",
+      id: "kiki-meets-ursula-s2",
       startSeconds: 20,
       endSeconds: 24.4,
       en: "Yes, stop shouting, I'm on the roof.",
@@ -167,11 +113,11 @@ export const kikiMeetsUrsula: VideoLesson = {
       ],
     },
     {
-      id: "kiki-meets-ursula-s9",
+      id: "kiki-meets-ursula-s3",
       startSeconds: 24.6,
-      endSeconds: 27.3,
-      en: "What do you want?",
-      ar: "ماذا تريدين؟",
+      endSeconds: 39.8,
+      en: "What do you want? Why don't you come up? What do you want?",
+      ar: "ماذا تريدين؟ لماذا لا تصعدين؟ ماذا تريدين؟",
       wordTranslations: [
         {
           en: "What",
@@ -189,15 +135,6 @@ export const kikiMeetsUrsula: VideoLesson = {
           en: "want",
           ar: "تريدين",
         },
-      ],
-    },
-    {
-      id: "kiki-meets-ursula-s10",
-      startSeconds: 27.5,
-      endSeconds: 30.8,
-      en: "Why don't you come up?",
-      ar: "لماذا لا تصعدين؟",
-      wordTranslations: [
         {
           en: "Why",
           ar: "لماذا",
@@ -218,15 +155,6 @@ export const kikiMeetsUrsula: VideoLesson = {
           en: "up",
           ar: "إلى فوق",
         },
-      ],
-    },
-    {
-      id: "kiki-meets-ursula-s11",
-      startSeconds: 31,
-      endSeconds: 39.8,
-      en: "What do you want?",
-      ar: "ماذا تريدين؟",
-      wordTranslations: [
         {
           en: "What",
           ar: "ماذا",
@@ -246,7 +174,7 @@ export const kikiMeetsUrsula: VideoLesson = {
       ],
     },
     {
-      id: "kiki-meets-ursula-s12",
+      id: "kiki-meets-ursula-s4",
       startSeconds: 40,
       endSeconds: 48.8,
       en: "Oh, well, you have a black cat in your cabin window and you see, it's mine and I need it back.",
@@ -339,11 +267,11 @@ export const kikiMeetsUrsula: VideoLesson = {
       ],
     },
     {
-      id: "kiki-meets-ursula-s13",
+      id: "kiki-meets-ursula-s5",
       startSeconds: 49,
-      endSeconds: 51.8,
-      en: "You're a good birdie, aren't you?",
-      ar: "أنتِ عصفورة طيبة، أليس كذلك؟",
+      endSeconds: 55.1,
+      en: "You're a good birdie, aren't you? So why was it alone in the forest, huh?",
+      ar: "أنتِ عصفورة طيبة، أليس كذلك؟ إذن لماذا كانت وحدها في الغابة؟",
       wordTranslations: [
         {
           en: "You're",
@@ -369,15 +297,6 @@ export const kikiMeetsUrsula: VideoLesson = {
           en: "you",
           ar: "أنتِ",
         },
-      ],
-    },
-    {
-      id: "kiki-meets-ursula-s14",
-      startSeconds: 52,
-      endSeconds: 55.1,
-      en: "So why was it alone in the forest, huh?",
-      ar: "إذن لماذا كانت وحدها في الغابة؟",
-      wordTranslations: [
         {
           en: "So",
           ar: "إذن",
@@ -417,11 +336,11 @@ export const kikiMeetsUrsula: VideoLesson = {
       ],
     },
     {
-      id: "kiki-meets-ursula-s15",
+      id: "kiki-meets-ursula-s6",
       startSeconds: 55.3,
-      endSeconds: 57.1,
-      en: "That's where I dropped it.",
-      ar: "هناك أسقطتها.",
+      endSeconds: 59.5,
+      en: "That's where I dropped it. May I have it back, please?",
+      ar: "هناك أسقطتها. هل لي أن آخذها، من فضلك؟",
       wordTranslations: [
         {
           en: "That's",
@@ -443,15 +362,6 @@ export const kikiMeetsUrsula: VideoLesson = {
           en: "it",
           ar: "إياها",
         },
-      ],
-    },
-    {
-      id: "kiki-meets-ursula-s16",
-      startSeconds: 57.3,
-      endSeconds: 59.5,
-      en: "May I have it back, please?",
-      ar: "هل لي أن آخذها، من فضلك؟",
-      wordTranslations: [
         {
           en: "May",
           ar: "هل لي",
@@ -479,11 +389,11 @@ export const kikiMeetsUrsula: VideoLesson = {
       ],
     },
     {
-      id: "kiki-meets-ursula-s17",
+      id: "kiki-meets-ursula-s7",
       startSeconds: 59.7,
-      endSeconds: 61.8,
-      en: "I really need to finish this.",
-      ar: "أحتاج فعلًا إلى إنهاء هذا.",
+      endSeconds: 65.8,
+      en: "I really need to finish this. That's my girl. You're just about through, okay.",
+      ar: "أحتاج فعلًا إلى إنهاء هذا. أحسنتِ يا فتاتي. أوشكتِ على الانتهاء، حسنًا.",
       wordTranslations: [
         {
           en: "I",
@@ -509,15 +419,6 @@ export const kikiMeetsUrsula: VideoLesson = {
           en: "this",
           ar: "هذا",
         },
-      ],
-    },
-    {
-      id: "kiki-meets-ursula-s18",
-      startSeconds: 62,
-      endSeconds: 63.4,
-      en: "That's my girl.",
-      ar: "أحسنتِ يا فتاتي.",
-      wordTranslations: [
         {
           en: "That's",
           ar: "هذه",
@@ -530,15 +431,6 @@ export const kikiMeetsUrsula: VideoLesson = {
           en: "girl",
           ar: "فتاة",
         },
-      ],
-    },
-    {
-      id: "kiki-meets-ursula-s19",
-      startSeconds: 63.6,
-      endSeconds: 65.8,
-      en: "You're just about through, okay.",
-      ar: "أوشكتِ على الانتهاء، حسنًا.",
-      wordTranslations: [
         {
           en: "You're",
           ar: "أنتِ",
@@ -562,7 +454,7 @@ export const kikiMeetsUrsula: VideoLesson = {
       ],
     },
     {
-      id: "kiki-meets-ursula-s20",
+      id: "kiki-meets-ursula-s8",
       startSeconds: 75,
       endSeconds: 78.9,
       en: "Well, why didn't you tell me sooner why you needed it in such a hurry?",
@@ -631,11 +523,11 @@ export const kikiMeetsUrsula: VideoLesson = {
       ],
     },
     {
-      id: "kiki-meets-ursula-s21",
+      id: "kiki-meets-ursula-s9",
       startSeconds: 79.1,
-      endSeconds: 80.2,
-      en: "He keeps me company.",
-      ar: "إنه يؤنسني.",
+      endSeconds: 82.8,
+      en: "He keeps me company. I've gotten sort of fond of him, you know?",
+      ar: "إنه يؤنسني. لقد أصبحتُ أحبه نوعًا ما، تعرفين؟",
       wordTranslations: [
         {
           en: "He",
@@ -653,15 +545,6 @@ export const kikiMeetsUrsula: VideoLesson = {
           en: "company",
           ar: "رفقة",
         },
-      ],
-    },
-    {
-      id: "kiki-meets-ursula-s22",
-      startSeconds: 80.4,
-      endSeconds: 82.8,
-      en: "I've gotten sort of fond of him, you know?",
-      ar: "لقد أصبحتُ أحبه نوعًا ما، تعرفين؟",
-      wordTranslations: [
         {
           en: "I've",
           ar: "لقد",
@@ -701,11 +584,11 @@ export const kikiMeetsUrsula: VideoLesson = {
       ],
     },
     {
-      id: "kiki-meets-ursula-s23",
+      id: "kiki-meets-ursula-s10",
       startSeconds: 83,
-      endSeconds: 84.3,
-      en: "Thank you.",
-      ar: "شكرًا لكِ.",
+      endSeconds: 90.8,
+      en: "Thank you. Oh no, his head's falling off. Ooh, it must've been the crows.",
+      ar: "شكرًا لكِ. يا إلهي، رأسه يسقط! لا بد أن الغربان فعلت ذلك.",
       wordTranslations: [
         {
           en: "Thank",
@@ -715,15 +598,6 @@ export const kikiMeetsUrsula: VideoLesson = {
           en: "you",
           ar: "لكِ",
         },
-      ],
-    },
-    {
-      id: "kiki-meets-ursula-s24",
-      startSeconds: 84.5,
-      endSeconds: 87.6,
-      en: "Oh no, his head's falling off.",
-      ar: "يا إلهي، رأسه يسقط!",
-      wordTranslations: [
         {
           en: "Oh",
           ar: "يا",
@@ -748,15 +622,6 @@ export const kikiMeetsUrsula: VideoLesson = {
           en: "off",
           ar: "عنه",
         },
-      ],
-    },
-    {
-      id: "kiki-meets-ursula-s25",
-      startSeconds: 87.8,
-      endSeconds: 90.8,
-      en: "Ooh, it must've been the crows.",
-      ar: "لا بد أن الغربان فعلت ذلك.",
-      wordTranslations: [
         {
           en: "Ooh",
           ar: "أوه",
@@ -784,11 +649,11 @@ export const kikiMeetsUrsula: VideoLesson = {
       ],
     },
     {
-      id: "kiki-meets-ursula-s26",
+      id: "kiki-meets-ursula-s11",
       startSeconds: 91,
-      endSeconds: 93.8,
-      en: "They were making such a big fuss over him.",
-      ar: "كانوا يثيرون ضجة كبيرة حوله.",
+      endSeconds: 95,
+      en: "They were making such a big fuss over him. This is terrible.",
+      ar: "كانوا يثيرون ضجة كبيرة حوله. هذا فظيع.",
       wordTranslations: [
         {
           en: "They",
@@ -826,15 +691,6 @@ export const kikiMeetsUrsula: VideoLesson = {
           en: "him",
           ar: "له",
         },
-      ],
-    },
-    {
-      id: "kiki-meets-ursula-s27",
-      startSeconds: 94,
-      endSeconds: 95,
-      en: "This is terrible.",
-      ar: "هذا فظيع.",
-      wordTranslations: [
         {
           en: "This",
           ar: "هذا",
@@ -850,11 +706,11 @@ export const kikiMeetsUrsula: VideoLesson = {
       ],
     },
     {
-      id: "kiki-meets-ursula-s28",
+      id: "kiki-meets-ursula-s12",
       startSeconds: 95.2,
-      endSeconds: 97.1,
-      en: "I can't deliver it like this.",
-      ar: "لا أستطيع تسليمه هكذا.",
+      endSeconds: 100.8,
+      en: "I can't deliver it like this. Hey, I know. How about we work out a deal?",
+      ar: "لا أستطيع تسليمه هكذا. اسمعي، لدي فكرة. ما رأيكِ أن نتفق على صفقة؟",
       wordTranslations: [
         {
           en: "I",
@@ -880,15 +736,6 @@ export const kikiMeetsUrsula: VideoLesson = {
           en: "this",
           ar: "مثل هذا",
         },
-      ],
-    },
-    {
-      id: "kiki-meets-ursula-s29",
-      startSeconds: 97.3,
-      endSeconds: 98.4,
-      en: "Hey, I know.",
-      ar: "اسمعي، لدي فكرة.",
-      wordTranslations: [
         {
           en: "Hey",
           ar: "اسمعي",
@@ -901,15 +748,6 @@ export const kikiMeetsUrsula: VideoLesson = {
           en: "know",
           ar: "أعرف",
         },
-      ],
-    },
-    {
-      id: "kiki-meets-ursula-s30",
-      startSeconds: 98.6,
-      endSeconds: 100.8,
-      en: "How about we work out a deal?",
-      ar: "ما رأيكِ أن نتفق على صفقة؟",
-      wordTranslations: [
         {
           en: "How",
           ar: "كيف",
@@ -941,11 +779,11 @@ export const kikiMeetsUrsula: VideoLesson = {
       ],
     },
     {
-      id: "kiki-meets-ursula-s31",
+      id: "kiki-meets-ursula-s13",
       startSeconds: 101,
-      endSeconds: 104.8,
-      en: "So, you're on your own at thirteen.",
-      ar: "إذن، أنتِ تعتمدين على نفسكِ في الثالثة عشرة.",
+      endSeconds: 109.2,
+      en: "So, you're on your own at thirteen. That's pretty exciting, to be completely independent and a witch, impressive.",
+      ar: "إذن، أنتِ تعتمدين على نفسكِ في الثالثة عشرة. هذا مثير جدًا، أن تكوني مستقلة تمامًا وساحرة، مذهل.",
       wordTranslations: [
         {
           en: "So",
@@ -975,15 +813,6 @@ export const kikiMeetsUrsula: VideoLesson = {
           en: "thirteen",
           ar: "ثلاثة عشر",
         },
-      ],
-    },
-    {
-      id: "kiki-meets-ursula-s32",
-      startSeconds: 105,
-      endSeconds: 109.2,
-      en: "That's pretty exciting, to be completely independent and a witch, impressive.",
-      ar: "هذا مثير جدًا، أن تكوني مستقلة تمامًا وساحرة، مذهل.",
-      wordTranslations: [
         {
           en: "That's",
           ar: "هذا",
@@ -1031,11 +860,11 @@ export const kikiMeetsUrsula: VideoLesson = {
       ],
     },
     {
-      id: "kiki-meets-ursula-s33",
+      id: "kiki-meets-ursula-s14",
       startSeconds: 109.4,
-      endSeconds: 110.8,
-      en: "How's it going?",
-      ar: "كيف الحال؟",
+      endSeconds: 116.8,
+      en: "How's it going? Trust me, he'll be good as new. Almost done.",
+      ar: "كيف الحال؟ ثقي بي، سيصبح كالجديد. أوشكتُ على الانتهاء.",
       wordTranslations: [
         {
           en: "How's",
@@ -1049,15 +878,6 @@ export const kikiMeetsUrsula: VideoLesson = {
           en: "going",
           ar: "يسير",
         },
-      ],
-    },
-    {
-      id: "kiki-meets-ursula-s34",
-      startSeconds: 111,
-      endSeconds: 113.8,
-      en: "Trust me, he'll be good as new.",
-      ar: "ثقي بي، سيصبح كالجديد.",
-      wordTranslations: [
         {
           en: "Trust",
           ar: "ثقي",
@@ -1086,15 +906,6 @@ export const kikiMeetsUrsula: VideoLesson = {
           en: "new",
           ar: "جديد",
         },
-      ],
-    },
-    {
-      id: "kiki-meets-ursula-s35",
-      startSeconds: 114,
-      endSeconds: 116.8,
-      en: "Almost done.",
-      ar: "أوشكتُ على الانتهاء.",
-      wordTranslations: [
         {
           en: "Almost",
           ar: "تقريبًا",
