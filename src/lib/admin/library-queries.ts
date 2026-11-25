@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { safeFilterTerm } from "@/lib/supabase/filter-text";
 import type { BookStatus, BookType } from "@/lib/admin/library-validation";
 import type { BookSectionWithSentences } from "@/types/library";
 
@@ -142,8 +143,10 @@ export async function listBooksAdmin(
   if (filters.access === "premium") query = query.eq("is_free", false);
   if (filters.difficultyLevel) query = query.eq("difficulty_level", filters.difficultyLevel);
   if (filters.type) query = query.eq("type", filters.type);
-  if (filters.search)
-    query = query.or(`title.ilike.%${filters.search}%,author.ilike.%${filters.search}%`);
+  if (filters.search) {
+    const term = safeFilterTerm(filters.search);
+    if (term) query = query.or(`title.ilike.%${term}%,author.ilike.%${term}%`);
+  }
   if (bookIds) query = query.in("id", bookIds);
 
   const offset = (Math.max(1, page) - 1) * LIBRARY_PAGE_SIZE;

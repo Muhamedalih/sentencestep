@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { completeSignIn } from "@/lib/supabase/auth-actions";
+import { completeSignIn } from "@/lib/supabase/complete-sign-in";
 import { safeNextPath } from "@/lib/supabase/safe-redirect";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { getDictionary, fallbackDictionary } from "@/lib/i18n/dictionary";

@@ -346,7 +346,7 @@ export const ar: Dictionary = {
     registerSubtitle: "الدروس المجانية تبقى مجانية — هذا فقط يحافظ على تقدّمك.",
     displayNameLabel: "اسم العرض",
     optional: "(اختياري)",
-    passwordHint: "6 أحرف على الأقل.",
+    passwordHint: "8 أحرف على الأقل.",
     creatingAccount: "جارٍ إنشاء الحساب…",
     hasAccount: "لديك حساب بالفعل؟",
     notConfiguredHeading: "تسجيل الدخول غير متاح بعد",
@@ -355,7 +355,7 @@ export const ar: Dictionary = {
     errors: {
       invalidCredentials: "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
       accountExists: "يوجد حساب بهذا البريد الإلكتروني بالفعل.",
-      passwordTooShort: "يجب أن تتكوّن كلمة المرور من 6 أحرف على الأقل.",
+      passwordTooShort: "يجب أن تتكوّن كلمة المرور من 8 أحرف على الأقل.",
       invalidEmail: "أدخل بريدًا إلكترونيًا صالحًا.",
       emailRateLimited:
         "تم طلب عدد كبير جدًا من رسائل التأكيد. يرجى الانتظار قليلاً والمحاولة مرة أخرى.",

@@ -22,6 +22,8 @@ const skipBuildChecks = isNetlifyBuild || process.env.SKIP_BUILD_CHECKS === "1";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // Do not announce the framework (and so its version) in an `X-Powered-By` header on every response.
+  poweredByHeader: false,
   // `NEXT_OUTPUT=standalone` (set only by the Dockerfile) makes `next build` emit
   // a self-contained server — .next/standalone — with just the files it needs, so
   // the container image stays small and starts with `node server.js`. Unset

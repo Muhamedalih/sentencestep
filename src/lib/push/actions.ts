@@ -1,5 +1,6 @@
 "use server";
 
+import { allowRequest } from "@/lib/security/rate-limit";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import {
   deletePushSubscription,
@@ -14,6 +15,9 @@ export async function savePushSubscriptionAction(
 ): Promise<{ error?: string }> {
   const user = await getCurrentUser();
   if (!user) return { error: "Sign in first." };
+  if (!allowRequest(`push-save:${user.id}`, 30, 60 * 60 * 1000)) {
+    return { error: "Couldn't save your subscription. Please try again." };
+  }
 
   try {
     await savePushSubscription(user.id, subscription);
@@ -46,6 +50,9 @@ export async function deletePushSubscriptionAction(endpoint: string): Promise<{ 
 export async function sendTestPushNotificationAction(): Promise<{ error?: string }> {
   const user = await getCurrentUser();
   if (!user) return { error: "Sign in first." };
+  if (!allowRequest(`push-test:${user.id}`, 5, 60 * 60 * 1000)) {
+    return { error: "Couldn't send a test notification. Please try again." };
+  }
 
   let subscriptions;
   try {

@@ -9,7 +9,11 @@ import {
 } from "@/lib/email/inbound/parse";
 import { verifyWebhookSignature } from "@/lib/email/inbound/signature";
 import { inboundEmailExists, storeInboundEmail } from "@/lib/email/inbound/store";
+import { readBodyCapped } from "@/lib/security/read-body";
 import { isServiceRoleConfigured } from "@/lib/supabase/service-role";
+
+/** The webhook only announces a message (the body is fetched separately), so it is small. */
+const MAX_INBOUND_WEBHOOK_BYTES = 256 * 1024;
 
 /**
  * Where Resend posts `email.received` when a learner replies to one of our
@@ -33,7 +37,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Inbound email isn't configured yet." }, { status: 501 });
   }
 
-  const rawBody = await request.text();
+  const rawBody = await readBodyCapped(request, MAX_INBOUND_WEBHOOK_BYTES);
+  if (rawBody === null) return NextResponse.json({ error: "too_large" }, { status: 413 });
 
   const verified = verifyWebhookSignature({
     body: rawBody,

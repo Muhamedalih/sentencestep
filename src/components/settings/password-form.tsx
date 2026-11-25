@@ -41,7 +41,7 @@ export function PasswordForm() {
               name="password"
               autoComplete="new-password"
               required
-              minLength={6}
+              minLength={8}
               aria-invalid={Boolean(state?.error)}
               showLabel={t.auth.showPassword}
               hideLabel={t.auth.hidePassword}
@@ -57,7 +57,7 @@ export function PasswordForm() {
               name="confirmPassword"
               autoComplete="new-password"
               required
-              minLength={6}
+              minLength={8}
               aria-invalid={Boolean(state?.error)}
               showLabel={t.auth.showPassword}
               hideLabel={t.auth.hidePassword}

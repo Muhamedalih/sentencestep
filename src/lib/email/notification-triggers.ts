@@ -12,7 +12,7 @@ import {
 import { sendTemplateEmail } from "@/lib/email/send";
 import { milestoneEmail } from "@/lib/email/templates/milestone";
 import type { MilestoneEvent } from "@/lib/email/templates/milestone";
-import { getSiteUrl } from "@/lib/site-url";
+import { trustedOrigin } from "@/lib/security/trusted-origin";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import type { ProgressState } from "@/lib/progress/types";
 import type { LearningMode, Lesson } from "@/types/content";
@@ -125,7 +125,7 @@ export async function evaluateAndNotify(
     // case, not the common case) must never leak a dead localhost link into
     // an email actually delivered to a real user. See getSiteUrl's doc
     // comment for how that origin gets set.
-    const origin = originHeader ?? getSiteUrl();
+    const origin = trustedOrigin(originHeader);
 
     for (const event of emailable) {
       if (!preferences.progressEmails) {

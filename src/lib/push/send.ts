@@ -1,5 +1,6 @@
 import webpush from "web-push";
 
+import { isAllowedPushEndpoint } from "@/lib/push/endpoint";
 import type { PushSubscriptionRecord } from "@/lib/push/subscriptions";
 
 export function isPushConfigured(): boolean {
@@ -45,6 +46,13 @@ export async function sendPushNotification(
   payload: PushPayload,
 ): Promise<void> {
   ensureConfigured();
+
+  // Never send to an address that is not a browser push service (see endpoint.ts): a learner can write
+  // the table directly, and the server must not be made to call internal addresses. Treated as gone,
+  // so the callers delete the row exactly as they do for a dead subscription.
+  if (!isAllowedPushEndpoint(subscription.endpoint)) {
+    throw new PushSubscriptionGoneError("Push endpoint is not a browser push service.");
+  }
 
   try {
     await webpush.sendNotification(

@@ -6,12 +6,14 @@ import type { AuthError } from "@supabase/supabase-js";
 import { cookies, headers } from "next/headers";
 
 import { createClient } from "@/lib/supabase/server";
+import { completeSignIn } from "@/lib/supabase/complete-sign-in";
 import { queueWelcomeEmail } from "@/lib/email/welcome-trigger";
-import { getSiteUrl } from "@/lib/site-url";
+import { trustedOrigin } from "@/lib/security/trusted-origin";
+import { allowRequest } from "@/lib/security/rate-limit";
+import { clientIpFrom } from "@/lib/security/client-ip";
 import { track } from "@/lib/analytics/track";
 import { safeNextPath } from "@/lib/supabase/safe-redirect";
-import { getPreferredLanguageForUser } from "@/lib/i18n/locale-actions";
-import { LOCALE_COOKIE, LOCALE_COOKIE_MAX_AGE } from "@/lib/i18n/locale-cookie";
+import { LOCALE_COOKIE } from "@/lib/i18n/locale-cookie";
 import { DEFAULT_LOCALE, isSupportLocale } from "@/lib/i18n/locales";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { getDictionary, fallbackDictionary } from "@/lib/i18n/dictionary";
@@ -24,34 +26,6 @@ import { angleBracketsError, hasAngleBrackets } from "@/lib/supabase/display-nam
 export interface AuthActionState {
   error?: string;
   success?: string;
-}
-
-/**
- * The post-auth tail shared by signIn (no MFA pending) and
- * verifyLoginMfaCode (MFA just completed) — analytics + locale sync +
- * the final redirect. Kept in one place so the two entry points can't drift
- * on what "actually finishing sign-in" means.
- */
-export async function completeSignIn(userId: string | undefined, next: string): Promise<never> {
-  if (userId) {
-    await track({ name: "USER_SIGNED_IN", category: "AUTH", properties: {} }, userId);
-
-    // DB wins for a returning user — overwrites whatever this browser's
-    // cookie currently holds, including an incidental guest choice made
-    // before signing in. See locale-actions.ts's doc comment for the full
-    // sync policy.
-    const savedLocale = await getPreferredLanguageForUser(userId);
-    if (savedLocale) {
-      const cookieStore = await cookies();
-      cookieStore.set(LOCALE_COOKIE, savedLocale, {
-        maxAge: LOCALE_COOKIE_MAX_AGE,
-        path: "/",
-        sameSite: "lax",
-      });
-    }
-  }
-
-  redirect(next);
 }
 
 export async function signIn(
@@ -114,7 +88,7 @@ export async function signIn(
  */
 export async function signInWithGoogle(formData: FormData): Promise<void> {
   const next = safeNextPath(formData.get("next"));
-  const origin = (await headers()).get("origin") ?? getSiteUrl();
+  const origin = trustedOrigin((await headers()).get("origin"));
 
   const supabase = await createClient();
   let url: string | null = null;
@@ -146,7 +120,7 @@ export async function signUp(
   const t = locale ? getDictionary(locale) : fallbackDictionary;
 
   if (!email || !password) return { error: t.auth.errors.missingFields };
-  if (password.length < 6) return { error: t.auth.errors.passwordTooShort };
+  if (password.length < 8) return { error: t.auth.errors.passwordTooShort };
   if (hasAngleBrackets(displayName)) return { error: angleBracketsError(locale) };
 
   // Bot-signup protection — see verify.ts's own doc comment for why this
@@ -169,7 +143,7 @@ export async function signUp(
   // produce a host-less link in a confirmation/reset email actually
   // delivered to a real user. Mirrors notification-triggers.ts's origin
   // fallback. See getSiteUrl's doc comment for how that origin gets set.
-  const origin = (await headers()).get("origin") ?? getSiteUrl();
+  const origin = trustedOrigin((await headers()).get("origin"));
 
   let signUpResult;
   try {
@@ -274,12 +248,23 @@ export async function requestPasswordResetAction(
 
   if (!email) return { error: t.auth.errors.missingFields };
 
+  // Each request sends a real e-mail to the address typed, so a script could use this form to flood
+  // someone's inbox or burn the mail quota. Past the limit the answer stays the same friendly one
+  // (it never says whether an address exists) but nothing is sent.
+  const requesterIp = clientIpFrom(await headers());
+  if (
+    !allowRequest(`reset:email:${email.toLowerCase()}`, 3, 15 * 60 * 1000) ||
+    !allowRequest(`reset:ip:${requesterIp}`, 30, 15 * 60 * 1000)
+  ) {
+    return { success: t.auth.resetLinkSent };
+  }
+
   // Falls back to the configured production origin, not an empty string —
   // a missing Origin header (uncommon, but not guaranteed absent) must never
   // produce a host-less link in a confirmation/reset email actually
   // delivered to a real user. Mirrors notification-triggers.ts's origin
   // fallback. See getSiteUrl's doc comment for how that origin gets set.
-  const origin = (await headers()).get("origin") ?? getSiteUrl();
+  const origin = trustedOrigin((await headers()).get("origin"));
 
   try {
     const supabase = await createClient();
@@ -315,7 +300,7 @@ export async function updatePasswordAction(
   const t = locale ? getDictionary(locale) : fallbackDictionary;
 
   if (!password || !confirmPassword) return { error: t.auth.errors.missingFields };
-  if (password.length < 6) return { error: t.auth.errors.passwordTooShort };
+  if (password.length < 8) return { error: t.auth.errors.passwordTooShort };
   if (password !== confirmPassword) return { error: t.auth.errors.passwordMismatch };
 
   try {
