@@ -4,6 +4,7 @@ import type { LucideIcon } from "lucide-react";
 import { fill, palette, stroke, type Palette } from "@/components/words/word-cover-kit";
 import { MORE_PALETTES, MORE_SCENES } from "@/components/words/word-cover-scenes";
 import { NEW_PALETTES, NEW_SCENES } from "@/components/words/word-cover-scenes-new";
+import { englishTopicTitle } from "@/lib/english-topic-title";
 import { cn } from "@/lib/utils";
 
 /**
@@ -318,12 +319,16 @@ const SCENES: Record<string, () => ReactNode> = {
 
 /** Whether a topic has a drawing of its own (otherwise its cover is the soft ground with its icon). */
 export function hasCoverScene(title: string): boolean {
-  return Object.prototype.hasOwnProperty.call(SCENES, title);
+  return Object.prototype.hasOwnProperty.call(SCENES, englishTopicTitle(title));
 }
 
 /** The tones a topic's cover is painted with (its own palette, or its level's soft ground when it has no drawing). */
 export function coverTones(title: string, level: number): Palette {
-  return (hasCoverScene(title) ? PALETTES[title] : undefined) ?? FALLBACK[level] ?? FALLBACK[1]!;
+  return (
+    (hasCoverScene(title) ? PALETTES[englishTopicTitle(title)] : undefined) ??
+    FALLBACK[level] ??
+    FALLBACK[1]!
+  );
 }
 
 function varsOf(p: Palette): CSSProperties {
@@ -362,7 +367,7 @@ export function WordCoverArt({
   fit?: "fill" | "bottom";
   className?: string;
 }) {
-  const scene = hasCoverScene(title) ? SCENES[title] : null;
+  const scene = hasCoverScene(title) ? SCENES[englishTopicTitle(title)] : null;
   const tones = coverTones(title, level);
 
   return (

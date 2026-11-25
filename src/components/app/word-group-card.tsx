@@ -54,6 +54,7 @@ import { WordCoverEditor } from "@/components/words/word-cover-editor";
 import { difficultyForLevel, type Difficulty } from "@/lib/levels";
 import { fadeInUp } from "@/lib/motion";
 import { TIER_DOT_CLASS, TIER_WATERMARK_CLASS } from "@/lib/tier-colors";
+import { englishTopicTitle } from "@/lib/english-topic-title";
 import { cn } from "@/lib/utils";
 import type { GroupMastery } from "@/lib/word-mastery/schedule";
 import type { WordGroupSummary } from "@/types/word-lists";
@@ -104,7 +105,7 @@ const TOPIC_ICON: Record<string, LucideIcon> = {
 };
 
 export function iconForGroup(title: string): LucideIcon {
-  return TOPIC_ICON[title] ?? BookOpen;
+  return TOPIC_ICON[englishTopicTitle(title)] ?? BookOpen;
 }
 
 const CARD_CLASS =

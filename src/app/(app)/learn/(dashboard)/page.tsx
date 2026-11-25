@@ -1,4 +1,4 @@
-import { GermanHome } from "@/components/german/german-home";
+import { GermanHomeCards } from "@/components/german/german-home-cards";
 import { getLearnLanguage } from "@/lib/learn-language-server";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
@@ -106,7 +106,7 @@ export default async function LearnHomePage({
   // this page is English-only and is skipped entirely for them.
   if ((await isAdmin()) && (await getLearnLanguage()) === "de") {
     const germanUser = await getCurrentUser();
-    return <GermanHome userId={germanUser?.id ?? null} locale={locale ?? null} />;
+    return <GermanHomeCards user={germanUser} locale={locale ?? null} />;
   }
 
   // The lesson catalog comes from getHomeLessons — lesson cards plus per-lesson
