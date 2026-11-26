@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import type { ReactNode } from "react";
 
 import { AppHeader } from "@/components/app/app-header";
+import { GermanAnnouncement } from "@/components/app/german-announcement";
 import { DashboardChrome } from "@/components/app/dashboard-chrome";
 import { LearnSidebar } from "@/components/app/learn-sidebar";
 import { ReportProblemButton } from "@/components/app/report-problem-button";
@@ -80,6 +81,7 @@ export default async function LearnDashboardLayout({ children }: { children: Rea
             mobilePath={features.rollouts.mobilePath}
             rulesEnabled={Boolean(user) && features.rollouts.dailyRule}
             videoEnabled={features.rollouts.videoDictation}
+            videoLocked={learnLanguage === "de"}
             wordDropEnabled={features.rollouts.wordDrop}
             contactInstagram={features.rollouts.contactInstagram}
             wordBankEnabled={
@@ -90,6 +92,7 @@ export default async function LearnDashboardLayout({ children }: { children: Rea
         }
       >
         {askLanguage && <LearnLanguagePicker />}
+        {learnLanguage === "en" && <GermanAnnouncement />}
         {children}
       </DashboardChrome>
       {/* Guests have no email to follow up on — see submitProblemReport and problem_reports' RLS insert policy. Phones get the inline buttons instead (see ReportProblemButton). */}

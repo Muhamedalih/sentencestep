@@ -6,6 +6,7 @@ import { useEffect, useSyncExternalStore } from "react";
 const KEYS = {
   video: "sentencestep:video-seen",
   words: "sentencestep:words-seen",
+  german: "sentencestep:german-seen",
 } as const;
 
 const listeners = new Set<() => void>();
@@ -32,6 +33,18 @@ function subscribe(listener: () => void): () => void {
   };
 }
 
+/** Remembers that the section was seen (this tab at least; this browser when storage allows) and tells every subscriber. */
+function markSeen(storageKey: string): void {
+  if (readSeen(storageKey)) return;
+  cached.set(storageKey, true);
+  try {
+    window.localStorage.setItem(storageKey, "1");
+  } catch {
+    // The word is a convenience only.
+  }
+  for (const listener of listeners) listener();
+}
+
 function useSectionNew(storageKey: string, onSection: boolean): boolean {
   const seen = useSyncExternalStore(
     subscribe,
@@ -40,14 +53,7 @@ function useSectionNew(storageKey: string, onSection: boolean): boolean {
   );
 
   useEffect(() => {
-    if (!onSection || readSeen(storageKey)) return;
-    cached.set(storageKey, true);
-    try {
-      window.localStorage.setItem(storageKey, "1");
-    } catch {
-      // The word is a convenience only.
-    }
-    for (const listener of listeners) listener();
+    if (onSection) markSeen(storageKey);
   }, [onSection, storageKey]);
 
   return !seen;
@@ -65,4 +71,18 @@ export function useVideoNew(onVideo: boolean): boolean {
 /** The same small «new» word for the Words (Word Lists) section. */
 export function useWordsNew(onWords: boolean): boolean {
   return useSectionNew(KEYS.words, onWords);
+}
+
+/**
+ * True until the learner has chosen German once (or closed the announcement): the language chip wears a
+ * small dot, German's row in its list wears «new», and the English Home shows the announcement strip.
+ * Choosing German (`german`) retires all three for good on this device.
+ */
+export function useGermanNew(german: boolean): boolean {
+  return useSectionNew(KEYS.german, german);
+}
+
+/** Closes the German announcement for good on this device (the strip's × button). */
+export function dismissGermanNew(): void {
+  markSeen(KEYS.german);
 }

@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 import { CardSkeleton } from "@/components/app/home-engagement";
 import type { LessonStatsMap } from "@/components/app/home-hero";
-import { ContinueCard } from "@/components/home-cards/continue-card";
+import { GermanSuggestedCard } from "@/components/german/suggested-card";
 import { PassagesSectionCard } from "@/components/home-cards/section-cards";
 import { StatsPanel } from "@/components/home-cards/stats-panel";
 import { TasksBox } from "@/components/home-cards/tasks-box";
@@ -106,9 +106,10 @@ async function TasksSlot({
 
 /**
  * Home for a learner of German (permission germanTrack, Admins only for now): the English Home's cards
- * page — the week strip, the keep-learning card beside the achievements panel, then the Passages card
- * and, where the English page has its Video card (German has no videos), the words banner — drawn
- * with the German track's own lessons, stories, passages and word lists. German content is separate
+ * page, rearranged — the week strip, then the words banner at the top beside the achievements panel,
+ * then the Passages card beside a small keep-learning card (the next story or daily lesson, see
+ * GermanSuggestedCard), and no Video card (German has no videos) — drawn with the German track's own
+ * lessons, stories, passages and word lists. German content is separate
  * from English by id ("de-…"), so every count and the progress it reads is the German track's alone.
  */
 export async function GermanHomeCards({
@@ -164,11 +165,12 @@ export async function GermanHomeCards({
         <div
           className={cn("grid gap-4 lg:grid-cols-[minmax(0,1fr)_20.75rem]", calm && "mt-5 gap-y-4")}
         >
-          <ContinueCard
-            units={units}
-            storiesUnits={storiesUnits}
+          <WordsBanner
+            groups={groups}
             isPremiumUser
-            hasWeakWords={false}
+            reviewCount={0}
+            reviewHref="/learn/word-lists/review"
+            className="min-w-0 xl:h-[19.75rem] xl:min-h-0"
           />
           <StatsPanel lessonStats={lessonStats} sessionCount={null} videosFinished={null} />
         </div>
@@ -180,13 +182,7 @@ export async function GermanHomeCards({
           >
             <PassagesSlot data={passages} />
           </Suspense>
-          <WordsBanner
-            groups={groups}
-            isPremiumUser
-            reviewCount={0}
-            reviewHref="/learn/word-lists/review"
-            className="min-w-0 max-xl:basis-full xl:flex-[3_1_28rem]"
-          />
+          <GermanSuggestedCard units={units} storiesUnits={storiesUnits} />
         </div>
       </div>
     </ProgressProvider>
