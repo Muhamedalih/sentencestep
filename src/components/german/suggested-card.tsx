@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { CSSProperties } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
@@ -16,18 +17,22 @@ import { useCurrentLesson } from "@/hooks/use-current-lesson";
 import { GERMAN_ID_PREFIX } from "@/lib/learn-language";
 import { findCurrentLesson } from "@/lib/progress/level";
 import { storyMonogram } from "@/lib/story-monogram";
+import { cn } from "@/lib/utils";
 import type { LessonUnit } from "@/types/content";
+
+type Choice = "story" | "lesson";
 
 /** The white button of the story choice, the same as the English Home's. */
 const WHITE_BUTTON =
-  "inline-flex h-11 w-fit items-center gap-2 rounded-xl bg-white px-5 text-[15px] font-bold text-slate-900 transition-colors outline-none hover:bg-white/90 focus-visible:ring-2 focus-visible:ring-white/70";
+  "inline-flex h-11 w-fit items-center gap-2 rounded-xl bg-white px-5 text-[15px] font-bold text-slate-900 transition-colors outline-none hover:bg-white/90 focus-visible:ring-2 focus-visible:ring-white/70 xl:h-12 xl:px-6 xl:text-base";
 
 /**
- * The small «keep learning» card of the German Home (permission germanTrack, Admins only): the English
- * Home's keep-learning card at half its size, with no tabs and no section name, only what to do next —
- * the next story or the next daily lesson. It alternates: after a lesson it suggests the story, after a
- * story (or with nothing finished yet) it suggests the lesson, and when one of the two has run out it
- * suggests the other. The Passages card is its own card beside it and has nothing to do with this one.
+ * The «keep learning» card of the German Home (permission germanTrack, Admins only): the English Home's
+ * keep-learning card at a smaller size, with no section name, only what to do next — the next story or
+ * the next daily lesson. A small picker in its corner switches between the two (daily lessons, stories).
+ * It opens on the one the learner did not do last: after a lesson the story, after a story (or with
+ * nothing finished yet) the lesson, and when one of the two has run out the other. The Passages card is
+ * its own card beside it and has nothing to do with this one.
  */
 export function GermanSuggestedCard({
   units,
@@ -45,11 +50,12 @@ export function GermanSuggestedCard({
   const grey = useGreyHome();
   const stories = homeCardColors(grey, "stories");
   const lessonColors = homeCardColors(grey, "lesson");
+  const [picked, setPicked] = useState<Choice | null>(null);
 
   if (!isLoaded) {
     return (
       <div
-        className="bg-muted/60 min-h-[13.75rem] min-w-0 flex-1 basis-[20rem] animate-pulse rounded-2xl"
+        className="bg-muted/60 min-h-[13.75rem] min-w-0 flex-1 basis-[20rem] animate-pulse rounded-2xl xl:min-h-[17rem]"
         aria-hidden="true"
       />
     );
@@ -64,7 +70,7 @@ export function GermanSuggestedCard({
   );
   const lesson = currentLesson;
 
-  // What the learner finished last in German decides which of the two comes next.
+  // What the learner finished last in German decides which of the two opens first.
   const last = completions
     .filter((entry) => entry.lessonId.startsWith(GERMAN_ID_PREFIX))
     .reduce<(typeof completions)[number] | null>(
@@ -72,8 +78,9 @@ export function GermanSuggestedCard({
       null,
     );
   const wantStory = last?.mode === "normal";
-  const choice: "story" | "lesson" | null =
-    wantStory && story ? "story" : lesson ? "lesson" : story ? "story" : null;
+  const suggested: Choice =
+    wantStory && story ? "story" : lesson ? "lesson" : story ? "story" : "lesson";
+  const choice: Choice = picked ?? suggested;
 
   const startedLessons = completedIds.some((id) => id.startsWith(GERMAN_ID_PREFIX));
   const startedStories = getCompletedIds("stories").some((id) => id.startsWith(GERMAN_ID_PREFIX));
@@ -84,17 +91,23 @@ export function GermanSuggestedCard({
       : t.common.startLearning;
 
   const onStory = choice === "story";
-  const colors = onStory || !lesson ? stories : lessonColors;
+  const colors = onStory ? stories : lessonColors;
   const card: CSSProperties = {
     background: colors.background,
     borderColor: colors.edge,
     borderRadius: grey ? GREY.radius.card : undefined,
   };
+  const rtl = locale === "ar";
+  const titleClass =
+    "mt-3 line-clamp-2 text-[1.65rem] leading-tight font-bold tracking-tight xl:text-[2.1rem]";
+  const supportClass = "mt-0.5 line-clamp-1 text-base font-medium text-white/85 xl:text-lg";
+  const lineClass =
+    "mt-2.5 line-clamp-1 border-t border-white/15 pt-2 text-sm text-white/75 xl:text-[15px]";
 
   return (
     <section
       aria-label={s.continueTitle}
-      className="hc-card hc-rise relative isolate min-h-[13.75rem] min-w-0 flex-1 basis-[20rem] overflow-hidden rounded-2xl border text-white"
+      className="hc-card hc-rise relative isolate min-h-[13.75rem] min-w-0 flex-1 basis-[20rem] overflow-hidden rounded-2xl border text-white xl:min-h-[17rem]"
       style={{ ...card, "--hc-i": 4 } as CSSProperties}
     >
       {choice === "lesson" && lesson && (
@@ -117,7 +130,7 @@ export function GermanSuggestedCard({
       {choice === "story" && story && (
         <div
           aria-hidden="true"
-          className="hc-tilt-r absolute end-6 top-5 hidden h-[21.6rem] w-[15.6rem] origin-top-right scale-[0.5] sm:block"
+          className="hc-tilt-r absolute end-6 top-14 hidden h-[21.6rem] w-[15.6rem] origin-top-right scale-[0.46] sm:block xl:top-16 xl:scale-[0.58]"
         >
           <i
             className="absolute rounded-[4px_10px_10px_4px]"
@@ -149,26 +162,50 @@ export function GermanSuggestedCard({
         </div>
       )}
 
-      <div className="relative flex h-full min-h-[13.75rem] max-w-[62%] flex-col px-6 py-5 max-sm:max-w-none">
-        <span className="text-[13.5px] font-bold" dir={dir}>
+      {/* The picker in the corner: the daily lessons or the stories. */}
+      <div
+        role="tablist"
+        aria-label={s.continueTitle}
+        dir={rtl ? "rtl" : "ltr"}
+        className="absolute end-4 top-4 z-20 grid grid-cols-2 rounded-xl border border-white/10 bg-black/45 p-1"
+      >
+        {(
+          [
+            ["lesson", s.tabLessons],
+            ["story", s.tabStories],
+          ] as const
+        ).map(([id, label]) => (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            aria-selected={choice === id}
+            onClick={() => setPicked(id)}
+            className={cn(
+              "cursor-pointer rounded-[9px] px-3 py-1 text-[12.5px] font-semibold whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-white/70",
+              choice === id ? "bg-white/15 text-white" : "text-white/70 hover:text-white",
+            )}
+            dir={dir}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      <div className="relative flex h-full min-h-[13.75rem] max-w-[62%] flex-col px-6 py-5 max-sm:max-w-none xl:min-h-[17rem] xl:px-7 xl:py-6">
+        <span className="text-[13.5px] font-bold xl:text-[15px]" dir={dir}>
           {s.continueTitle}
         </span>
         {choice === "story" && story ? (
           <>
-            <h2
-              dir="ltr"
-              className="mt-3 line-clamp-2 text-[1.65rem] leading-tight font-bold tracking-tight"
-            >
+            <h2 dir="ltr" className={titleClass}>
               {story.title}
             </h2>
-            <p className="mt-0.5 line-clamp-1 text-base font-medium text-white/85" dir={dir}>
+            <p className={supportClass} dir={dir}>
               {story.supportTitle ?? s.storyLine}
             </p>
             {story.supportTitle && (
-              <p
-                className="mt-2.5 line-clamp-1 border-t border-white/15 pt-2 text-sm text-white/75"
-                dir={dir}
-              >
+              <p className={lineClass} dir={dir}>
                 {s.storyLine}
               </p>
             )}
@@ -183,20 +220,14 @@ export function GermanSuggestedCard({
           </>
         ) : choice === "lesson" && lesson ? (
           <>
-            <h2
-              dir="ltr"
-              className="mt-3 line-clamp-2 text-[1.65rem] leading-tight font-bold tracking-tight"
-            >
+            <h2 dir="ltr" className={titleClass}>
               {lesson.title}
             </h2>
-            <p className="mt-0.5 line-clamp-1 text-base font-medium text-white/85" dir={dir}>
+            <p className={supportClass} dir={dir}>
               {lesson.supportTitle ?? lesson.title}
             </p>
             {lesson.supportDescription && (
-              <p
-                className="mt-2.5 line-clamp-1 border-t border-white/15 pt-2 text-sm text-white/75"
-                dir={dir}
-              >
+              <p className={lineClass} dir={dir}>
                 {lesson.supportDescription}
               </p>
             )}
@@ -208,15 +239,19 @@ export function GermanSuggestedCard({
             </Button>
           </>
         ) : (
+          // The chosen side has nothing left: say so and open its list.
           <>
-            <h2 className="mt-3 text-[1.65rem] leading-tight font-bold tracking-tight" dir={dir}>
-              {t.nav.stories}
+            <h2 className={titleClass} dir={dir}>
+              {onStory ? t.nav.stories : t.premium.homeAllDoneHeading}
             </h2>
-            <p className="mt-0.5 text-base text-white/85" dir={dir}>
-              {s.storiesAllDone}
+            <p className={supportClass} dir={dir}>
+              {onStory ? s.storiesAllDone : t.premium.homeAllDoneBody}
             </p>
-            <Link href="/learn/stories" className={`${WHITE_BUTTON} mt-auto`}>
-              <span dir={dir}>{t.nav.stories}</span>
+            <Link
+              href={onStory ? "/learn/stories" : "/learn/normal"}
+              className={`${WHITE_BUTTON} mt-auto`}
+            >
+              <span dir={dir}>{onStory ? t.nav.stories : t.nav.normalLessons}</span>
               <ArrowRight className="size-4" aria-hidden="true" />
             </Link>
           </>

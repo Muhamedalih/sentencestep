@@ -1248,3 +1248,35 @@ html[data-keyboard] .kb-hide {
     animation: none;
   }
 }
+
+/* The German Home's words banner: the books sway one after another, slowly, and a soft glow breathes behind the shelf. */
+@keyframes hc-sway {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+@keyframes hc-glow {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.hc-sway {
+  animation: hc-sway 4.8s ease-in-out infinite;
+}
+.hc-glow {
+  animation: hc-glow 6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hc-sway,
+  .hc-glow {
+    animation: none;
+  }
+}

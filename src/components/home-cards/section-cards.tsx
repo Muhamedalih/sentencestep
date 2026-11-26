@@ -12,7 +12,15 @@ import { useGreyHome } from "./use-grey-home";
 import { YouTubeTag } from "./youtube-mark";
 
 /** The Passages card of the Home cards: the passage to read next (the one in progress, or the first not started). */
-export function PassagesSectionCard({ data, index }: { data: PassagesHomeData; index: number }) {
+export function PassagesSectionCard({
+  data,
+  index,
+  className,
+}: {
+  data: PassagesHomeData;
+  index: number;
+  className?: string;
+}) {
   const { t, locale } = useLocale();
   const s = homeCardsStrings(locale);
   const grey = useGreyHome();
@@ -30,6 +38,7 @@ export function PassagesSectionCard({ data, index }: { data: PassagesHomeData; i
       cta={data.mode === "continue" ? t.passages.continue : t.passages.homeStart}
       href={`/learn/passages/${passage.id}`}
       index={index}
+      className={className}
     />
   );
 }

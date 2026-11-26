@@ -22,6 +22,10 @@ const EASE = [0.22, 1, 0.36, 1] as const;
 /** A book's height: 120 px for a topic just begun up to 170 px for a finished one. */
 const spineHeight = (ratio: number) => 120 + 50 * ratio;
 
+/** The lively banner's taller books (it stands on a taller band): 150 px up to 210 px, and a small difference between neighbours so a shelf does not look cut by a ruler. */
+const livelySpineHeight = (ratio: number, index: number) =>
+  150 + 60 * ratio + ((index * 37) % 5) * 9;
+
 /**
  * The banner at the top of the Words page (the wordsBanner permission), a deep green band: the
  * number of words the learner has learned, how many topics are going and one button on the left, a
@@ -36,6 +40,11 @@ const spineHeight = (ratio: number) => 120 + 50 * ratio;
  * reduced motion. It replaces the review card at the top of the page, so the page gains no element.
  * Below 1280 px it stacks (number, button, shelf) and the shelf shows six books and the leaning one.
  *
+ * `lively` (the German Home's banner, which stands on a taller band) stands every topic on the shelf,
+ * begun or not (the ones not begun a shade darker and short), and lets the books sway one after
+ * another, slowly, once they have risen, with a soft glow breathing behind the shelf. Both stop for a
+ * learner who asked for reduced motion.
+ *
  * The learner's progress is read in the browser (a guest's lives there, a signed-in learner's comes
  * from their account), so until it is read the band is drawn empty at its full height: the page
  * never jumps and never flashes a beginner's banner at someone who has begun.
@@ -46,6 +55,7 @@ export function WordsBanner({
   reviewCount,
   reviewHref,
   className,
+  lively = false,
 }: {
   groups: WordGroupSummary[];
   isPremiumUser: boolean;
@@ -54,6 +64,8 @@ export function WordsBanner({
   /** Where the review button goes. */
   reviewHref: string;
   className?: string;
+  /** Every topic on the shelf, taller books, a slow sway and a soft glow (the German Home). */
+  lively?: boolean;
 }) {
   const { locale } = useLocale();
   const s = wordsBannerStrings(locale);
@@ -62,8 +74,8 @@ export function WordsBanner({
   const reducedMotion = useReducedMotion() ?? false;
 
   const summary = useMemo(
-    () => summarizeBanner(groups, completedWordIds, isPremiumUser),
-    [groups, completedWordIds, isPremiumUser],
+    () => summarizeBanner(groups, completedWordIds, isPremiumUser, { fullShelf: lively }),
+    [groups, completedWordIds, isPremiumUser, lively],
   );
 
   const shell = cn("relative overflow-hidden rounded-[18px] xl:min-h-[196px]", BAND, className);
@@ -125,6 +137,17 @@ export function WordsBanner({
         </Link>
       )}
 
+      {lively && (
+        <span
+          aria-hidden="true"
+          className="hc-glow pointer-events-none absolute inset-y-0 end-0 w-[55%]"
+          style={{
+            background:
+              "radial-gradient(60% 70% at 70% 100%,rgba(194,229,209,0.20) 0%,rgba(194,229,209,0) 70%)",
+          }}
+        />
+      )}
+
       <div
         role="list"
         aria-label={s.shelfLabel}
@@ -138,6 +161,7 @@ export function WordsBanner({
               <Book
                 key={topic.id}
                 index={index}
+                lively={lively}
                 topic={topic}
                 lean={topic.id === summary.leanId}
                 href={topicHref(topic.id)}
@@ -162,6 +186,7 @@ function Book({
   ratio,
   topic,
   lean = false,
+  lively = false,
   href,
   label,
   reducedMotion,
@@ -170,23 +195,36 @@ function Book({
   ratio?: number;
   topic?: BannerTopic;
   lean?: boolean;
+  /** The German Home's taller, swaying book; a topic not begun is shown a shade darker. */
+  lively?: boolean;
   href?: string;
   label?: string;
   reducedMotion: boolean;
 }) {
-  const height = spineHeight(topic ? topic.ratio : (ratio ?? 0));
+  const bookRatio = topic ? topic.ratio : (ratio ?? 0);
+  const height = lively ? livelySpineHeight(bookRatio, index) : spineHeight(bookRatio);
+  const notBegun = lively && topic !== undefined && topic.done === 0;
   const delay = index * 0.07 + (lean ? 0.42 : topic ? 0.28 : 0.3);
   const rise = { duration: 0.75, ease: EASE, delay };
-  return (
+  const book = (
     <motion.div
       role="listitem"
-      className={cn("relative w-9 shrink-0 rounded-t-[3px]", lean && "lean ms-2 me-[18px]")}
+      className={cn(
+        "relative w-9 shrink-0 rounded-t-[3px]",
+        !lively && lean && "lean ms-2 me-[18px]",
+      )}
       style={{
         height,
         originX: 0,
         originY: 1,
         ...(topic
-          ? { background: spineColor(topic.title, topic.level), color: SPINE_TEXT }
+          ? {
+              background: spineColor(topic.title, topic.level),
+              color: SPINE_TEXT,
+              ...(notBegun
+                ? { backgroundImage: "linear-gradient(rgba(0,0,0,0.22),rgba(0,0,0,0.22))" }
+                : {}),
+            }
           : { border: "1.5px dashed rgba(241,239,230,0.28)" }),
       }}
       initial={reducedMotion ? false : { opacity: 0, y: 52, rotate: 0 }}
@@ -221,5 +259,15 @@ function Book({
         </Link>
       )}
     </motion.div>
+  );
+  if (!lively) return book;
+  // The sway lives on a wrapper so it never fights the motion of the book itself (rise, lean, lift).
+  return (
+    <div
+      className={cn("hc-sway shrink-0", lean && "lean ms-2 me-[18px]")}
+      style={{ animationDelay: `${(1.4 + index * 0.22).toFixed(2)}s` }}
+    >
+      {book}
+    </div>
   );
 }

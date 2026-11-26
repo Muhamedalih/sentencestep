@@ -265,6 +265,7 @@ export function CategoryCard({
   plain = false,
   badge,
   index = 0,
+  className: extraClassName,
 }: {
   colors: CardColors;
   art: CategoryArt;
@@ -284,12 +285,15 @@ export function CategoryCard({
   badge?: ReactNode;
   /** The place in the page's staggered entrance. */
   index?: number;
+  /** Extra classes for the card itself (the German Home makes it taller). */
+  className?: string;
 }) {
   const { dir } = useLocale();
   // The grey look of Home (permission "greyCalm"): small corners (the colours come from the caller).
   const grey = useGreyHome();
   const className = cn(
     "hc-card hc-rise group relative isolate flex min-h-[13.75rem] min-w-0 flex-1 basis-[20rem] flex-col overflow-hidden rounded-2xl border p-5 text-white outline-none focus-visible:ring-2 focus-visible:ring-white/70",
+    extraClassName,
   );
   const style = {
     background: colors.background,
