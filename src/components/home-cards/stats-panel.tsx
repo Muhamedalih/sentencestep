@@ -74,10 +74,13 @@ export function StatsPanel({
   lessonStats,
   sessionCount,
   videosFinished,
+  narrow = false,
 }: {
   lessonStats: LessonStatsMap;
   sessionCount: number | null;
   videosFinished: number | null;
+  /** The words-first Home: the panel is drawn 35% narrower (the page sets its width), so the «to next level» line goes under the name. */
+  narrow?: boolean;
 }) {
   const { t, dir, locale } = useLocale();
   const s = homeCardsStrings(locale);
@@ -108,14 +111,24 @@ export function StatsPanel({
         <p className="text-xs leading-none" style={{ color: colors.soft }} dir={dir}>
           {s.levelLabel}
         </p>
-        <div className="mt-1.5 flex items-baseline justify-between gap-3">
+        <div
+          className={
+            narrow
+              ? "mt-1.5 flex flex-col gap-1"
+              : "mt-1.5 flex items-baseline justify-between gap-3"
+          }
+        >
           <b
             className="truncate text-[1.7rem] leading-tight font-extrabold tracking-tight"
             dir={dir}
           >
             {levelName}
           </b>
-          <span className="shrink-0 text-xs" style={{ color: colors.accent }} dir={dir}>
+          <span
+            className={narrow ? "text-xs" : "shrink-0 text-xs"}
+            style={{ color: colors.accent }}
+            dir={dir}
+          >
             {nextName ? fillText(s.levelToNext, { n: percent, level: nextName }) : s.levelTop}
           </span>
         </div>

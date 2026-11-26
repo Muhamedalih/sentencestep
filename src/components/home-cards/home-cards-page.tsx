@@ -17,11 +17,20 @@ import { PassagesSectionCard, VideoSectionCard } from "./section-cards";
 import { StatsPanel } from "./stats-panel";
 import type { BankCardData } from "@/lib/word-bank/shelves";
 
+import { WordsBanner } from "@/components/words/words-banner";
+import type { WordGroupSummary } from "@/types/word-lists";
+
 import { WordsSection } from "./words-section";
 
-async function PassagesSlot({ data }: { data: Promise<PassagesHomeData | null> }) {
+async function PassagesSlot({
+  data,
+  className,
+}: {
+  data: Promise<PassagesHomeData | null>;
+  className?: string;
+}) {
   const resolved = await data;
-  return resolved ? <PassagesSectionCard data={resolved} index={3} /> : null;
+  return resolved ? <PassagesSectionCard data={resolved} index={3} className={className} /> : null;
 }
 
 /**
@@ -51,6 +60,7 @@ export function HomeCardsPage({
   wordHints,
   wordsBank = null,
   calm = false,
+  wordsFirst = null,
 }: {
   engagement: HomeEngagementStream | null;
   /** «Up next». */
@@ -74,7 +84,84 @@ export function HomeCardsPage({
   wordsBank?: BankCardData | null;
   /** The calm look (permission "homeCalm"): tabs above the story card instead of a heading, a narrower centred page, no lift under the pointer. */
   calm?: boolean;
+  /**
+   * The words-first order (permission "homeWordsFirst"): the word-list titles for the Words banner. Row 1 is
+   * the banner beside a level panel 35% narrower (20.75rem to 13.5rem); row 2 is Passages beside the keep-learning
+   * card, both 25% taller than that card was (19.75rem to 24.7rem); row 3 is the Video card across the page with
+   * a large player. The Words section at the foot gives way to the banner.
+   */
+  wordsFirst?: WordGroupSummary[] | null;
 }) {
+  if (wordsFirst) {
+    return (
+      <div
+        className={cn(
+          "mx-auto max-w-5xl px-6 pt-4 pb-12 sm:pt-6 sm:pb-16 xl:max-w-7xl",
+          calm && "max-w-7xl pt-3 sm:pt-3",
+        )}
+        data-calm-home={calm ? "" : undefined}
+      >
+        {banners}
+        <HomeEngagementSection stream={engagement} quiet cards calm={calm} className="hc-rise" />
+        {!calm && (
+          <div className="mt-4 mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+            <h2 className="text-lg font-semibold tracking-tight">{heading}</h2>
+            {!isPremiumUser && <StarterPathProgress units={units} />}
+          </div>
+        )}
+        <div className={cn("grid gap-4 lg:grid-cols-[minmax(0,1fr)_13.5rem]", calm && "mt-5")}>
+          <WordsBanner
+            groups={wordsFirst}
+            isPremiumUser={isPremiumUser}
+            reviewCount={reviewCount}
+            reviewHref="/learn/word-lists/review"
+            className="min-w-0 xl:h-[19.75rem] xl:min-h-0"
+            lively
+          />
+          <StatsPanel
+            lessonStats={lessonStats}
+            sessionCount={sessionCount}
+            videosFinished={videosFinished}
+            narrow
+          />
+        </div>
+        <div className="mt-4 grid gap-4 lg:grid-cols-2 lg:items-end">
+          <Suspense
+            fallback={
+              <CardSkeleton
+                feature="passages"
+                className="min-h-[13.75rem] lg:min-h-[22rem] xl:h-[24.7rem]"
+              />
+            }
+          >
+            <PassagesSlot data={passages} className="lg:min-h-[22rem] xl:h-[24.7rem]" />
+          </Suspense>
+          <div className="flex min-w-0 flex-col gap-3">
+            <ContinueCard
+              units={units}
+              storiesUnits={storiesUnits}
+              isPremiumUser={isPremiumUser}
+              hasWeakWords={reviewCount > 0}
+              extra={calm && !isPremiumUser ? <StarterPathProgress units={units} /> : null}
+              tall
+            />
+          </div>
+        </div>
+        {video && (
+          <div className="mt-4 flex">
+            <VideoSectionCard
+              card={video.card}
+              heading={video.heading}
+              cta={video.cta}
+              index={4}
+              wide
+            />
+          </div>
+        )}
+        {footer}
+      </div>
+    );
+  }
   return (
     <div
       className={cn(

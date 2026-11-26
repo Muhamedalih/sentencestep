@@ -50,6 +50,7 @@ import { fetchAttemptCount } from "@/lib/supabase/queries/progress";
 import { fetchFinishedVideoCount } from "@/lib/supabase/queries/video-finishes";
 import { fetchWordCardHints } from "@/lib/supabase/queries/word-hints";
 import { loadBankCard } from "@/lib/word-bank/card-load";
+import { getWordGroupSummaries } from "@/lib/word-lists";
 import { getLearnerToday } from "@/lib/word-mastery/access";
 import { fetchWeakWordsAction } from "@/lib/weak-words/actions";
 import { countWordsWaitingForReview } from "@/lib/word-mastery/queue";
@@ -390,13 +391,19 @@ export default async function LearnHomePage({
     // leaves its piece out; neither can take the page down. A visitor has neither.
     // A third read for a learner the words bank («كلماتي») is open to: their own words, so the words
     // card can show today's round instead of the review queue (null on a day with none, or closed).
-    const [videosFinished, wordHints, wordsBank] = await Promise.all([
+    // The words-first order (permission "homeWordsFirst") needs the word-list titles for its banner; its
+    // words card replaces the one at the foot, so the meanings and the words bank are not read for it.
+    const wordsFirst = features.rollouts.homeWordsFirst;
+    const [videosFinished, wordHints, wordsBank, wordsFirstGroups] = await Promise.all([
       user ? fetchFinishedVideoCount(user.id) : Promise.resolve(null),
-      user && locale === "ar"
+      user && locale === "ar" && !wordsFirst
         ? fetchWordCardHints(reviewWords.slice(0, 4).map((word) => word.wordId))
         : Promise.resolve({}),
-      user && features.rollouts.wordBank
+      user && features.rollouts.wordBank && !wordsFirst
         ? getLearnerToday().then((today) => loadBankCard(user.id, today))
+        : Promise.resolve(null),
+      wordsFirst
+        ? getWordGroupSummaries(locale ?? undefined).catch(() => [])
         : Promise.resolve(null),
     ]);
     return (
@@ -445,6 +452,7 @@ export default async function LearnHomePage({
           wordHints={wordHints}
           wordsBank={wordsBank}
           calm={features.rollouts.homeCalm}
+          wordsFirst={wordsFirstGroups}
         />
       </ProgressProvider>
     );

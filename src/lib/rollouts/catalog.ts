@@ -67,6 +67,7 @@ export const ROLLOUT_IDS = [
   "wordDrop",
   "upgradeModal",
   "germanZero",
+  "homeWordsFirst",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -761,6 +762,17 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
     notes: [
       "Nothing about English changes, and no lesson row, recording or stored level is touched: the letters lesson is a page of its own, its done mark is kept on this browser.",
       "Needs germanTrack open as well; closed by default, so only admins see it until it is opened on the Permissions page.",
+    ],
+  },
+  homeWordsFirst: {
+    id: "homeWordsFirst",
+    audience: "learner",
+    title: "Home: the words banner first, Video as a full row",
+    description:
+      "The English Home gets the German Home's order. First row: the green Words banner (wider) beside a level and achievements panel that is 35% narrower. Second row: the Passages card beside the Stories / Daily lessons card, both 25% taller than the Stories card was. Third row: the Video card across the whole page with a large player. The Words section that used to sit at the foot is replaced by the banner at the top.",
+    notes: [
+      "Only the arrangement changes: the same links, numbers, tabs and words. The banner reads the word-list titles (one cached read, admins only while this is closed) and the learner's word progress from the browser, as the Words page does.",
+      "Needs the Home cards open as well (it rearranges that page). Closed by default, so only admins see it until it is opened to others on the Permissions page.",
     ],
   },
   wordDrop: {
