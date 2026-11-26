@@ -201,6 +201,12 @@ export default async function AdminConsoleLayout({ children }: { children: React
                     {newRatingsCount > 0 && <Badge variant="secondary">{newRatingsCount}</Badge>}
                   </Link>
                   <Link
+                    href="/admin/german"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    German
+                  </Link>
+                  <Link
                     href="/admin/inbox"
                     className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 transition-colors"
                   >

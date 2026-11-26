@@ -31,6 +31,18 @@ export type RatingsSource = "app" | "passages" | "video" | "words" | "rounds";
 export const RATINGS_SECTIONS = ["all", "normal", "stories", "settings"] as const;
 export type RatingsSection = (typeof RATINGS_SECTIONS)[number];
 
+/**
+ * The language a rating was given in (permission germanTrack): a rating is German when the lesson, story,
+ * passage or word group it followed is a German one (its id starts with "de-"); every other rating, the
+ * Settings card included, is counted as English.
+ */
+export type RatingsLanguage = "de" | "en";
+
+/** The language of a rating, from the id of what it followed. */
+export function ratingLanguage(lessonId: string): RatingsLanguage {
+  return lessonId.startsWith("de-") ? "de" : "en";
+}
+
 export interface RatingsFilter {
   source: RatingsSource;
   /** Only meaningful for the "app" source (it is "all" for the others). */
@@ -39,6 +51,8 @@ export interface RatingsFilter {
   /** Only this many stars, or null for all. */
   stars: 1 | 2 | 3 | 4 | 5 | null;
   userType: RatingUserType | null;
+  /** Only the ratings given about German content (its id starts with "de-"), only the rest (English), or null for both. */
+  language: RatingsLanguage | null;
   /** Hide the ratings that came without a written comment. */
   commentOnly: boolean;
   page: number;
@@ -67,6 +81,7 @@ export function parseRatingsFilter(params: RawParams): RatingsFilter {
   const view = first(params.view);
   const stars = Number(first(params.stars));
   const userType = first(params.type);
+  const lang = first(params.lang);
   const page = Number(first(params.page));
   const source = parseSource(first(params.source));
 
@@ -77,6 +92,7 @@ export function parseRatingsFilter(params: RawParams): RatingsFilter {
     stars:
       Number.isInteger(stars) && stars >= 1 && stars <= 5 ? (stars as 1 | 2 | 3 | 4 | 5) : null,
     userType: userType === "member" || userType === "guest" ? userType : null,
+    language: lang === "de" || lang === "en" ? lang : null,
     commentOnly: first(params.comments) === "1",
     page: Number.isInteger(page) && page >= 1 ? page : 1,
   };
@@ -90,6 +106,7 @@ export function ratingsFilterParams(filter: RatingsFilter): Record<string, strin
     view: filter.view === "active" ? undefined : filter.view,
     stars: filter.stars ? String(filter.stars) : undefined,
     type: filter.userType ?? undefined,
+    lang: filter.language ?? undefined,
     comments: filter.commentOnly ? "1" : undefined,
   };
 }

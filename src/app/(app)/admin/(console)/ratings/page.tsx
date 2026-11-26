@@ -16,6 +16,7 @@ import {
   RATINGS_PAGE_SIZE,
   RATINGS_SECTIONS,
   parseRatingsFilter,
+  ratingLanguage,
   ratingsFilterParams,
   type AppRatingStatus,
   type RatingsFilter,
@@ -105,11 +106,11 @@ export default async function AdminRatingsPage({
   const filter = parseRatingsFilter(await searchParams);
   const [overview, { ratings, totalCount }, settings, newBySource, sectionCounts] =
     await Promise.all([
-      getAppRatingsOverview(filter.source, filter.section),
+      getAppRatingsOverview(filter.source, filter.section, filter.language),
       listAppRatings(filter),
       getRatingsSettings(),
-      countNewRatingsBySource(),
-      countAppRatingsBySection(),
+      countNewRatingsBySource(filter.language),
+      countAppRatingsBySection(filter.language),
     ]);
   const forPassages = filter.source === "passages";
   const forVideo = filter.source === "video";
@@ -142,6 +143,11 @@ export default async function AdminRatingsPage({
               : forVideo
                 ? "What learners said about the Video section and how to develop the site, from the one-time card shown after their first finished video (the video is named on each rating), newest first. They are kept apart from the app's own ratings, so they never move the average quoted on the site. "
                 : "What learners gave the app from the rating pop-up after a Daily lesson or a Story and from Settings, newest first. The tabs Daily lessons, Stories and Site look at one of those places at a time; together (App all) they make the average quoted on the site. "}
+          {filter.language === "de"
+            ? "Only the ratings given about German content (a German lesson, story, passage or word list); the figures above are German only. "
+            : filter.language === "en"
+              ? "Only the ratings that are not about German content (the Settings card counts here). "
+              : ""}
           Reply by email to anyone who left an address (signed-in members always have one), and
           approve the best ones to show on the site. Archiving a rating takes it out of the figures
           below
@@ -208,7 +214,7 @@ export default async function AdminRatingsPage({
         </Chip>
       </div>
 
-      {wholeApp && (
+      {wholeApp && filter.language === null && (
         <RatingsDisplaySettings
           initial={settings}
           proofPreview={proofPreview}
@@ -288,6 +294,18 @@ export default async function AdminRatingsPage({
             ))}
           </div>
           <div className="flex flex-wrap items-center gap-1">
+            <span className="text-muted-foreground me-1 text-xs font-medium">Language</span>
+            <Chip href={hrefWith(filter, { lang: undefined })} active={filter.language === null}>
+              English + German
+            </Chip>
+            <Chip href={hrefWith(filter, { lang: "en" })} active={filter.language === "en"}>
+              English
+            </Chip>
+            <Chip href={hrefWith(filter, { lang: "de" })} active={filter.language === "de"}>
+              German
+            </Chip>
+          </div>
+          <div className="flex flex-wrap items-center gap-1">
             <Chip href={hrefWith(filter, { type: undefined })} active={filter.userType === null}>
               Everyone
             </Chip>
@@ -323,6 +341,9 @@ export default async function AdminRatingsPage({
                     <Stars value={rating.rating} />
                     <Badge variant={rating.userType === "member" ? "outline" : "muted"}>
                       {rating.userType === "member" ? "Member" : "Guest"}
+                    </Badge>
+                    <Badge variant={ratingLanguage(rating.lessonId) === "de" ? "secondary" : "muted"}>
+                      {ratingLanguage(rating.lessonId) === "de" ? "German" : "English"}
                     </Badge>
                     <Badge variant={STATUS_VARIANT[rating.status]}>{rating.status}</Badge>
                     {rating.isPublic && <Badge variant="success">On site</Badge>}

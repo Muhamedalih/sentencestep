@@ -463,6 +463,7 @@ const ADMIN_ONLY_SEGMENTS = [
   "lesson-completion",
   "reports",
   "ratings",
+  "german",
   "payments",
   "binance-pay",
   "egypt-wallet",
