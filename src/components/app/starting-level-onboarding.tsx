@@ -1,6 +1,7 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -12,6 +13,7 @@ import { LockBodyScroll } from "@/components/app/lock-body-scroll";
 import { Logo } from "@/components/layout/logo";
 import { trackOnboardingLevelAction } from "@/lib/analytics/track-actions";
 import { isMarketingHomePath } from "@/lib/i18n/locales";
+import { useLearnChoice } from "@/lib/learn-choice";
 import { tierSupportLabel } from "@/lib/levels";
 import { STARTING_LEVEL_TIERS, type PlacementTier } from "@/lib/progress/starting-level";
 
@@ -78,6 +80,9 @@ export function StartingLevelOnboarding() {
     firstRunVariant,
   } = useGetStartedStep();
   const pathname = usePathname();
+  const router = useRouter();
+  // A visitor who chose German in the first step skips the level questions, which are written for English: they go straight to the German Home.
+  const germanChoice = useLearnChoice() === "de";
   const isShort = firstRunVariant === "short";
   const Chevron = dir === "rtl" ? ChevronLeft : ChevronRight;
   const BackIcon = dir === "rtl" ? ChevronRight : ChevronLeft;
@@ -89,8 +94,13 @@ export function StartingLevelOnboarding() {
     isLoaded &&
     completions.length === 0 &&
     (startingLevel === null || forceLevelStep);
-  useOnboardingStepTracking("level", isShown);
+  useOnboardingStepTracking("level", isShown && !germanChoice);
+  const leaveForGerman = germanChoice && isShown;
+  useEffect(() => {
+    if (leaveForGerman) router.replace("/learn");
+  }, [leaveForGerman, router]);
 
+  if (germanChoice) return null;
   if (!isMarketingHomePath(pathname)) return null;
   if (forceLanguageStep) return null; // back button below sent them to the language step instead
   if (!locale || !isLoaded || completions.length > 0) return null;

@@ -19,3 +19,11 @@ test("a passage's own word list stays closed even to an admin, and an archived t
   assert.equal(canOpenWordGroup({ id: "kitchen", status: "archived" }, false), false);
   assert.equal(canOpenWordGroup({ id: "kitchen", status: "" }, true), false);
 });
+
+test("a German draft topic opens for anyone German is open to, and no other draft does", () => {
+  assert.equal(canOpenWordGroup({ id: "de-family", status: "draft" }, false, true), true);
+  assert.equal(canOpenWordGroup({ id: "de-family", status: "draft" }, false, false), false);
+  assert.equal(canOpenWordGroup({ id: "family", status: "draft" }, false, true), false);
+  assert.equal(canOpenWordGroup({ id: "passage-de-x", status: "draft" }, false, true), false);
+  assert.equal(canOpenWordGroup({ id: "de-family", status: "archived" }, true, true), false);
+});

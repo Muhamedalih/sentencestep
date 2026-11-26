@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { rememberLearnChoice } from "@/lib/learn-choice";
 import type { TargetLanguage } from "@/lib/learn-language";
 
 /**
@@ -23,6 +24,7 @@ export function LearnLanguagePicker() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ language, asked: true }),
       });
+      rememberLearnChoice(language);
     } finally {
       setBusy(false);
       setOpen(false);

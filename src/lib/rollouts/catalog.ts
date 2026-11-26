@@ -662,10 +662,11 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
     audience: "learner",
     title: "German as a language to learn",
     description:
-      "A learner can choose German beside English as the language they learn. In German the learner types German sentences from the same lessons and stories (the Arabic, Spanish and Turkish meaning of each sentence is the one the English lesson already has), learns German words in Word Lists and reads German Passages. Typing is made easy: the plain letter is accepted for ä, ö, ü (a, o, u) and ss for ß, so nobody needs a German keyboard, and the real letter is accepted too. Video, voices, books and the rule course are not part of German yet.",
+      "A learner can choose German beside English as the language they learn. In German the learner types German sentences from the same lessons and stories (the Arabic, Spanish and Turkish meaning of each sentence is the one the English lesson already has), learns German words in Word Lists and reads German Passages. Typing is made easy: the plain letter is accepted for ä, ö, ü (a, o, u) and ss for ß, so nobody needs a German keyboard, and the real letter is accepted too. Whoever it is open to also gets the language chip in the top bar (with a «new» mark and an announcement strip on the English Home), and a brand-new visitor is asked first, before the language step, what they want to learn. The German Home puts the words banner on top, and the Video menu item is locked while German is chosen. Video and books are not part of German.",
     notes: [
       "Nothing about English changes: German lessons, words and passages are separate rows marked lang = 'de', and every English screen reads only lang = 'en'.",
-      "Admins only: nobody is given it. German content is inserted as drafts and stays hidden from learners until the owner opens it.",
+      "Closed by default, so only admins see German until it is opened on the Permissions page. Opening it to everyone is the whole launch: every German door asks this one permission, so closing it again closes them all.",
+      "German lessons, words and passages stay drafts in the tables (so every English list, statistic and job that reads only published rows still ignores them); the migration 20250362000000_german_public_read.sql lets the app read the «de-» rows with the same free / Premium rule as the published ones.",
       "Needs the migration 20250360000000_german_track.sql (lang columns); the code that reads them treats a missing column as English only.",
     ],
   },

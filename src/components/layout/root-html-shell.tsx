@@ -4,6 +4,7 @@ import { Amiri, Inter, Lora } from "next/font/google";
 import { CountryOnboarding } from "@/components/app/country-onboarding";
 import { FirstRunTips } from "@/components/app/first-run-tips";
 import { FirstTimeLanguagePicker } from "@/components/app/first-time-language-picker";
+import { FirstTimeLearnPicker } from "@/components/app/first-time-learn-picker";
 import { FirstTouchCookie } from "@/components/app/first-touch-cookie";
 import { InAppBucketCookie } from "@/components/app/in-app-bucket-cookie";
 import { VisitorTokenCookie } from "@/components/app/visitor-token-cookie";
@@ -313,6 +314,7 @@ export function RootHtmlShell({
         <LocaleProvider initialLocale={locale} localizedNavigation={localizedNavigation}>
           <GetStartedStepProvider localizedNavigation={localizedNavigation}>
             <IntroLanding />
+            <FirstTimeLearnPicker />
             <FirstTimeLanguagePicker />
             <StartingLevelOnboarding />
             <CountryOnboarding />

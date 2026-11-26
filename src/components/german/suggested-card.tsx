@@ -37,16 +37,23 @@ const WHITE_BUTTON =
 export function GermanSuggestedCard({
   units,
   storiesUnits,
+  isPremiumUser,
 }: {
   units: LessonUnit[];
   storiesUnits: LessonUnit[];
+  /** A subscriber or an admin; everyone else is suggested the free lessons and stories only. */
+  isPremiumUser: boolean;
 }) {
   const { t, dir, locale } = useLocale();
   const s = homeCardsStrings(locale);
   const progress = useSharedProgress();
   const { isLoaded, getCompletedIds, startingLevel, completions } = progress;
   const { rollouts } = useFeatures();
-  const { completedIds, currentLesson, isResumed } = useCurrentLesson(units, true, progress);
+  const { completedIds, currentLesson, isResumed } = useCurrentLesson(
+    units,
+    isPremiumUser,
+    progress,
+  );
   const grey = useGreyHome();
   const stories = homeCardColors(grey, "stories");
   const lessonColors = homeCardColors(grey, "lesson");
@@ -64,7 +71,7 @@ export function GermanSuggestedCard({
   const story = findCurrentLesson(
     storiesUnits,
     getCompletedIds("stories"),
-    true,
+    isPremiumUser,
     startingLevel,
     rollouts.levelFloor,
   );

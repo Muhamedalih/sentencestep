@@ -64,12 +64,13 @@ export async function WordsHubPage({ tab: tabParam }: { tab: unknown }) {
     body = <CoreWordsShelf data={shelf} isPremiumUser={premium} className="mt-1" />;
   } else {
     // In German (permission germanTrack, an admin's choice) the grid is the German topics, all drafts for now.
-    const german = isAdminUser && (await getLearnLanguage()) === "de";
+    const german = (await getLearnLanguage()) === "de";
     const groups = german ? [] : await getWordGroupSummaries(locale ?? undefined);
     // Topics still in draft: an admin's grid only (the banner and the figures never count them).
-    const drafts = isAdminUser
-      ? await getDraftWordGroupSummaries(locale ?? undefined, german ? "de" : "en")
-      : [];
+    const drafts =
+      isAdminUser || german
+        ? await getDraftWordGroupSummaries(locale ?? undefined, german ? "de" : "en")
+        : [];
     let overview: BankOverview | null = null;
     if (bankOpen && user) {
       overview = await fetchBankStates(user.id)

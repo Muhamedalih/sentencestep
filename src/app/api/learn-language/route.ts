@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
-import { isAdmin } from "@/lib/admin/access";
+import { isGermanOpen } from "@/lib/learn-language-server";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import {
@@ -12,13 +12,21 @@ import {
 } from "@/lib/learn-language";
 
 /**
- * An admin picks the language to learn on this browser (permission germanTrack). Anyone else gets a
- * 403 and nothing is stored. English clears the cookie, so the default stays the absence of a choice.
+ * A visitor picks the language to learn on this browser (permission germanTrack, open to the visitor).
+ * Anyone it is not open to gets a 403 and nothing is stored. English clears the cookie, so the default stays the absence of a choice.
  */
 export const dynamic = "force-dynamic";
 
+/** Whether German is open to this visitor (the first-run step asks before it shows itself). */
+export async function GET() {
+  return NextResponse.json(
+    { open: await isGermanOpen() },
+    { headers: { "Cache-Control": "no-store" } },
+  );
+}
+
 export async function POST(request: Request) {
-  if (!(await isAdmin())) return NextResponse.json({ ok: false }, { status: 403 });
+  if (!(await isGermanOpen())) return NextResponse.json({ ok: false }, { status: 403 });
   const body = (await request.json().catch(() => null)) as {
     language?: string;
     asked?: boolean;

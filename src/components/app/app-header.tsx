@@ -100,6 +100,7 @@ export function AppHeader({
   ) : (
     <>
       <div className="flex items-center gap-1.5">
+        {learnLanguage && <LearnLanguageChip current={learnLanguage} />}
         <LanguageSwitcher bare />
         <ThemeToggle />
       </div>

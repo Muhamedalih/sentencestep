@@ -104,7 +104,7 @@ export default async function LearnHomePage({
 
   // An admin who chose German (permission germanTrack) gets the German track's own Home; the rest of
   // this page is English-only and is skipped entirely for them.
-  if ((await isAdmin()) && (await getLearnLanguage()) === "de") {
+  if ((await getLearnLanguage()) === "de") {
     const germanUser = await getCurrentUser();
     return <GermanHomeCards user={germanUser} locale={locale ?? null} />;
   }
