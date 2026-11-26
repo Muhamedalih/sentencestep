@@ -17,6 +17,16 @@ import { playGermanLetter, stopGermanLetterAudio } from "@/lib/german-letter-aud
 import { markGermanLettersDone } from "@/lib/german-letters-state";
 import { cn } from "@/lib/utils";
 
+/** Where each German-only letter sits on the keyboard, by the key's position (KeyboardEvent.code), whatever layout is installed. */
+const PHYSICAL_KEY: Readonly<Record<string, string>> = {
+  Minus: "ß",
+  Quote: "ä",
+  Semicolon: "ö",
+  BracketLeft: "ü",
+  KeyY: "z",
+  KeyZ: "y",
+};
+
 /** Left offset of each keyboard row, like the stagger of a real keyboard (a key is about 30 px with its gap). */
 const KEY_ROW_OFFSET = [0, 15, 22, 37, 60];
 
@@ -164,6 +174,19 @@ export function GermanLettersLesson({ next }: { next: string }) {
             onChange={(event) => handleChange(event.target.value)}
             onKeyDown={(event) => {
               if (event.key === "Enter" && solved) advance();
+              // The drawn keyboard is a German one, but the learner's own may not be: the key at the drawn
+              // spot is the right answer whatever it types (ß sits where an English keyboard has the minus,
+              // and its neighbour types a dead accent that never shows as a letter).
+              if (
+                !solved &&
+                !event.ctrlKey &&
+                !event.metaKey &&
+                PHYSICAL_KEY[event.code] === letter.lower
+              ) {
+                event.preventDefault();
+                setValue(letter.letter);
+                setSolved(true);
+              }
             }}
             maxLength={2}
             inputMode="text"
