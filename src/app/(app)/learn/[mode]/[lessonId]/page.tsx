@@ -15,7 +15,7 @@ import { getGatePay } from "@/lib/billing/gate-pay";
 import { getGateProgress } from "@/lib/billing/gate-progress";
 import { getGateFigures } from "@/lib/stats/gate-figures";
 import { isAdmin } from "@/lib/admin/access";
-import { isGermanOpen } from "@/lib/learn-language-server";
+import { isGermanOpen, isGermanZeroOpen } from "@/lib/learn-language-server";
 import { hasPremiumAccess } from "@/lib/billing/access";
 import { findNextLesson, getLessonById, getLessonNav } from "@/lib/content";
 import { buildStoryWordQuiz } from "@/lib/content/story-word-quiz";
@@ -27,6 +27,7 @@ import { getLocale } from "@/lib/i18n/get-locale";
 import type { SupportLocale } from "@/lib/i18n/locales";
 import { getOpenerArms } from "@/lib/opener/arms";
 import { shortOpenerRowId } from "@/lib/opener/shared";
+import { GERMAN_OPENING_LESSON_ID } from "@/lib/progress/starting-level";
 import {
   fetchLessonSentenceStats,
   fetchOpenerShortSentences,
@@ -129,6 +130,11 @@ export default async function LessonPage({
   // The short opening text swaps only the sentences: the lesson keeps its own id, so everything keyed
   // on it (progress, the resume point, the level read back at sign-up) is exactly as before.
   const unit = opener?.sentences ? { ...baseUnit, sentences: opener.sentences } : baseUnit;
+  // The German opening lessons (Erste Schritte) get the «Skip lesson» button for every level (permission germanZero); the English openers keep their own test (openerSkip).
+  const germanOpenerSkip =
+    mode === "normal" &&
+    Object.values(GERMAN_OPENING_LESSON_ID).includes(lessonId) &&
+    (await isGermanZeroOpen());
 
   // This route sits outside the (dashboard) layout (see this file's own
   // doc comment) on purpose, so it never gets that layout's default-size
@@ -382,7 +388,7 @@ export default async function LessonPage({
         firstSentenceWordAudio={firstSentenceWordAudio}
         wordQuiz={wordQuiz}
         openerVariant={opener ? (opener.sentences ? "short" : "classic") : undefined}
-        openerSkip={opener?.skip === true}
+        openerSkip={opener?.skip === true || germanOpenerSkip}
         // Today's taste story: its completion offers the full plan at 90% or more (see lib/hybrid).
         hybridStar={
           tasteOpen && taste

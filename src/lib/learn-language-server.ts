@@ -24,6 +24,21 @@ export const isGermanOpen = cache(async (): Promise<boolean> => {
 });
 
 /**
+ * Whether the German beginner features (permission germanZero: the fourth level, the letters lesson,
+ * the skip button on the German opening lesson) are open to this visitor: German must be open too, then
+ * an admin always, everyone else once germanZero is opened.
+ */
+export const isGermanZeroOpen = cache(async (): Promise<boolean> => {
+  if (!(await isGermanOpen())) return false;
+  if (await isAdmin()) return true;
+  try {
+    return (await getEffectiveFeatures()).rollouts.germanZero;
+  } catch {
+    return false;
+  }
+});
+
+/**
  * The language this request learns (permission germanTrack). German only when German is open to this
  * visitor, they chose it on this browser and an admin is not looking at the site as a learner; anyone
  * else gets English, whatever the cookie says, so the cookie can never open anything.

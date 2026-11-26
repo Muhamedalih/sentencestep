@@ -1,4 +1,5 @@
-import { getLearnLanguage } from "@/lib/learn-language-server";
+import { GermanLettersCard } from "@/components/german/german-letters-card";
+import { getLearnLanguage, isGermanZeroOpen } from "@/lib/learn-language-server";
 import { BookOpen } from "lucide-react";
 
 import { CoreWordsShelf } from "@/components/words/core-words-shelf";
@@ -82,8 +83,10 @@ export async function WordsHubPage({ tab: tabParam }: { tab: unknown }) {
           return null;
         });
     }
+    const lettersCard = german && (await isGermanZeroOpen());
     body = (
       <>
+        {lettersCard && <GermanLettersCard className="mt-5" />}
         {features.rollouts.wordsBanner
           ? // The banner (permission wordsBanner) takes the review strip's place; its button goes where the strip's did.
             groups.length > 0 && (

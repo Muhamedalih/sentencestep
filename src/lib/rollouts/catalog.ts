@@ -67,6 +67,7 @@ export const ROLLOUT_IDS = [
   "wordDrop",
   "upgradeModal",
   "signupLanding",
+  "germanZero",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -750,6 +751,17 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "The pop-up asks the server for its figures only when it opens, so no page gets slower. A visitor who is not signed in, or who already has Premium, is sent to the plans page as before.",
       "The plans page itself, the emails that link to it and the pages shown after paying are untouched.",
       "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
+    ],
+  },
+  germanZero: {
+    id: "germanZero",
+    audience: "learner",
+    title: "German: a fourth level for absolute beginners, the letters lesson, and a skip button",
+    description:
+      "For a learner of German: the level step gets a fourth choice, «From zero», shown first. Choosing it skips the opening lesson and starts the German letters lesson instead: each special letter (Ä Ö Ü ß, and Z and Y whose place differs on a German keyboard) with an example word, how it sounds and a sound button, typed by the learner (the letter itself, its plain stand-in, or the spelled form ae / oe / ue / ss all count). A small keyboard help button shows a German keyboard with the letter's key lit, for looking at only: its keys never type. The lesson can be skipped (counted as done) and repeated from the first row of the Words page. An English learner who adds German from the top bar sees a small «Choose your level» pop-up first, with the note that it can be changed any time. The German opening lesson gets the «Skip lesson» button for every level.",
+    notes: [
+      "Nothing about English changes, and no lesson row, recording or stored level is touched: the letters lesson is a page of its own, its done mark is kept on this browser.",
+      "Needs germanTrack open as well; closed by default, so only admins see it until it is opened on the Permissions page.",
     ],
   },
   signupLanding: {

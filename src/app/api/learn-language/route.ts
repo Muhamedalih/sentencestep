@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin/access";
 import { track } from "@/lib/analytics/track";
 import { VISITOR_TOKEN_COOKIE, parseVisitorToken } from "@/lib/opener/shared";
-import { isGermanOpen } from "@/lib/learn-language-server";
+import { isGermanOpen, isGermanZeroOpen } from "@/lib/learn-language-server";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import {
@@ -23,7 +23,7 @@ export const dynamic = "force-dynamic";
 /** Whether German is open to this visitor (the first-run step asks before it shows itself). */
 export async function GET() {
   return NextResponse.json(
-    { open: await isGermanOpen() },
+    { open: await isGermanOpen(), zero: await isGermanZeroOpen() },
     { headers: { "Cache-Control": "no-store" } },
   );
 }

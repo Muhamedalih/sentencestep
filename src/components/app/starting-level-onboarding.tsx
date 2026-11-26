@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
@@ -11,6 +12,8 @@ import { useGetStartedStep } from "@/components/providers/get-started-step-provi
 import { LockBodyScroll } from "@/components/app/lock-body-scroll";
 import { Logo } from "@/components/layout/logo";
 import { trackOnboardingLevelAction } from "@/lib/analytics/track-actions";
+import { germanLettersStrings } from "@/lib/german-letters";
+import { setGermanZeroPick } from "@/lib/german-letters-state";
 import { isMarketingHomePath } from "@/lib/i18n/locales";
 import { useLearnChoice, useLearnStepDone } from "@/lib/learn-choice";
 import { tierSupportLabel } from "@/lib/levels";
@@ -93,6 +96,22 @@ export function StartingLevelOnboarding() {
   const learnStepDone = useLearnStepDone();
   const waitingForLearnStep = introContinued && !learnStepDone;
   const isShort = firstRunVariant === "short";
+  // The fourth level, «From zero» (permission germanZero): asked once, only for a learner of German, and only when the permission is open to them.
+  const [zeroOpen, setZeroOpen] = useState(false);
+  useEffect(() => {
+    if (!germanChoice || waitingForLearnStep) return;
+    let cancelled = false;
+    fetch("/api/learn-language", { cache: "no-store" })
+      .then((response) => (response.ok ? response.json() : { zero: false }))
+      .then((body: { zero?: boolean }) => {
+        if (!cancelled) setZeroOpen(body.zero === true);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [germanChoice, waitingForLearnStep]);
+  const zeroStrings = germanLettersStrings(locale);
   const Chevron = dir === "rtl" ? ChevronLeft : ChevronRight;
   const BackIcon = dir === "rtl" ? ChevronRight : ChevronLeft;
 
@@ -111,7 +130,8 @@ export function StartingLevelOnboarding() {
   if (!locale || !isLoaded || completions.length > 0) return null;
   if (startingLevel !== null && !forceLevelStep) return null;
 
-  function handleSelect(difficulty: PlacementTier, level: number) {
+  function handleSelect(difficulty: PlacementTier, level: number, fromZero = false) {
+    setGermanZeroPick(fromZero);
     setStartingLevel(level);
     setPendingDifficulty(difficulty);
     if (firstRunVariant) void trackOnboardingLevelAction(level, firstRunVariant).catch(() => {});
@@ -160,6 +180,25 @@ export function StartingLevelOnboarding() {
           <p className="text-muted-foreground mt-2 text-sm text-balance">{t.onboarding.subtitle}</p>
 
           <div className="mt-10 flex flex-col gap-4">
+            {germanChoice && zeroOpen && (
+              <motion.button
+                type="button"
+                onClick={() => handleSelect("beginner", 1, true)}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.99 }}
+                transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+                className="border-border bg-card hover:border-primary hover:shadow-primary/10 focus-visible:ring-ring focus-visible:ring-offset-background flex items-center gap-4 rounded-2xl border px-6 py-5 text-start transition-colors outline-none hover:shadow-lg focus-visible:ring-2 focus-visible:ring-offset-2"
+              >
+                <Chevron aria-hidden="true" className="text-muted-foreground size-5 shrink-0" />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-lg font-semibold">{zeroStrings.zeroName}</span>
+                  <span className="text-muted-foreground mt-0.5 block text-sm">
+                    {zeroStrings.zeroBody}
+                  </span>
+                </span>
+                <span aria-hidden="true" className="size-2.5 shrink-0 rounded-full bg-slate-400" />
+              </motion.button>
+            )}
             {STARTING_LEVEL_TIERS.map(({ difficulty, level }) => (
               <motion.button
                 key={difficulty}
