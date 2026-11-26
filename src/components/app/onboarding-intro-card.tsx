@@ -19,7 +19,8 @@ import {
   onboardingCardTitleForLocale,
   type OnboardingCardSettings,
 } from "@/lib/admin/onboarding-card-settings";
-import { OPENING_LESSON_ID, difficultyForStartingLevel } from "@/lib/progress/starting-level";
+import { useLearnChoice } from "@/lib/learn-choice";
+import { difficultyForStartingLevel, openingLessonIdFor } from "@/lib/progress/starting-level";
 
 /**
  * The fifth and last step of the homepage's "get started" flow, right
@@ -75,6 +76,7 @@ export function OnboardingIntroCard() {
 
   // A learner who skipped the opening lesson (the «تخطّي الدرس» button) is not asked to start it again.
   const skippedOpeners = useSkippedOpeners();
+  const language = useLearnChoice() === "de" ? "de" : "en";
 
   const difficulty = pendingDifficulty ?? difficultyForStartingLevel(startingLevel);
   const shouldShow =
@@ -85,7 +87,7 @@ export function OnboardingIntroCard() {
     difficulty !== null &&
     tutorialStepDone &&
     completions.length === 0 &&
-    !skippedOpeners.includes(OPENING_LESSON_ID[difficulty]);
+    !skippedOpeners.includes(openingLessonIdFor(difficulty, language));
   useOnboardingStepTracking("start", shouldShow);
 
   useEffect(() => {
@@ -119,8 +121,10 @@ export function OnboardingIntroCard() {
       </div>
     );
   }
-  const openingLessonPath = `/learn/normal/${OPENING_LESSON_ID[difficulty]}`;
-  const title = onboardingCardTitleForLocale(settings, locale);
+  const openingLessonPath = `/learn/normal/${openingLessonIdFor(difficulty, language)}`;
+  // The card's headline is the admin's English-learning one; a learner of German gets its German twin.
+  const title =
+    language === "de" ? t.onboarding.introTitleDe : onboardingCardTitleForLocale(settings, locale);
 
   function handleStart() {
     setIsNavigating(true);

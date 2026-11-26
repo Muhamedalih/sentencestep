@@ -33,7 +33,7 @@ import type { OnboardingCardSettings } from "@/lib/admin/onboarding-card-setting
  * link — the ordinary catalog is where every subsequent lesson choice
  * belongs, not this one-time screen.
  */
-export function OnboardingLessonComplete() {
+export function OnboardingLessonComplete({ german = false }: { german?: boolean }) {
   const { t, dir } = useLocale();
   const userId = useAuthUserId();
   const [settings, setSettings] = useState<OnboardingCardSettings | null>(null);
@@ -48,6 +48,7 @@ export function OnboardingLessonComplete() {
     };
   }, []);
 
+  const headline = german ? t.onboardingComplete.headlineDe : t.onboardingComplete.headline;
   const points = [
     { title: t.onboardingComplete.point1Title, body: t.onboardingComplete.point1Body },
     { title: t.onboardingComplete.point2Title, body: t.onboardingComplete.point2Body },
@@ -60,7 +61,7 @@ export function OnboardingLessonComplete() {
       className="bg-background fixed inset-0 z-100 flex flex-col overflow-y-auto p-6"
       role="dialog"
       aria-modal="true"
-      aria-label={t.onboardingComplete.headline}
+      aria-label={headline}
     >
       <div className="flex shrink-0 items-center justify-between">
         <Logo />
@@ -78,7 +79,7 @@ export function OnboardingLessonComplete() {
             <div>
               <p className="text-primary text-sm font-semibold">{t.onboardingComplete.eyebrow}</p>
               <h1 className="mt-2 text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
-                {t.onboardingComplete.headline}
+                {headline}
               </h1>
             </div>
 

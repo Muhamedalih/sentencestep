@@ -126,6 +126,7 @@ export const en: Dictionary = {
   firstTimePicker: {
     heading: "Choose your language",
     subtitle: "We'll use this to explain lessons, hints, and translations as you learn English.",
+    subtitleDe: "We'll use this to explain lessons, hints, and translations as you learn German.",
     confirm: "Continue",
   },
   twoFactor: {
@@ -251,6 +252,10 @@ export const en: Dictionary = {
     beginnerBody: "New to English, or just getting comfortable with the basics.",
     intermediateBody: "Comfortable with everyday English, ready for more natural sentences.",
     advancedBody: "Confident with English, looking for richer vocabulary and practice.",
+    beginnerBodyDe: "New to German, or just getting comfortable with the basics.",
+    intermediateBodyDe: "Comfortable with everyday German, ready for more natural sentences.",
+    advancedBodyDe: "Confident with German, looking for richer vocabulary and practice.",
+    introTitleDe: "Your German Journey Starts Here",
     skip: "I'll choose myself",
     back: "Back",
     startCta: "Start the lesson",
@@ -295,6 +300,7 @@ export const en: Dictionary = {
   onboardingComplete: {
     eyebrow: "You did it — your first lesson is complete",
     headline: "Your English journey has begun",
+    headlineDe: "Your German journey has begun",
     point1Title: "You learn by doing, not memorizing",
     point1Body: "You hear it, you type it, letter by letter — that's what makes it stick.",
     point2Title: "Instant feedback on every mistake",

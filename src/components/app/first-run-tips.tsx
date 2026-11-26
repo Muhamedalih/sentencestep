@@ -14,7 +14,8 @@ import { Logo } from "@/components/layout/logo";
 import { Button } from "@/components/ui/button";
 import { waitForLocaleCookie } from "@/lib/i18n/browser-locale";
 import { isMarketingHomePath } from "@/lib/i18n/locales";
-import { OPENING_LESSON_ID, difficultyForStartingLevel } from "@/lib/progress/starting-level";
+import { useLearnChoice } from "@/lib/learn-choice";
+import { difficultyForStartingLevel, openingLessonIdFor } from "@/lib/progress/starting-level";
 
 const TIPS = [
   { icon: Keyboard, title: "tip1Title", body: "tip1Body" },
@@ -43,6 +44,7 @@ export function FirstRunTips() {
   const pathname = usePathname();
   const router = useRouter();
   const [isNavigating, setIsNavigating] = useState(false);
+  const language = useLearnChoice() === "de" ? "de" : "en";
   const difficulty = pendingDifficulty ?? difficultyForStartingLevel(startingLevel);
   const isShown =
     firstRunVariant === "short" &&
@@ -69,7 +71,7 @@ export function FirstRunTips() {
     );
   }
   if (!isShown || difficulty === null) return null;
-  const lessonPath = `/learn/normal/${OPENING_LESSON_ID[difficulty]}`;
+  const lessonPath = `/learn/normal/${openingLessonIdFor(difficulty, language)}`;
 
   async function openLesson() {
     setIsNavigating(true);

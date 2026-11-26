@@ -1,6 +1,6 @@
 import { unitsByMode } from "@/data/units";
 import { modeMeta } from "@/lib/learning-modes";
-import { OPENING_LESSON_ID } from "@/lib/progress/starting-level";
+import { GERMAN_OPENING_LESSON_ID, OPENING_LESSON_ID } from "@/lib/progress/starting-level";
 import type { ContentStatus } from "@/lib/admin/validation";
 import type { SupportLocale } from "@/lib/i18n/locales";
 import type {
@@ -77,10 +77,19 @@ export function getLessonsByLevel(units: LessonUnit[], level: number): LessonUni
 export function withOpeningLessonPlacement<T extends { id: string; level: number }>(
   units: T[],
 ): T[] {
-  const hidden = [OPENING_LESSON_ID.intermediate, OPENING_LESSON_ID.advanced] as string[];
+  // The German twins (a German list holds only those) are trimmed the same way as the English three.
+  const hidden = [
+    OPENING_LESSON_ID.intermediate,
+    OPENING_LESSON_ID.advanced,
+    GERMAN_OPENING_LESSON_ID.intermediate,
+    GERMAN_OPENING_LESSON_ID.advanced,
+  ] as string[];
   const visible = units.filter((unit) => !hidden.includes(unit.id));
 
-  const openingIndex = visible.findIndex((unit) => unit.id === OPENING_LESSON_ID.beginner);
+  const openingIndex = visible.findIndex(
+    (unit) =>
+      unit.id === OPENING_LESSON_ID.beginner || unit.id === GERMAN_OPENING_LESSON_ID.beginner,
+  );
   if (openingIndex <= 0) return visible;
 
   const opening = visible[openingIndex]!;

@@ -150,6 +150,8 @@ export interface Dictionary {
   firstTimePicker: {
     heading: string;
     subtitle: string;
+    /** The same subtitle for a visitor who chose German in the first step. */
+    subtitleDe: string;
     confirm: string;
   };
   /** Settings' "Two-factor authentication" section (src/components/settings/two-factor-settings.tsx) and the login-time code-verification step (src/app/login/verify-mfa/page.tsx). */
@@ -272,6 +274,12 @@ export interface Dictionary {
     beginnerBody: string;
     intermediateBody: string;
     advancedBody: string;
+    /** The same three lines for a learner of German (the first-run level step when German was chosen). */
+    beginnerBodyDe: string;
+    intermediateBodyDe: string;
+    advancedBodyDe: string;
+    /** The first-run start card's headline for a learner of German. */
+    introTitleDe: string;
     skip: string;
     back: string;
     /** Onboarding intro card's (src/components/app/onboarding-intro-card.tsx) "enter the lesson" button — the flow's third and last step. */
@@ -335,6 +343,8 @@ export interface Dictionary {
   onboardingComplete: {
     eyebrow: string;
     headline: string;
+    /** The same headline for a learner of German. */
+    headlineDe: string;
     point1Title: string;
     point1Body: string;
     point2Title: string;

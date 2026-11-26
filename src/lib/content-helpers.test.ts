@@ -8,6 +8,7 @@ import {
   resolveLevelSupportTitle,
   resolveVocabularySupportText,
   tallySentenceStats,
+  withOpeningLessonPlacement,
   withSupportTextFallback,
 } from "./content-helpers";
 import type { VocabularyItem } from "@/types/content";
@@ -200,4 +201,18 @@ test("nextLevelIsAllPremium: levels need not be consecutive", () => {
 test("nextLevelIsAllPremium: a level whose only lessons are hidden onboarding copies is not 'locked' (nothing is shown)", () => {
   const units = [lesson("a", 1, true), lesson("onboarding-advanced", 2, true)];
   assert.equal(nextLevelIsAllPremium(units, 1), false);
+});
+
+test("withOpeningLessonPlacement: a German list is trimmed like the English one (only the beginner copy, pinned first of its level)", () => {
+  const units = [
+    lesson("de-normal-1", 1, true),
+    lesson("de-onboarding-beginner", 1, true),
+    lesson("de-onboarding-intermediate", 2, true),
+    lesson("de-onboarding-advanced", 3, true),
+    lesson("de-normal-30", 2, true),
+  ];
+  assert.deepEqual(
+    withOpeningLessonPlacement(units).map((unit) => unit.id),
+    ["de-onboarding-beginner", "de-normal-1", "de-normal-30"],
+  );
 });

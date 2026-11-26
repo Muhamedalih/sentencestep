@@ -124,6 +124,7 @@ export const tr: Dictionary = {
     heading: "Dilinizi seçin",
     subtitle:
       "İngilizce öğrenirken dersleri, ipuçlarını ve çevirileri açıklamak için bunu kullanacağız.",
+    subtitleDe: "Almanca öğrenirken dersleri, ipuçlarını ve çevirileri açıklamak için bunu kullanacağız.",
     confirm: "Devam et",
   },
   twoFactor: {
@@ -248,6 +249,10 @@ export const tr: Dictionary = {
     beginnerBody: "İngilizceye yeni başlıyorsunuz ya da temellerle rahatlaşmaya çalışıyorsunuz.",
     intermediateBody: "Günlük İngilizceyle rahatsınız, daha doğal cümlelere hazırsınız.",
     advancedBody: "İngilizcenize güveniyorsunuz, daha zengin kelime bilgisi ve pratik arıyorsunuz.",
+    beginnerBodyDe: "Almancaya yeni başlıyorsunuz ya da temellerle rahatlaşmaya çalışıyorsunuz.",
+    intermediateBodyDe: "Günlük Almancayla rahatsınız, daha doğal cümlelere hazırsınız.",
+    advancedBodyDe: "Almancanıza güveniyorsunuz, daha zengin kelime bilgisi ve pratik arıyorsunuz.",
+    introTitleDe: "Almanca yolculuğun burada başlıyor",
     skip: "Kendim seçeceğim",
     back: "Geri",
     startCta: "Derse başla",
@@ -292,6 +297,7 @@ export const tr: Dictionary = {
   onboardingComplete: {
     eyebrow: "İlk dersini tamamladın",
     headline: "İngilizce yolculuğun artık başladı",
+    headlineDe: "Almanca yolculuğun artık başladı",
     point1Title: "Ezberlemeden, yaparak öğrenirsin",
     point1Body: "Duyarsın, harf harf yazarsın — kalıcı olmasını sağlayan da budur.",
     point2Title: "Her hataya anında geri bildirim",
