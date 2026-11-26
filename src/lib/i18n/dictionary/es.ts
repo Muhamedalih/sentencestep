@@ -129,6 +129,7 @@ export const es: Dictionary = {
     heading: "Elige tu idioma",
     subtitle:
       "Lo usaremos para explicar las lecciones, pistas y traducciones mientras aprendes inglés.",
+    subtitleDe: "Lo usaremos para explicar las lecciones, pistas y traducciones mientras aprendes alemán.",
     confirm: "Continuar",
   },
   twoFactor: {
@@ -254,6 +255,10 @@ export const es: Dictionary = {
     beginnerBody: "Nuevo en inglés, o todavía ganando confianza con lo básico.",
     intermediateBody: "Cómodo con el inglés cotidiano, listo para oraciones más naturales.",
     advancedBody: "Con confianza en inglés, buscando vocabulario y práctica más ricos.",
+    beginnerBodyDe: "Nuevo en alemán, o todavía ganando confianza con lo básico.",
+    intermediateBodyDe: "Cómodo con el alemán cotidiano, listo para oraciones más naturales.",
+    advancedBodyDe: "Con confianza en alemán, buscando vocabulario y práctica más ricos.",
+    introTitleDe: "Tu viaje con el alemán comienza aquí",
     skip: "Elegiré yo mismo",
     back: "Atrás",
     startCta: "Comenzar la lección",
@@ -298,6 +303,7 @@ export const es: Dictionary = {
   onboardingComplete: {
     eyebrow: "Lo lograste — tu primera lección está completa",
     headline: "Tu viaje con el inglés ya comenzó",
+    headlineDe: "Tu viaje con el alemán ya comenzó",
     point1Title: "Aprendes haciendo, no memorizando",
     point1Body: "Lo escuchas, lo escribes letra por letra — así es como se queda contigo.",
     point2Title: "Corrección al instante en cada error",

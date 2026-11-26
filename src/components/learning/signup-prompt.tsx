@@ -39,10 +39,20 @@ import { signInWithGoogle } from "@/lib/supabase/auth-actions";
  * that strip opens the CURRENT page in the outside browser, which here would be the lesson without
  * the visitor's progress (it lives in this browser), so it is not used on this page.
  */
-export function SignupPrompt({ words, accuracy }: { words: number; accuracy: number }) {
+export function SignupPrompt({
+  words,
+  accuracy,
+  german = false,
+}: {
+  words: number;
+  accuracy: number;
+  /** The opening lesson was the German one: a signed-in learner's headline names German, not English. */
+  german?: boolean;
+}) {
   const { locale, t } = useLocale();
   const userId = useAuthUserId();
   const s = t.signupPrompt;
+  const signedInHeadline = german ? t.onboardingComplete.headlineDe : t.onboardingComplete.headline;
   const features = useFeatures();
   const pathname = usePathname();
   const [hook, setHook] = useState<(ReturnPlanData & { minutes: number }) | null>(null);
@@ -87,7 +97,7 @@ export function SignupPrompt({ words, accuracy }: { words: number; accuracy: num
       className="bg-background fixed inset-0 z-100 flex flex-col overflow-y-auto p-6"
       role="dialog"
       aria-modal="true"
-      aria-label={userId ? t.onboardingComplete.headline : s.headline}
+      aria-label={userId ? signedInHeadline : s.headline}
     >
       <div className="flex shrink-0 items-center justify-between">
         <Logo />
@@ -104,7 +114,7 @@ export function SignupPrompt({ words, accuracy }: { words: number; accuracy: num
             {s.eyebrow}
           </p>
           <h1 dir="auto" className="mt-1.5 text-2xl font-semibold tracking-tight text-balance">
-            {userId ? t.onboardingComplete.headline : s.headline}
+            {userId ? signedInHeadline : s.headline}
           </h1>
           <ul
             dir={locale === "ar" ? "rtl" : "ltr"}

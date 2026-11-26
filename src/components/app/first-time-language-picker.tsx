@@ -8,7 +8,7 @@ import { useGetStartedStep } from "@/components/providers/get-started-step-provi
 import { LockBodyScroll } from "@/components/app/lock-body-scroll";
 import { Logo } from "@/components/layout/logo";
 import { useOnboardingStepTracking } from "@/hooks/use-onboarding-step-tracking";
-import { useLearnStepDone } from "@/lib/learn-choice";
+import { useLearnChoice, useLearnStepDone } from "@/lib/learn-choice";
 import { detectBrowserLocale } from "@/lib/i18n/browser-locale";
 import { LOCALE_META, SUPPORT_LOCALES } from "@/lib/i18n/locales";
 import { cn } from "@/lib/utils";
@@ -57,6 +57,7 @@ export function FirstTimeLanguagePicker() {
   const isShort = firstRunVariant === "short";
   // The «what do you want to learn?» step (FirstTimeLearnPicker, permission germanTrack) comes first and marks itself done at once when German is closed.
   const learnStepDone = useLearnStepDone();
+  const germanChoice = useLearnChoice() === "de";
   const isShown =
     !isShort &&
     (!locale || forceLanguageStep) &&
@@ -132,7 +133,7 @@ export function FirstTimeLanguagePicker() {
             {t.firstTimePicker.heading}
           </h1>
           <p className="text-muted-foreground mt-2 text-sm text-balance">
-            {t.firstTimePicker.subtitle}
+            {germanChoice ? t.firstTimePicker.subtitleDe : t.firstTimePicker.subtitle}
           </p>
 
           <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3">

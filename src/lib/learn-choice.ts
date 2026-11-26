@@ -11,8 +11,8 @@ import type { TargetLanguage } from "@/lib/learn-language";
  *
  *  - STEP_KEY: the "what do you want to learn?" step has been answered or skipped (German is not open),
  *    so the language step after it may show.
- *  - LANG_KEY: the language chosen there ("en" or "de"), so the level questions, which are written for
- *    English, are skipped for a visitor who chose German.
+ *  - LANG_KEY: the language chosen there ("en" or "de"), so the level questions, the start card and the
+ *    opening lesson are the German ones for a visitor who chose German.
  *
  * Per-viewer conveniences only, so localStorage: a blocked or empty storage just shows the step again.
  */

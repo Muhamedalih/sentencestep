@@ -1,4 +1,8 @@
-import { OPENING_LESSON_ID, difficultyForStartingLevel } from "@/lib/progress/starting-level";
+import {
+  GERMAN_OPENING_LESSON_ID,
+  OPENING_LESSON_ID,
+  difficultyForStartingLevel,
+} from "@/lib/progress/starting-level";
 import type { LessonUnit } from "@/types/content";
 
 /**
@@ -85,7 +89,12 @@ export function findCurrentLesson(
     if (completedIds.length === 0) {
       const difficulty = difficultyForStartingLevel(startingLevel);
       const openingLesson = difficulty
-        ? sorted.find((unit) => unit.id === OPENING_LESSON_ID[difficulty])
+        ? // A list holds one language's lessons, so at most one of the two twins is in it.
+          sorted.find(
+            (unit) =>
+              unit.id === OPENING_LESSON_ID[difficulty] ||
+              unit.id === GERMAN_OPENING_LESSON_ID[difficulty],
+          )
         : undefined;
       if (openingLesson && isOpen(openingLesson)) return openingLesson;
     }

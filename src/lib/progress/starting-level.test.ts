@@ -1,7 +1,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { levelFromFinishedOpeningLesson, startingLevelFromOpeningLesson } from "./starting-level";
+import {
+  GERMAN_OPENING_LESSON_ID,
+  OPENING_LESSON_ID,
+  levelFromFinishedOpeningLesson,
+  openingLessonIdFor,
+  startingLevelFromOpeningLesson,
+} from "./starting-level";
 
 function done(lessonId: string, completedAt = "2026-10-20T10:00:00.000Z") {
   return { lessonId, completedAt };
@@ -67,4 +73,18 @@ test("levelFromFinishedOpeningLesson: the Beginner opening lesson and ordinary l
     levelFromFinishedOpeningLesson({ permissionOpen: true, lessonId: "story-81" }),
     null,
   );
+});
+
+test("openingLessonIdFor: a learner of German is sent to the German twin of the tier's opening lesson", () => {
+  assert.equal(openingLessonIdFor("beginner", "en"), OPENING_LESSON_ID.beginner);
+  assert.equal(openingLessonIdFor("advanced", "en"), "onboarding-advanced");
+  assert.equal(openingLessonIdFor("beginner", "de"), "de-onboarding-beginner");
+  assert.equal(openingLessonIdFor("intermediate", "de"), "de-onboarding-intermediate");
+  assert.equal(openingLessonIdFor("advanced", "de"), GERMAN_OPENING_LESSON_ID.advanced);
+});
+
+test("startingLevelFromOpeningLesson: the German opening lessons say the same as the English ones", () => {
+  assert.equal(startingLevelFromOpeningLesson([done("de-onboarding-intermediate")]), 2);
+  assert.equal(startingLevelFromOpeningLesson([done("de-onboarding-advanced")]), 3);
+  assert.equal(startingLevelFromOpeningLesson([done("de-onboarding-beginner")]), null);
 });

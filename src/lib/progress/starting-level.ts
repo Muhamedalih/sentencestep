@@ -1,4 +1,5 @@
 import type { Difficulty } from "@/lib/levels";
+import type { TargetLanguage } from "@/lib/learn-language";
 import type { LessonCompletion } from "@/lib/progress/types";
 
 /**
@@ -25,6 +26,22 @@ export const OPENING_LESSON_ID: Record<PlacementTier, string> = {
   advanced: "onboarding-advanced",
 };
 
+/**
+ * The German twins of the opening lessons ("Erste Schritte": the same five-sentence pep talk written for
+ * a learner of German), one per tier like the English three. They are drafts like every German lesson
+ * (opened by id for the people German is open to), free so a guest can open them, and never listed in a catalog.
+ */
+export const GERMAN_OPENING_LESSON_ID: Record<PlacementTier, string> = {
+  beginner: "de-onboarding-beginner",
+  intermediate: "de-onboarding-intermediate",
+  advanced: "de-onboarding-advanced",
+};
+
+/** The opening lesson a visitor is sent to: the tier's English one, or its German twin for a learner of German. */
+export function openingLessonIdFor(difficulty: PlacementTier, language: TargetLanguage): string {
+  return language === "de" ? GERMAN_OPENING_LESSON_ID[difficulty] : OPENING_LESSON_ID[difficulty];
+}
+
 /** Reverses STARTING_LEVEL_TIERS — turns the plain number useProgress persists back into which tier it represents, e.g. for OnboardingIntroCard to know which OPENING_LESSON_ID to route "Start" to once StartingLevelOnboarding has already set it. Accepts null (useProgress().startingLevel's own "never chosen yet" state) as a plain pass-through, so callers never need a separate guard first. */
 export function difficultyForStartingLevel(level: number | null): PlacementTier | null {
   if (level === null) return null;
@@ -44,7 +61,10 @@ export function startingLevelFromOpeningLesson(
 ): number | null {
   const tierOf = (lessonId: string) =>
     STARTING_LEVEL_TIERS.find(
-      (tier) => tier.difficulty !== "beginner" && OPENING_LESSON_ID[tier.difficulty] === lessonId,
+      (tier) =>
+        tier.difficulty !== "beginner" &&
+        (OPENING_LESSON_ID[tier.difficulty] === lessonId ||
+          GERMAN_OPENING_LESSON_ID[tier.difficulty] === lessonId),
     );
   const first = [...completions]
     .sort((a, b) => a.completedAt.localeCompare(b.completedAt))

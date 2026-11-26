@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -21,6 +20,13 @@ const TIER_BODY_KEY = {
   beginner: "beginnerBody",
   intermediate: "intermediateBody",
   advanced: "advancedBody",
+} as const;
+
+/** The same three lines written for a learner of German (the visitor chose German in the first step). */
+const TIER_BODY_KEY_DE = {
+  beginner: "beginnerBodyDe",
+  intermediate: "intermediateBodyDe",
+  advanced: "advancedBodyDe",
 } as const;
 
 /** Matches the reference onboarding's colored placement dots — purely decorative, one fixed color per tier, not theme-derived. Same green/blue/purple progression as every other tier badge in the app (see src/lib/tier-colors.ts). */
@@ -81,8 +87,7 @@ export function StartingLevelOnboarding() {
     introContinued,
   } = useGetStartedStep();
   const pathname = usePathname();
-  const router = useRouter();
-  // A visitor who chose German in the first step skips the level questions, which are written for English: they go straight to the German Home.
+  // A visitor who chose German in the first step gets the same questions and opening as an English learner, worded for German.
   const germanChoice = useLearnChoice() === "de";
   // The «what do you want to learn?» step (FirstTimeLearnPicker) comes before the level questions: they wait for it.
   const learnStepDone = useLearnStepDone();
@@ -98,13 +103,9 @@ export function StartingLevelOnboarding() {
     isLoaded &&
     completions.length === 0 &&
     (startingLevel === null || forceLevelStep);
-  useOnboardingStepTracking("level", isShown && !germanChoice && !waitingForLearnStep);
-  const leaveForGerman = germanChoice && isShown && !waitingForLearnStep;
-  useEffect(() => {
-    if (leaveForGerman) router.replace("/learn");
-  }, [leaveForGerman, router]);
+  useOnboardingStepTracking("level", isShown && !waitingForLearnStep);
 
-  if (germanChoice || waitingForLearnStep) return null;
+  if (waitingForLearnStep) return null;
   if (!isMarketingHomePath(pathname)) return null;
   if (forceLanguageStep) return null; // back button below sent them to the language step instead
   if (!locale || !isLoaded || completions.length > 0) return null;
@@ -175,7 +176,7 @@ export function StartingLevelOnboarding() {
                     {tierSupportLabel(difficulty, locale)}
                   </span>
                   <span className="text-muted-foreground mt-0.5 block text-sm">
-                    {t.onboarding[TIER_BODY_KEY[difficulty]]}
+                    {t.onboarding[(germanChoice ? TIER_BODY_KEY_DE : TIER_BODY_KEY)[difficulty]]}
                   </span>
                 </span>
                 <span

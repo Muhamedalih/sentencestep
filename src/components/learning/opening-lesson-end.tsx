@@ -12,8 +12,17 @@ import { readFirstRunVariantNow } from "@/lib/first-run/browser";
  * step provider (see root-html-shell.tsx), so the version is read from where the browser keeps it —
  * once, when this mounts, which is only ever on the client, after the last sentence.
  */
-export function OpeningLessonEnd({ words, accuracy }: { words: number; accuracy: number }) {
+export function OpeningLessonEnd({
+  words,
+  accuracy,
+  german = false,
+}: {
+  words: number;
+  accuracy: number;
+  /** The opening lesson was the German one: the headline names German, not English. */
+  german?: boolean;
+}) {
   const [variant] = useState(() => readFirstRunVariantNow());
-  if (variant === "short") return <SignupPrompt words={words} accuracy={accuracy} />;
-  return <OnboardingLessonComplete />;
+  if (variant === "short") return <SignupPrompt words={words} accuracy={accuracy} german={german} />;
+  return <OnboardingLessonComplete german={german} />;
 }

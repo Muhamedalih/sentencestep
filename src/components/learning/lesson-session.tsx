@@ -57,7 +57,7 @@ import { buildFromMemoryItems } from "@/lib/features/from-memory";
 import { recordFeatureUsageAction } from "@/lib/features/usage-actions";
 import { resolveSectionSentenceCompleteSound } from "@/lib/admin/typing-sound-settings";
 import { clearLessonResume, getLessonResume, saveLessonResume } from "@/lib/progress/lesson-resume";
-import { OPENING_LESSON_ID } from "@/lib/progress/starting-level";
+import { GERMAN_OPENING_LESSON_ID, OPENING_LESSON_ID } from "@/lib/progress/starting-level";
 import type { StoryWordQuizQuestion } from "@/lib/content/story-word-quiz";
 import {
   lessonUsesSessionEnd,
@@ -73,7 +73,11 @@ import { cn } from "@/lib/utils";
 import type { WordAudioWindowRequest } from "@/lib/voice/word-audio-preloader";
 import type { Lesson, NextLessonRef } from "@/types/content";
 
-const OPENING_LESSON_IDS = new Set(Object.values(OPENING_LESSON_ID));
+const GERMAN_OPENING_IDS = new Set<string>(Object.values(GERMAN_OPENING_LESSON_ID));
+const OPENING_LESSON_IDS = new Set<string>([
+  ...Object.values(OPENING_LESSON_ID),
+  ...GERMAN_OPENING_IDS,
+]);
 
 /** The learner's last Dictation on/off choice, remembered per browser so it survives lesson changes (a per-viewer convenience, so localStorage — never the source of truth for anything that matters). */
 // Screens that only appear after the typing (or on request) load on demand: together they were a large share of the
@@ -1097,6 +1101,7 @@ export function LessonSession({
         ) : isComplete && isOpeningLesson ? (
           <OpeningLessonEnd
             key="onboarding-complete"
+            german={GERMAN_OPENING_IDS.has(unit.id)}
             // The lesson's words, counted the way Home's words stat counts them (countWords).
             words={unit.sentences.reduce(
               (sum, sentence) => sum + sentence.en.trim().split(/\s+/).filter(Boolean).length,
