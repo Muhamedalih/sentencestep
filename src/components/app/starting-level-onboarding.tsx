@@ -85,7 +85,8 @@ export function StartingLevelOnboarding() {
   // A visitor who chose German in the first step skips the level questions, which are written for English: they go straight to the German Home.
   const germanChoice = useLearnChoice() === "de";
   // The «what do you want to learn?» step (FirstTimeLearnPicker) comes before the level questions: they wait for it.
-  const waitingForLearnStep = introContinued && !useLearnStepDone();
+  const learnStepDone = useLearnStepDone();
+  const waitingForLearnStep = introContinued && !learnStepDone;
   const isShort = firstRunVariant === "short";
   const Chevron = dir === "rtl" ? ChevronLeft : ChevronRight;
   const BackIcon = dir === "rtl" ? ChevronRight : ChevronLeft;
