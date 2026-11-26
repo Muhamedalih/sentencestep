@@ -14,6 +14,9 @@ import type { WordGroupSummary } from "@/types/word-lists";
 /** The most books the shelf holds. */
 export const MAX_SPINES = 9;
 
+/** The most books a full shelf holds (see the `fullShelf` option). */
+export const MAX_FULL_SPINES = 12;
+
 export interface BannerTopic {
   id: string;
   /** The topic's English title, written on the spine. */
@@ -49,6 +52,14 @@ export function summarizeBanner(
   /** Finished word ids, oldest first (the last one is the word typed most recently). */
   completedWordIds: readonly string[],
   isPremiumUser: boolean,
+  options: {
+    /**
+     * Stand every topic on the shelf, begun or not (the German Home's banner, where a learner with two
+     * topics begun would otherwise see a shelf of two): the begun ones keep their place and their
+     * height, the rest make up the number up to MAX_FULL_SPINES in the library's own order.
+     */
+    fullShelf?: boolean;
+  } = {},
 ): BannerSummary {
   const ordered = inLibraryOrder(groups);
   const finished = new Set(completedWordIds);
@@ -86,7 +97,19 @@ export function summarizeBanner(
   const others = started.filter((topic) => topic.id !== leanId);
   const lean = started.find((topic) => topic.id === leanId);
   // The leaning book always stays on the shelf; the others give way to it when the shelf is full.
-  const shelf = [...others.slice(0, lean ? MAX_SPINES - 1 : MAX_SPINES), ...(lean ? [lean] : [])];
+  let shelf = [...others.slice(0, lean ? MAX_SPINES - 1 : MAX_SPINES), ...(lean ? [lean] : [])];
+  if (options.fullShelf) {
+    const room = lean ? MAX_FULL_SPINES - 1 : MAX_FULL_SPINES;
+    const chosen = new Set(others.slice(0, room).map((topic) => topic.id));
+    for (const group of ordered) {
+      if (chosen.size >= room) break;
+      if (group.id !== leanId) chosen.add(group.id);
+    }
+    shelf = [
+      ...ordered.filter((group) => chosen.has(group.id)).map((group) => topics.get(group.id)!),
+      ...(lean ? [lean] : []),
+    ];
+  }
 
   const start = ordered.find(
     (group) => (group.isFree || isPremiumUser) && (topics.get(group.id)?.done ?? 0) === 0,

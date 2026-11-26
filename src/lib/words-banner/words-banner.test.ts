@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { hasSpineColor, spineColor } from "@/lib/words-banner/colors";
 import { wordsBannerStrings } from "@/lib/words-banner/strings";
-import { MAX_SPINES, summarizeBanner } from "@/lib/words-banner/summary";
+import { MAX_FULL_SPINES, MAX_SPINES, summarizeBanner } from "@/lib/words-banner/summary";
 import type { WordGroupSummary } from "@/types/word-lists";
 
 /**
@@ -178,4 +178,30 @@ test("the Arabic chip says the number the way Arabic counts, and every language 
     assert.ok(s.spineTitle("Name", 4, 20).includes("4 / 20"));
   }
   assert.equal(wordsBannerStrings(null).going(1), "1 topic going");
+});
+
+test("a full shelf stands every topic up to its limit: begun topics kept, the leaning one last", () => {
+  const groups = Array.from({ length: 15 }, (_, i) => group(`t${i + 1}`, 1, i + 1, 4));
+  // t14 begun first, t3 typed last (it leans).
+  const done = [...ids(groups[13]!, 2), ...ids(groups[2]!, 1)];
+  const summary = summarizeBanner(groups, done, true, { fullShelf: true });
+  assert.equal(summary.shelf.length, MAX_FULL_SPINES);
+  assert.equal(summary.shelf.at(-1)?.id, "t3");
+  assert.ok(summary.shelf.some((topic) => topic.id === "t14"));
+  assert.equal(new Set(summary.shelf.map((topic) => topic.id)).size, MAX_FULL_SPINES);
+  // Without the option the shelf is only the begun topics, as before.
+  assert.deepEqual(
+    summarizeBanner(groups, done, true).shelf.map((topic) => topic.id),
+    ["t14", "t3"],
+  );
+});
+
+test("a learner who has not begun still sees a full shelf when asked", () => {
+  const groups = Array.from({ length: 5 }, (_, i) => group(`t${i + 1}`, 1, i + 1, 4));
+  const summary = summarizeBanner(groups, [], true, { fullShelf: true });
+  assert.deepEqual(
+    summary.shelf.map((topic) => topic.id),
+    ["t1", "t2", "t3", "t4", "t5"],
+  );
+  assert.equal(summary.leanId, null);
 });

@@ -71,7 +71,9 @@ async function germanPassageCard(userId: string | null): Promise<PassagesHomeDat
 
 async function PassagesSlot({ data }: { data: Promise<PassagesHomeData | null> }) {
   const resolved = await data;
-  return resolved ? <PassagesSectionCard data={resolved} index={3} /> : null;
+  return resolved ? (
+    <PassagesSectionCard data={resolved} index={3} className="xl:min-h-[17rem]" />
+  ) : null;
 }
 
 async function TasksSlot({
@@ -141,7 +143,8 @@ export async function GermanHomeCards({
       <h1 className="sr-only">{t.nav.home}</h1>
       <div
         className={cn(
-          "mx-auto max-w-5xl px-6 pt-4 pb-12 sm:pt-6 sm:pb-16 xl:max-w-7xl",
+          // From xl up the page is as tall as the window under the header (4.75rem), so the last row takes the room the first two leave.
+          "mx-auto max-w-5xl px-6 pt-4 pb-12 sm:pt-6 sm:pb-16 xl:flex xl:min-h-[calc(100svh-4.75rem)] xl:max-w-7xl xl:flex-col",
           calm && "max-w-7xl pt-3 sm:pt-3",
         )}
         data-calm-home={calm ? "" : undefined}
@@ -171,13 +174,17 @@ export async function GermanHomeCards({
             reviewCount={0}
             reviewHref="/learn/word-lists/review"
             className="min-w-0 xl:h-[19.75rem] xl:min-h-0"
+            lively
           />
           <StatsPanel lessonStats={lessonStats} sessionCount={null} videosFinished={null} />
         </div>
-        <div className="mt-4 flex flex-wrap gap-4 empty:hidden">
+        <div className="mt-4 flex flex-wrap gap-4 empty:hidden xl:max-h-[36rem] xl:flex-1">
           <Suspense
             fallback={
-              <CardSkeleton feature="passages" className="min-h-[13.75rem] flex-1 basis-[20rem]" />
+              <CardSkeleton
+                feature="passages"
+                className="min-h-[13.75rem] flex-1 basis-[20rem] xl:min-h-[17rem]"
+              />
             }
           >
             <PassagesSlot data={passages} />
