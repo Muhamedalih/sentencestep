@@ -31,3 +31,10 @@ test("every lesson letter has its own key on the drawn keyboard", () => {
     assert.equal(letter.letter.toLowerCase(), letter.lower);
   }
 });
+
+test("the alphabet has all 30 letters, every lesson letter among them, each with a unique clip key", async () => {
+  const { GERMAN_ALPHABET, alphabetEntry } = await import("./german-alphabet");
+  assert.equal(GERMAN_ALPHABET.length, 30);
+  assert.equal(new Set(GERMAN_ALPHABET.map((entry) => entry.key)).size, 30);
+  for (const letter of GERMAN_LETTERS) assert.ok(alphabetEntry(letter.letter), letter.letter);
+});
