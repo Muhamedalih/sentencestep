@@ -49,11 +49,14 @@ export function VideoSectionCard({
   heading,
   cta,
   index,
+  wide = false,
 }: {
   card: VideoCardData;
   heading: string;
   cta: string;
   index: number;
+  /** The Video row of the words-first Home: the card is a whole row with a large player. */
+  wide?: boolean;
 }) {
   const { locale } = useLocale();
   const s = homeCardsStrings(locale);
@@ -77,6 +80,8 @@ export function VideoSectionCard({
         </>
       }
       index={index}
+      wide={wide}
+      className={wide ? "lg:min-h-[24rem]" : undefined}
     />
   );
 }

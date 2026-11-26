@@ -84,6 +84,7 @@ export function ContinueCard({
   isPremiumUser,
   hasWeakWords,
   extra = null,
+  tall = false,
 }: {
   units: LessonUnit[];
   storiesUnits: LessonUnit[];
@@ -91,6 +92,8 @@ export function ContinueCard({
   hasWeakWords: boolean;
   /** The calm look: what sits at the far end of the tab row (the free plan's progress). */
   extra?: ReactNode;
+  /** The words-first Home: the card is 25% taller (24.7rem instead of 19.75rem) from xl up. */
+  tall?: boolean;
 }) {
   const { t, dir, locale } = useLocale();
   const s = homeCardsStrings(locale);
@@ -147,7 +150,10 @@ export function ContinueCard({
   const card = (
     <section
       aria-label={s.continueTitle}
-      className="hc-card hc-rise relative isolate min-h-[22rem] overflow-hidden rounded-2xl border text-white transition-[border-color] duration-300 xl:h-[19.75rem] xl:min-h-0"
+      className={cn(
+        "hc-card hc-rise relative isolate min-h-[22rem] overflow-hidden rounded-2xl border text-white transition-[border-color] duration-300 xl:min-h-0",
+        tall ? "xl:h-[24.7rem]" : "xl:h-[19.75rem]",
+      )}
       style={
         {
           background: lessonColors.background,

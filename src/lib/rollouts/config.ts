@@ -216,6 +216,7 @@ export function withRolloutDependencies(
     homeCards,
     taskSteps: access.taskSteps && homeCards,
     guestCards: access.guestCards && homeCards,
+    homeWordsFirst: access.homeWordsFirst && homeCards,
   };
 }
 

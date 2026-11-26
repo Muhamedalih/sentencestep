@@ -233,6 +233,7 @@ test("evaluateRollouts: default config opens everything for admins only", () => 
     upgradeModal: false,
     signupLanding: false,
     germanZero: false,
+    homeWordsFirst: false,
   });
 });
 
@@ -251,6 +252,18 @@ test("the lean lock card and the Library for subscribers: Admins only until open
   assert.equal(
     withRolloutDependencies({ ...evaluateRollouts(config, guest), todaySession: false }).leanGate,
     true,
+  );
+});
+
+test("the words-first Home: Admins only, and closed whenever the Home cards are", () => {
+  const config = defaultRolloutConfig();
+  assert.equal(evaluateRollouts(config, admin).homeWordsFirst, true);
+  assert.equal(evaluateRollouts(config, learner).homeWordsFirst, false);
+  assert.equal(evaluateRollouts(config, guest).homeWordsFirst, false);
+  assert.equal(
+    withRolloutDependencies({ ...evaluateRollouts(config, admin), homeCards: false })
+      .homeWordsFirst,
+    false,
   );
 });
 

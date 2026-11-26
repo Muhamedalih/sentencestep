@@ -266,6 +266,7 @@ export function CategoryCard({
   badge,
   index = 0,
   className: extraClassName,
+  wide = false,
 }: {
   colors: CardColors;
   art: CategoryArt;
@@ -287,6 +288,8 @@ export function CategoryCard({
   index?: number;
   /** Extra classes for the card itself (the German Home makes it taller). */
   className?: string;
+  /** A card that takes a whole row (the Home's Video row): the picture is drawn large on the far side from lg up. */
+  wide?: boolean;
 }) {
   const { dir } = useLocale();
   // The grey look of Home (permission "greyCalm"): small corners (the colours come from the caller).
@@ -326,7 +329,14 @@ export function CategoryCard({
       <p className="relative z-10 mt-1 text-sm" style={{ color: colors.soft }} dir={dir}>
         {line}
       </p>
-      <p className="relative z-10 mt-3 flex max-w-[calc(100%-12.5rem)] min-w-0 items-baseline gap-2 text-sm xl:max-w-[calc(100%-18.25rem)]">
+      <p
+        className={cn(
+          "relative z-10 mt-3 flex min-w-0 items-baseline gap-2 text-sm",
+          wide
+            ? "max-w-[calc(100%-12.5rem)] lg:max-w-[calc(100%-33rem)]"
+            : "max-w-[calc(100%-12.5rem)] xl:max-w-[calc(100%-18.25rem)]",
+        )}
+      >
         <span
           aria-hidden="true"
           className="size-1.5 shrink-0 self-center rounded-full"
@@ -351,11 +361,21 @@ export function CategoryCard({
       <div
         aria-hidden="true"
         className={cn(
-          "hc-peek pointer-events-none absolute end-5 w-[16.75rem] xl:end-[1.9rem]",
-          art === "sheet" ? "-bottom-14 h-[13.4rem]" : "-bottom-[1.9rem] h-[11.4rem]",
+          "hc-peek pointer-events-none absolute",
+          wide
+            ? "end-5 -bottom-[1.9rem] h-[11.4rem] w-[16.75rem] max-lg:block lg:end-8 lg:top-1/2 lg:bottom-auto lg:h-[20.5rem] lg:w-[30.1rem] lg:-translate-y-1/2"
+            : "end-5 w-[16.75rem] xl:end-[1.9rem]",
+          !wide && (art === "sheet" ? "-bottom-14 h-[13.4rem]" : "-bottom-[1.9rem] h-[11.4rem]"),
         )}
       >
-        <div className="relative size-full origin-bottom-right max-xl:scale-[0.66]">
+        <div
+          className={cn(
+            "relative origin-bottom-right",
+            wide
+              ? "size-full max-lg:scale-[0.66] lg:h-[11.4rem] lg:w-[16.75rem] lg:origin-top-left lg:scale-[1.8]"
+              : "size-full max-xl:scale-[0.66]",
+          )}
+        >
           {art === "sheet" ? (
             <SheetArt title={artTitle ?? nextTitle} />
           ) : (
