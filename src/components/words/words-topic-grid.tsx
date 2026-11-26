@@ -32,11 +32,14 @@ export function WordsTopicGrid({
   groups,
   isPremiumUser,
   canEditCovers = false,
+  firstTile = null,
 }: {
   groups: WordGroupSummary[];
   isPremiumUser: boolean;
   /** An admin: with the picture covers open (permission wordCovers) each cover carries the buttons that change its picture. */
   canEditCovers?: boolean;
+  /** A card that comes first in the first level (the German letters lesson, permission germanZero). */
+  firstTile?: ReactNode;
 }) {
   const { locale, dir, t } = useLocale();
   const s = wordsHubStrings(locale);
@@ -101,6 +104,7 @@ export function WordsTopicGrid({
             : "gap-3 md:grid-cols-4 md:gap-4",
         )}
       >
+        {level === 1 && firstTile}
         {shown.map((group) => {
           const locked = !group.isFree && !isPremiumUser;
           const done = isLoaded && !locked ? completedCountIn(group.wordIds) : 0;

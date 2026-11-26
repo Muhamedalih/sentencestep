@@ -1,4 +1,4 @@
-import { GermanLettersCard } from "@/components/german/german-letters-card";
+import { GermanLettersTile } from "@/components/german/german-letters-tile";
 import { getLearnLanguage, isGermanZeroOpen } from "@/lib/learn-language-server";
 import { BookOpen } from "lucide-react";
 
@@ -93,7 +93,6 @@ export async function WordsHubPage({ tab: tabParam, view }: { tab: unknown; view
     const lettersCard = german && (await isGermanZeroOpen());
     body = (
       <>
-        {lettersCard && <GermanLettersCard className="mt-5" />}
         {features.rollouts.wordsBanner
           ? // The banner (permission wordsBanner) takes the review strip's place; its button goes where the strip's did.
             groups.length > 0 && (
@@ -129,6 +128,7 @@ export async function WordsHubPage({ tab: tabParam, view }: { tab: unknown; view
             groups={drafts.length > 0 ? [...groups, ...drafts] : groups}
             isPremiumUser={premium}
             canEditCovers={isAdminUser}
+            firstTile={lettersCard ? <GermanLettersTile /> : null}
           />
         )}
       </>

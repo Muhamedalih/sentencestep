@@ -149,6 +149,8 @@ export interface GermanLettersStrings {
   cardStart: string;
   alphabetBack: string;
   alphabetOpen: string;
+  tileTitle: string;
+  tileCount: (count: number) => string;
   alphabetBody: string;
   zeroName: string;
   zeroBody: string;
@@ -181,6 +183,8 @@ const ar: GermanLettersStrings = {
   cardStart: "ابدأ",
   alphabetBack: "المفردات",
   alphabetOpen: "افتح",
+  tileTitle: "Buchstaben",
+  tileCount: (count) => `${count} حرفاً`,
   alphabetBody: "اضغط على أي حرف لتسمع اسمه وكلمة منه. بعدها تدرّب على الحروف الستة الأصعب.",
   zeroName: "من الصفر",
   zeroBody: "ما أعرف أي شي بالألمانية. نبدي بالحروف",
@@ -213,6 +217,8 @@ const en: GermanLettersStrings = {
   cardStart: "Start",
   alphabetBack: "Words",
   alphabetOpen: "Open",
+  tileTitle: "Buchstaben",
+  tileCount: (count) => `${count} letters`,
   alphabetBody: "Tap any letter to hear its name and a word. Then practise the six hardest ones.",
   zeroName: "From zero",
   zeroBody: "I know nothing in German yet. Start with the letters",
