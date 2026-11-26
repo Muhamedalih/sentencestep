@@ -147,6 +147,9 @@ export interface GermanLettersStrings {
   cardTitle: string;
   cardBody: string;
   cardStart: string;
+  alphabetBack: string;
+  alphabetOpen: string;
+  alphabetBody: string;
   zeroName: string;
   zeroBody: string;
   popupTitle: string;
@@ -174,8 +177,11 @@ const ar: GermanLettersStrings = {
   repeat: "أعد الدرس",
   repeatDone: "تم",
   cardTitle: "الحروف الألمانية",
-  cardBody: "ستة حروف مع طريقة اللفظ ومكانها على الكيبورد",
+  cardBody: "الدرس الأول: كل الحروف الألمانية بأصواتها",
   cardStart: "ابدأ",
+  alphabetBack: "المفردات",
+  alphabetOpen: "افتح",
+  alphabetBody: "اضغط على أي حرف لتسمع اسمه وكلمة منه. بعدها تدرّب على الحروف الستة الأصعب.",
   zeroName: "من الصفر",
   zeroBody: "ما أعرف أي شي بالألمانية. نبدي بالحروف",
   popupTitle: "اختر مستواك بالألمانية",
@@ -203,8 +209,11 @@ const en: GermanLettersStrings = {
   repeat: "Repeat lesson",
   repeatDone: "Done",
   cardTitle: "German letters",
-  cardBody: "Six letters with how they sound and where they are on the keyboard",
+  cardBody: "Lesson one: every German letter with its sound",
   cardStart: "Start",
+  alphabetBack: "Words",
+  alphabetOpen: "Open",
+  alphabetBody: "Tap any letter to hear its name and a word. Then practise the six hardest ones.",
   zeroName: "From zero",
   zeroBody: "I know nothing in German yet. Start with the letters",
   popupTitle: "Choose your German level",

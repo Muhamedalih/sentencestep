@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Check, RefreshCw, Type } from "lucide-react";
 
 import { useLocale } from "@/components/providers/locale-provider";
-import { GERMAN_LETTERS_PATH, germanLettersStrings } from "@/lib/german-letters";
+import { germanLettersStrings } from "@/lib/german-letters";
 import { useGermanLettersDone } from "@/lib/german-letters-state";
 
 /**
@@ -32,11 +32,11 @@ export function GermanLettersCard({ className }: { className?: string }) {
         <span className="text-muted-foreground block text-xs">{s.cardBody}</span>
       </span>
       <Link
-        href={`${GERMAN_LETTERS_PATH}?from=words`}
+        href="/learn/german-alphabet"
         className="border-border hover:bg-accent inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-sm font-medium"
       >
         {done && <RefreshCw className="size-4" aria-hidden="true" />}
-        {done ? s.repeat : s.cardStart}
+        {s.alphabetOpen}
       </Link>
     </div>
   );
