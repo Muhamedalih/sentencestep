@@ -20,6 +20,8 @@ import {
   type OnboardingCardSettings,
 } from "@/lib/admin/onboarding-card-settings";
 import { useLearnChoice } from "@/lib/learn-choice";
+import { GERMAN_LETTERS_PATH } from "@/lib/german-letters";
+import { useGermanLettersDone, useGermanZeroPick } from "@/lib/german-letters-state";
 import { difficultyForStartingLevel, openingLessonIdFor } from "@/lib/progress/starting-level";
 
 /**
@@ -77,6 +79,9 @@ export function OnboardingIntroCard() {
   // A learner who skipped the opening lesson (the «تخطّي الدرس» button) is not asked to start it again.
   const skippedOpeners = useSkippedOpeners();
   const language = useLearnChoice() === "de" ? "de" : "en";
+  // «From zero» (permission germanZero): the letters lesson opens instead of the opening lesson, and once it was done this card never comes back.
+  const zeroPick = useGermanZeroPick() && language === "de";
+  const lettersDone = useGermanLettersDone();
 
   const difficulty = pendingDifficulty ?? difficultyForStartingLevel(startingLevel);
   const shouldShow =
@@ -87,6 +92,7 @@ export function OnboardingIntroCard() {
     difficulty !== null &&
     tutorialStepDone &&
     completions.length === 0 &&
+    !(zeroPick && lettersDone) &&
     !skippedOpeners.includes(openingLessonIdFor(difficulty, language));
   useOnboardingStepTracking("start", shouldShow);
 
@@ -121,7 +127,9 @@ export function OnboardingIntroCard() {
       </div>
     );
   }
-  const openingLessonPath = `/learn/normal/${openingLessonIdFor(difficulty, language)}`;
+  const openingLessonPath = zeroPick
+    ? GERMAN_LETTERS_PATH
+    : `/learn/normal/${openingLessonIdFor(difficulty, language)}`;
   // The card's headline is the admin's English-learning one; a learner of German gets its German twin.
   const title =
     language === "de" ? t.onboarding.introTitleDe : onboardingCardTitleForLocale(settings, locale);

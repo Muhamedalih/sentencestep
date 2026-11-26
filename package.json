@@ -37,7 +37,7 @@
     "test:cron": "tsx --test src/lib/cron/auth.test.ts",
     "test:seo": "tsx --test src/lib/seo/sitemap.test.ts",
     "test:library-open": "tsx --test src/lib/library/open-rule.test.ts src/lib/security/rate-limit.test.ts src/lib/security/trusted-origin.test.ts src/lib/security/read-body.test.ts src/lib/push/endpoint.test.ts src/lib/supabase/filter-text.test.ts",
-    "test:typing": "tsx --test src/lib/typing.test.ts src/lib/german-typing.test.ts src/lib/learn-language.test.ts",
+    "test:typing": "tsx --test src/lib/typing.test.ts src/lib/german-typing.test.ts src/lib/german-letters.test.ts src/lib/learn-language.test.ts",
     "test:typing-sound": "tsx --test src/lib/typing-sound-packs.test.ts",
     "test:speech": "tsx --test src/lib/speech.test.ts src/lib/audio-errors.test.ts",
     "test:voice": "tsx --test src/lib/voice/resolution.test.ts src/lib/voice/direction-to-tags.test.ts src/lib/voice/direction-to-ssml.test.ts src/lib/voice/direction-to-prosody.test.ts src/lib/voice/direction-to-gemini-prompt.test.ts src/lib/voice/director-validate.test.ts src/lib/voice/providers/elevenlabs.test.ts src/lib/voice/providers/fish-audio.test.ts src/lib/voice/providers/azure.test.ts src/lib/voice/word-list-word-audio.test.ts src/lib/voice/content-provider-map.test.ts src/lib/voice/sentence-word-plan.test.ts src/lib/voice/task-scheduler.test.ts src/lib/voice/word-audio-preloader.test.ts src/lib/voice/sentence-access.test.ts src/lib/voice/lesson-word-lookup.test.ts src/lib/voice/recorded-word-clips.test.ts src/lib/voice/providers/edge-tts.test.ts",

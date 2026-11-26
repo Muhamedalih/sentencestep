@@ -15,6 +15,8 @@ import { Button } from "@/components/ui/button";
 import { waitForLocaleCookie } from "@/lib/i18n/browser-locale";
 import { isMarketingHomePath } from "@/lib/i18n/locales";
 import { useLearnChoice } from "@/lib/learn-choice";
+import { GERMAN_LETTERS_PATH } from "@/lib/german-letters";
+import { useGermanLettersDone, useGermanZeroPick } from "@/lib/german-letters-state";
 import { difficultyForStartingLevel, openingLessonIdFor } from "@/lib/progress/starting-level";
 
 const TIPS = [
@@ -45,6 +47,9 @@ export function FirstRunTips() {
   const router = useRouter();
   const [isNavigating, setIsNavigating] = useState(false);
   const language = useLearnChoice() === "de" ? "de" : "en";
+  // «From zero» (permission germanZero): the letters lesson opens instead of the opening lesson, and once it was done this page never comes back.
+  const zeroPick = useGermanZeroPick() && language === "de";
+  const lettersDone = useGermanLettersDone();
   const difficulty = pendingDifficulty ?? difficultyForStartingLevel(startingLevel);
   const isShown =
     firstRunVariant === "short" &&
@@ -53,6 +58,7 @@ export function FirstRunTips() {
     isLoaded &&
     completions.length === 0 &&
     difficulty !== null &&
+    !(zeroPick && lettersDone) &&
     !tutorialStepDone;
   useOnboardingStepTracking("tutorial", isShown);
 
@@ -71,7 +77,9 @@ export function FirstRunTips() {
     );
   }
   if (!isShown || difficulty === null) return null;
-  const lessonPath = `/learn/normal/${openingLessonIdFor(difficulty, language)}`;
+  const lessonPath = zeroPick
+    ? GERMAN_LETTERS_PATH
+    : `/learn/normal/${openingLessonIdFor(difficulty, language)}`;
 
   async function openLesson() {
     setIsNavigating(true);

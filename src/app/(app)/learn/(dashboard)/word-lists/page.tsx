@@ -1,4 +1,5 @@
-import { getLearnLanguage } from "@/lib/learn-language-server";
+import { GermanLettersCard } from "@/components/german/german-letters-card";
+import { getLearnLanguage, isGermanZeroOpen } from "@/lib/learn-language-server";
 import type { Metadata } from "next";
 
 import { WordListsLibrary } from "@/components/app/word-lists-library";
@@ -105,6 +106,7 @@ export default async function WordListsPage({
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-12 sm:py-16">
+      {language === "de" && (await isGermanZeroOpen()) && <GermanLettersCard className="mb-6" />}
       {/* The redesigned dashboard is admin-controlled ("Word Lists redesign" in /admin/features):
           everyone else keeps the library exactly as it was. */}
       {redesign && !features.rollouts.wordCovers && language !== "de" ? (
