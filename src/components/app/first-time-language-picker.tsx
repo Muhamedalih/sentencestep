@@ -8,6 +8,7 @@ import { useGetStartedStep } from "@/components/providers/get-started-step-provi
 import { LockBodyScroll } from "@/components/app/lock-body-scroll";
 import { Logo } from "@/components/layout/logo";
 import { useOnboardingStepTracking } from "@/hooks/use-onboarding-step-tracking";
+import { useLearnStepDone } from "@/lib/learn-choice";
 import { detectBrowserLocale } from "@/lib/i18n/browser-locale";
 import { LOCALE_META, SUPPORT_LOCALES } from "@/lib/i18n/locales";
 import { cn } from "@/lib/utils";
@@ -54,13 +55,18 @@ export function FirstTimeLanguagePicker() {
   const { introContinued, forceLanguageStep, setForceLanguageStep, firstRunVariant } =
     useGetStartedStep();
   const isShort = firstRunVariant === "short";
-  const isShown = !isShort && (!locale || forceLanguageStep) && (Boolean(locale) || introContinued);
+  // The «what do you want to learn?» step (FirstTimeLearnPicker, permission germanTrack) comes first and marks itself done at once when German is closed.
+  const learnStepDone = useLearnStepDone();
+  const isShown =
+    !isShort &&
+    (!locale || forceLanguageStep) &&
+    (Boolean(locale) || (introContinued && learnStepDone));
   useOnboardingStepTracking("language", isShown);
 
   useEffect(() => {
-    if (!isShort || locale || !introContinued) return;
+    if (!isShort || locale || !introContinued || !learnStepDone) return;
     setLocaleForOnboarding(detectBrowserLocale());
-  }, [isShort, locale, introContinued, setLocaleForOnboarding]);
+  }, [isShort, locale, introContinued, learnStepDone, setLocaleForOnboarding]);
 
   // Warms the browser's cache for every locale's "/{locale}" marketing page
   // in the background — moved here, deferred, from a static
@@ -92,10 +98,13 @@ export function FirstTimeLanguagePicker() {
   // The effect above sets the locale in the next render; until then a plain cover keeps the page
   // under IntroLanding from showing for a frame.
   if (isShort) {
-    return !locale && introContinued ? <div className="bg-background fixed inset-0 z-100" /> : null;
+    return !locale && introContinued && learnStepDone ? (
+      <div className="bg-background fixed inset-0 z-100" />
+    ) : null;
   }
   if (locale && !forceLanguageStep) return null;
   if (!locale && !introContinued) return null; // IntroLanding is still showing — see its own doc comment
+  if (!locale && !learnStepDone) return null; // the learn-language step is still showing — see FirstTimeLearnPicker
 
   return (
     <div

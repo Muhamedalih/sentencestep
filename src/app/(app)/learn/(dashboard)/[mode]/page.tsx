@@ -101,9 +101,9 @@ export default async function ModeLessonsPage({ params }: { params: Promise<{ mo
   // learner's view) never get this: the drafts come from their own uncached read.
   // In German (permission germanTrack, an admin's choice) the list is the German lessons instead,
   // which are all drafts for now: the English ones are left out.
-  const language = isAdminUser ? await getLearnLanguage() : "en";
+  const language = await getLearnLanguage();
   const draftUnits =
-    mode === "normal" && isAdminUser && !(await isLearnerViewOn())
+    mode === "normal" && (language === "de" || (isAdminUser && !(await isLearnerViewOn())))
       ? await getDraftLessonSummaries(mode, locale ?? undefined, language).catch(() => [])
       : [];
   const listedUnits =

@@ -6,6 +6,8 @@ import { HybridWall } from "@/components/hybrid/hybrid-wall";
 import { PassageLocked, PosterArt } from "@/components/passages/passage-locked";
 import { PassageReader } from "@/components/passages/passage-reader";
 import { isAdmin } from "@/lib/admin/access";
+import { isGermanOpen } from "@/lib/learn-language-server";
+import { isGermanPassage } from "@/lib/passages/german-twin";
 import { trackPaywallViewed } from "@/lib/analytics/paywall";
 import { hasPremiumAccess } from "@/lib/billing/access";
 import { getFromMonthlyPrice } from "@/lib/billing/from-price";
@@ -85,7 +87,13 @@ export default async function PassageReaderPage({
     available: translationAvailable,
   } = localizePassage(fetched, PASSAGE_EXAMS[fetched.id], locale);
   // A draft is an admin's preview: nobody else can open it, nor learn it exists.
-  if (passage.status !== "published" && !isAdminUser) notFound();
+  // A German passage (permission germanTrack, id "de-…") is a draft too, open to everyone German is open to.
+  if (
+    passage.status !== "published" &&
+    !isAdminUser &&
+    !(isGermanPassage(passage.id) && (await isGermanOpen()))
+  )
+    notFound();
 
   // A Premium passage is for subscribers and admins; everyone else gets the lock screen. The
   // subscription is only looked up when it matters — this passage or a suggested next one is

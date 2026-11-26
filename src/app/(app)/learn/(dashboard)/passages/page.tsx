@@ -42,9 +42,7 @@ export default async function PassagesPage() {
   // which are all drafts for now.
   const pageLocale = await getLocale();
   const passages = (
-    isAdminUser && (await getLearnLanguage()) === "de"
-      ? await fetchGermanPassageSummaries()
-      : englishPassages
+    (await getLearnLanguage()) === "de" ? await fetchGermanPassageSummaries() : englishPassages
   ).map((summary) => localizeSummary(summary, pageLocale));
   // A Premium passage opens for subscribers and admins only; "Up next" never points anyone at a
   // lock. The subscription is only looked up when some passage is Premium (none is, until an

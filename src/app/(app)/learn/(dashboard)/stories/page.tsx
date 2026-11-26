@@ -50,9 +50,9 @@ export default async function StoriesLibraryPage() {
   // who switched to the learner's view, never get this: the drafts come from an uncached, session-aware read.
   // In German (permission germanTrack, an admin's choice) the list is the German stories instead,
   // which are all drafts for now: the English ones are left out.
-  const language = isAdminUser ? await getLearnLanguage() : "en";
+  const language = await getLearnLanguage();
   const draftLessons =
-    isAdminUser && !learnerView
+    language === "de" || (isAdminUser && !learnerView)
       ? await getDraftLessonSummaries("stories", locale ?? undefined, language).catch(() => [])
       : [];
   // A German story (id "de-<english id>") wears the drawing of its English twin: copied, nothing new is drawn.

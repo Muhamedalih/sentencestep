@@ -15,6 +15,7 @@ import { getGatePay } from "@/lib/billing/gate-pay";
 import { getGateProgress } from "@/lib/billing/gate-progress";
 import { getGateFigures } from "@/lib/stats/gate-figures";
 import { isAdmin } from "@/lib/admin/access";
+import { isGermanOpen } from "@/lib/learn-language-server";
 import { hasPremiumAccess } from "@/lib/billing/access";
 import { findNextLesson, getLessonById, getLessonNav } from "@/lib/content";
 import { buildStoryWordQuiz } from "@/lib/content/story-word-quiz";
@@ -113,9 +114,12 @@ export default async function LessonPage({
   // An admin may also open a lesson that is still a draft (their own preview inside the real
   // player); everyone else gets only published lessons, exactly as before.
   const adminViewer = await isAdmin();
+  // A German lesson (permission germanTrack, id "de-…") is still a draft in the table, so it opens as one
+  // for everyone German is open to; the lessons rule is the second lock and the lesson's own free/Premium flag decides the rest.
+  const draftAllowed = adminViewer || (lessonId.startsWith("de-") && (await isGermanOpen()));
   const [lessonNav, baseUnit, user, opener] = await Promise.all([
     getLessonNav(mode),
-    getLessonById(mode, lessonId, locale ?? undefined, adminViewer),
+    getLessonById(mode, lessonId, locale ?? undefined, draftAllowed),
     getCurrentUser(),
     // Only the three opening lessons (First Steps) ever ask: which of the two opening-lesson tests this
     // visitor is in (the short text, the skip button) and, for the short text, its sentences.

@@ -6,6 +6,7 @@ import { Sparkles, X } from "lucide-react";
 
 import { useLocale } from "@/components/providers/locale-provider";
 import { dismissGermanNew, useGermanNew } from "@/hooks/use-video-new";
+import { rememberLearnChoice } from "@/lib/learn-choice";
 import { learnLanguageStrings } from "@/lib/learn-language-strings";
 
 /**
@@ -35,6 +36,7 @@ export function GermanAnnouncement() {
         body: JSON.stringify({ language: "de" }),
       });
       if (response.ok) {
+        rememberLearnChoice("de");
         dismissGermanNew();
         router.refresh();
       }

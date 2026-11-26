@@ -11,6 +11,7 @@ import {
   warnIfMissing,
 } from "@/lib/i18n/content-translations";
 import type { SupportLocale } from "@/lib/i18n/locales";
+import { isGermanOpen } from "@/lib/learn-language-server";
 import { canOpenWordGroup } from "@/lib/word-lists-access";
 import type { Database } from "@/types/database";
 import type { WordGroup, WordGroupSummary } from "@/types/word-lists";
@@ -84,9 +85,10 @@ export async function fetchDraftWordGroupSummaries(
     .from("word_groups")
     .select("*, vocabulary_words(id)")
     .eq("status", "draft");
-  const { data, error } = await (language === "de"
-    ? base.like("id", "de-%")
-    : base.not("id", "like", "de-%").not("id", "like", "passage-%")
+  const { data, error } = await (
+    language === "de"
+      ? base.like("id", "de-%")
+      : base.not("id", "like", "de-%").not("id", "like", "passage-%")
   ).order("order_index");
   if (error) throw error;
   const drafts = await summarizeGroups((data ?? []) as unknown as GroupWithWordIds[], locale);
@@ -207,7 +209,10 @@ export async function fetchWordGroupById(
   // Defensive double-check, see isLearnerVisibleStatus's doc comment. A DRAFT only comes back to an
   // admin (the row-level rule already hides it from everyone else): the admin tries a new topic in the
   // learner's own rounds before it is published. Only a draft pays for the admin check.
-  if (!isLearnerVisibleStatus(group.status) && !canOpenWordGroup(group, await isAdmin())) {
+  if (
+    !isLearnerVisibleStatus(group.status) &&
+    !canOpenWordGroup(group, await isAdmin(), await isGermanOpen())
+  ) {
     return undefined;
   }
 

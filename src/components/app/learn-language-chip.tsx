@@ -6,6 +6,7 @@ import { ChevronDown } from "lucide-react";
 
 import { useLocale } from "@/components/providers/locale-provider";
 import { useGermanNew } from "@/hooks/use-video-new";
+import { rememberLearnChoice } from "@/lib/learn-choice";
 import { TARGET_LANGUAGES, type TargetLanguage } from "@/lib/learn-language";
 import { learnLanguageStrings } from "@/lib/learn-language-strings";
 import { cn } from "@/lib/utils";
@@ -35,7 +36,10 @@ export function LearnLanguageChip({ current }: { current: TargetLanguage }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ language }),
       });
-      if (response.ok) router.refresh();
+      if (response.ok) {
+        rememberLearnChoice(language);
+        router.refresh();
+      }
     } finally {
       setBusy(false);
     }

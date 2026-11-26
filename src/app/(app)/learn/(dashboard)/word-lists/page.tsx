@@ -57,8 +57,11 @@ export default async function WordListsPage({
   // Topics still in draft are shown to an admin alone, in the grid only (a card marked Draft that opens
   // the admin preview): the figures below (mastery, the banner) never count them.
   // In German (permission germanTrack, an admin's choice) the grid is the German topics, all drafts for now.
-  const language = isAdminUser ? await getLearnLanguage() : "en";
-  const drafts = isAdminUser ? await getDraftWordGroupSummaries(locale ?? undefined, language) : [];
+  const language = await getLearnLanguage();
+  const drafts =
+    isAdminUser || language === "de"
+      ? await getDraftWordGroupSummaries(locale ?? undefined, language)
+      : [];
 
   // Smart word practice, signed-in learners only (the schedule needs an
   // account): each card's mastery and the number of words waiting for review.
@@ -114,9 +117,7 @@ export default async function WordListsPage({
         />
       ) : (
         <WordListsLibrary
-          groups={
-            language === "de" ? drafts : drafts.length > 0 ? [...groups, ...drafts] : groups
-          }
+          groups={language === "de" ? drafts : drafts.length > 0 ? [...groups, ...drafts] : groups}
           isPremiumUser={hasPremium || isAdminUser}
           weakWords={weakWords}
           mastery={mastery}

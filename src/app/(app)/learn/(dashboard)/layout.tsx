@@ -11,7 +11,7 @@ import { hasPremiumAccess } from "@/lib/billing/access";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { LearnLanguagePicker } from "@/components/app/learn-language-picker";
 import { LEARN_LANGUAGE_ASKED_COOKIE } from "@/lib/learn-language";
-import { getLearnLanguage } from "@/lib/learn-language-server";
+import { getLearnLanguage, isGermanOpen } from "@/lib/learn-language-server";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { fetchMySavedSentencesCount } from "@/lib/supabase/queries/saved-sentences";
 
@@ -58,11 +58,10 @@ export default async function LearnDashboardLayout({ children }: { children: Rea
     // Already resolved for this request by LearnLayout (cache()'d), so it costs nothing here.
     getEffectiveFeatures(),
   ]);
-  // The learning-language chip is for Admins alone for now (permission germanTrack).
-  const learnLanguage = isAdminUser ? await getLearnLanguage() : undefined;
+  // The learning-language chip is there for everyone German is open to (permission germanTrack).
+  const learnLanguage = (await isGermanOpen()) ? await getLearnLanguage() : undefined;
   // The first-time picker: shown to an admin once, until they have answered or dismissed it.
-  const askLanguage =
-    isAdminUser && !(await cookies()).get(LEARN_LANGUAGE_ASKED_COOKIE)?.value;
+  const askLanguage = isAdminUser && !(await cookies()).get(LEARN_LANGUAGE_ASKED_COOKIE)?.value;
 
   // The Library's menu item: admins always; a subscriber once the "libraryGift" permission is open for
   // them. The subscription is only looked up when that permission is open, so while it is closed this

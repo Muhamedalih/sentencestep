@@ -11,6 +11,8 @@ import { StatsPanel } from "@/components/home-cards/stats-panel";
 import { TasksBox } from "@/components/home-cards/tasks-box";
 import { ProgressProvider } from "@/components/providers/progress-provider";
 import { WordsBanner } from "@/components/words/words-banner";
+import { isAdmin } from "@/lib/admin/access";
+import { hasPremiumAccess } from "@/lib/billing/access";
 import { getDraftLessonSummaries } from "@/lib/content";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { localISODateInTimeZone, TIMEZONE_COOKIE } from "@/lib/features/learner-date";
@@ -33,15 +35,18 @@ import type { CurrentUser } from "@/lib/supabase/auth";
 /** The week strip looks back this many days, like the English Home's. */
 const STRIP_LOOKBACK_DAYS = 6;
 
-async function germanPassageCard(userId: string | null): Promise<PassagesHomeData | null> {
+async function germanPassageCard(
+  userId: string | null,
+  canOpenPremium: boolean,
+): Promise<PassagesHomeData | null> {
   try {
     const [summaries, progress] = await Promise.all([
       fetchGermanPassageSummaries(),
       userId ? fetchPassageProgress(userId) : Promise.resolve([]),
     ]);
-    // The German track is Admins only for now, so every passage is open.
+    // A Premium passage opens for subscribers and admins only, like the English ones.
     const pick = homeCardPick(
-      openablePassages(summaries, true),
+      openablePassages(summaries, canOpenPremium),
       new Map(progress.map((entry) => [entry.passageId, entry])),
     );
     if (!pick) return null;
@@ -125,7 +130,9 @@ export async function GermanHomeCards({
   const timeZone = (await cookies()).get(TIMEZONE_COOKIE)?.value;
   const todayISO = localISODateInTimeZone(timeZone) ?? todayLocalISODate();
   const calm = (await getEffectiveFeatures()).rollouts.homeCalm;
-  const passages = germanPassageCard(user?.id ?? null);
+  // The same rule as English: a free lesson, topic or passage is open to everyone; the rest to subscribers and admins.
+  const premium = (await Promise.all([hasPremiumAccess(), isAdmin()])).some(Boolean);
+  const passages = germanPassageCard(user?.id ?? null, premium);
   const [units, storiesUnits, groups, initialProgress] = await Promise.all([
     getDraftLessonSummaries("normal", locale ?? undefined, "de").catch(() => []),
     getDraftLessonSummaries("stories", locale ?? undefined, "de").catch(() => []),
@@ -144,7 +151,7 @@ export async function GermanHomeCards({
       <div
         className={cn(
           // From xl up the page is as tall as the window under the header (4.75rem), so the last row takes the room the first two leave.
-          "mx-auto max-w-5xl px-6 pt-4 pb-12 sm:pt-6 sm:pb-16 xl:flex xl:min-h-[calc(100svh-4.75rem)] xl:max-w-7xl xl:flex-col",
+          "mx-auto max-w-5xl px-6 pt-4 pb-12 sm:pt-6 sm:pb-16 xl:flex xl:min-h-[calc(100svh-4.75rem)] xl:max-w-7xl xl:flex-col xl:pb-5",
           calm && "max-w-7xl pt-3 sm:pt-3",
         )}
         data-calm-home={calm ? "" : undefined}
@@ -170,7 +177,7 @@ export async function GermanHomeCards({
         >
           <WordsBanner
             groups={groups}
-            isPremiumUser
+            isPremiumUser={premium}
             reviewCount={0}
             reviewHref="/learn/word-lists/review"
             className="min-w-0 xl:h-[19.75rem] xl:min-h-0"
@@ -189,7 +196,7 @@ export async function GermanHomeCards({
           >
             <PassagesSlot data={passages} />
           </Suspense>
-          <GermanSuggestedCard units={units} storiesUnits={storiesUnits} />
+          <GermanSuggestedCard units={units} storiesUnits={storiesUnits} isPremiumUser={premium} />
         </div>
       </div>
     </ProgressProvider>

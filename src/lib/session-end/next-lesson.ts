@@ -1,9 +1,10 @@
 import { isAdmin } from "@/lib/admin/access";
 import { hasPremiumAccess } from "@/lib/billing/access";
-import { getLessonSummaries } from "@/lib/content";
+import { getDraftLessonSummaries, getLessonSummaries } from "@/lib/content";
 import { withOpeningLessonPlacement } from "@/lib/content-helpers";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { getLocale } from "@/lib/i18n/get-locale";
+import { GERMAN_ID_PREFIX } from "@/lib/learn-language";
 import { findCurrentLesson } from "@/lib/progress/level";
 import { fetchProfileStartingLevel } from "@/lib/supabase/queries/profile";
 import { fetchUserProgress } from "@/lib/supabase/queries/progress";
@@ -38,8 +39,12 @@ export async function resolveNextLesson(input: {
 }): Promise<SessionEndNextLesson | null> {
   const { user, mode, lessonId, guestCompletedIds, guestStartingLevel } = input;
   const locale = await getLocale();
+  // A German lesson (permission germanTrack, id "de-…") is followed by the next German one, never by an English lesson.
+  const german = lessonId.startsWith(GERMAN_ID_PREFIX);
   const [units, features, premium, admin] = await Promise.all([
-    getLessonSummaries(mode, locale ?? undefined),
+    german
+      ? getDraftLessonSummaries(mode, locale ?? undefined, "de").catch(() => [])
+      : getLessonSummaries(mode, locale ?? undefined),
     getEffectiveFeatures(),
     hasPremiumAccess(),
     isAdmin(),
@@ -72,10 +77,11 @@ export async function resolveNextLesson(input: {
 
   const finished = [...new Set([...completedIds, lessonId])];
   const next = findCurrentLesson(
-    withOpeningLessonPlacement(units),
+    german ? units : withOpeningLessonPlacement(units),
     finished,
     premium || admin,
-    startingLevel,
+    // The placement is an English one: German starts from its first lesson.
+    german ? null : startingLevel,
     features.rollouts.levelFloor,
   );
   return next ? { id: next.id, mode: next.mode, title: next.title } : null;
