@@ -6,7 +6,6 @@ import { motion } from "framer-motion";
 import { LockBodyScroll } from "@/components/app/lock-body-scroll";
 import { Logo } from "@/components/layout/logo";
 import { useGetStartedStep } from "@/components/providers/get-started-step-provider";
-import { useLocale } from "@/components/providers/locale-provider";
 import { finishLearnStep, useLearnStepDone } from "@/lib/learn-choice";
 import type { TargetLanguage } from "@/lib/learn-language";
 import { cn } from "@/lib/utils";
@@ -25,19 +24,19 @@ const OPTIONS: readonly {
 /**
  * The step before the language step of the first-run flow (permission germanTrack): «what do you want
  * to learn?», English or German, drawn like the language step after it (the same full page, logo,
- * heading, big cards). It only exists for a brand-new visitor (no language chosen yet, past the
- * introduction) and only while German is open to them: the step asks the server once, and when German
+ * heading, big cards). It only exists for a brand-new visitor (just past the introduction's Continue,
+ * which a returning visitor never sees) and only while German is open to them: the step asks the server once, and when German
  * is closed it marks itself done without showing anything, so a closed permission changes nothing.
  * The choice is stored the same way the top bar's chip stores it (see /api/learn-language), and the
  * language step follows at once.
  */
 export function FirstTimeLearnPicker() {
-  const { locale } = useLocale();
   const { introContinued } = useGetStartedStep();
   const done = useLearnStepDone();
   const [open, setOpen] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
-  const active = !locale && introContinued && !done;
+  // Right after the introduction's Continue, whether or not a language is set yet: the short first run picks the language at that very tap.
+  const active = introContinued && !done;
 
   useEffect(() => {
     if (!active || open !== null) return;
