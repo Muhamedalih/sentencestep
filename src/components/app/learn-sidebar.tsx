@@ -12,6 +12,7 @@ import {
   Library,
   Lightbulb,
   ListChecks,
+  Lock,
   NotebookText,
   Play,
   Route,
@@ -32,6 +33,7 @@ import {
   type ContactStrings,
 } from "@/lib/contact/instagram";
 import { ruleStrings } from "@/lib/daily-rule/strings";
+import { learnLanguageStrings } from "@/lib/learn-language-strings";
 import { videoNewLabel, videoStrings } from "@/lib/video-dictation/strings";
 import { wordDropStrings } from "@/lib/word-drop/strings";
 import { wordsHubStrings } from "@/lib/words-hub/strings";
@@ -89,6 +91,7 @@ export function LearnSidebar({
   mobilePath = false,
   rulesEnabled = false,
   videoEnabled = false,
+  videoLocked = false,
   wordDropEnabled = false,
   contactInstagram = false,
   wordBankEnabled = false,
@@ -105,6 +108,8 @@ export function LearnSidebar({
   rulesEnabled?: boolean;
   /** The "videoDictation" permission, resolved for this visitor: «فيديو» is a menu item from md: up, and a tile in the phone's More sheet. */
   videoEnabled?: boolean;
+  /** German is the chosen learning language (permission germanTrack, Admins only): «فيديو» stays in the md: sidebar but locked (dimmed, a lock, «soon», not a link), and is left out of the phone's More sheet, because German has no videos yet. */
+  videoLocked?: boolean;
   /** The "wordDrop" permission, resolved for this visitor: «Word Drop» (the falling-words typing game) is a menu item from md: up, and a tile in the phone's More sheet. */
   wordDropEnabled?: boolean;
   /** The "contactInstagram" permission, resolved for this visitor: the «تواصل معنا» box at the foot of the md: sidebar, and the last tile of the phone's More sheet. */
@@ -117,8 +122,9 @@ export function LearnSidebar({
   const pathname = usePathname();
   const { t, dir, locale } = useLocale();
   // Until the learner has opened «فيديو» once, its button wears a small «new» word (see useVideoNew).
-  const videoIsNew = useVideoNew(pathname.startsWith("/learn/video")) && videoEnabled;
+  const videoIsNew = useVideoNew(pathname.startsWith("/learn/video")) && videoEnabled && !videoLocked;
   const newLabel = videoNewLabel(locale);
+  const lockedStrings = learnLanguageStrings(locale);
   // Same small «new» word on Words, until it has been opened once.
   const wordsIsNew = useWordsNew(pathname.startsWith("/learn/word-lists"));
   const showLibrary = false; // the Library section is hidden from everyone
@@ -260,7 +266,7 @@ export function LearnSidebar({
               },
             ]
           : []),
-        ...(videoEnabled
+        ...(videoEnabled && !videoLocked
           ? [
               {
                 key: "video",
@@ -330,6 +336,31 @@ export function LearnSidebar({
         {NAV_ITEMS.flatMap((item) => {
           const Icon = item.icon;
           const isActive = active === item.key;
+
+          // German has no videos yet: the item stays in its place, dimmed and locked, and is not a link.
+          if (item.key === "video" && videoLocked) {
+            return [
+              <div
+                key="video-locked"
+                role="link"
+                aria-disabled="true"
+                tabIndex={-1}
+                title={lockedStrings.videoLockedHint}
+                aria-label={`${item.label} — ${lockedStrings.videoLockedHint}`}
+                className="text-muted-foreground/50 flex cursor-not-allowed items-center gap-3 rounded-[11px] px-3.5 py-[11px] text-[15px] whitespace-nowrap select-none max-md:hidden"
+              >
+                <Lock className="size-4 shrink-0" aria-hidden="true" />
+                <span dir={dir}>{item.label}</span>
+                <span
+                  className="border-border ms-auto rounded-full border px-2 py-px text-[11px] leading-4"
+                  dir={dir}
+                >
+                  {lockedStrings.videoLockedTag}
+                </span>
+              </div>,
+            ];
+          }
+
           const navLink = (
             <SidebarLink
               key={item.key}
