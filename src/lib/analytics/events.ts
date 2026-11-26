@@ -131,6 +131,12 @@ export type AnalyticsEvent =
       properties: { level: number; variant: FirstRunVariant };
     }
   | {
+      name: "GERMAN_CHOSEN";
+      category: "ENGAGEMENT";
+      /** A visitor (never an admin) picked German as the language to learn (permission germanTrack, see /api/learn-language): `via` is the first-run "what do you want to learn?" step or a later switch (the top bar's chip, the announcement strip, the picker). Written once per switch to German, so a learner who flips back and forth leaves several rows: count distinct `visitor` (the browser's token, when it has one) or user. The counter on Admin > German reads these. */
+      properties: { via: "first_run" | "switch"; visitor?: string };
+    }
+  | {
       name: "SESSION_END_STARTED";
       category: "ENGAGEMENT";
       /** The new lesson ending (src/components/learning/session-end-flow.tsx) began after a finished lesson — one row per finished lesson. `first`: it was the learner's first lesson; `recall`: a recall round is asked before the finish screen. The denominator for every other SESSION_* event. */

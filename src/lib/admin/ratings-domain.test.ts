@@ -3,7 +3,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { parseRatingsFilter, ratingsFilterParams, summarizeDistribution } from "./ratings-domain";
+import {
+  parseRatingsFilter,
+  ratingLanguage,
+  ratingsFilterParams,
+  summarizeDistribution,
+} from "./ratings-domain";
 
 test("no query string means the default view: the app's ratings, active, every star, everyone, page 1", () => {
   assert.deepEqual(parseRatingsFilter({}), {
@@ -12,6 +17,7 @@ test("no query string means the default view: the app's ratings, active, every s
     view: "active",
     stars: null,
     userType: null,
+    language: null,
     commentOnly: false,
     page: 1,
   });
@@ -26,6 +32,7 @@ test("each filter is read from its query parameter", () => {
       view: "public",
       stars: 4,
       userType: "guest",
+      language: null,
       commentOnly: true,
       page: 3,
     },
@@ -50,6 +57,7 @@ test("nonsense in the query string falls back to the default instead of failing"
     view: "active",
     stars: null,
     userType: null,
+    language: null,
     commentOnly: false,
     page: 1,
   });
@@ -68,6 +76,7 @@ test("the filter round-trips through its query-string form, leaving defaults out
     view: undefined,
     stars: undefined,
     type: undefined,
+    lang: undefined,
     comments: undefined,
   });
   const filter = parseRatingsFilter({
@@ -83,6 +92,7 @@ test("the filter round-trips through its query-string form, leaving defaults out
     view: "archived",
     stars: "1",
     type: "member",
+    lang: undefined,
     comments: "1",
   });
 });
@@ -142,4 +152,21 @@ test("a section is a closer look at the app's ratings: read for the app source o
   assert.equal(parseRatingsFilter({ source: "words", section: "normal" }).section, "all");
   assert.equal(ratingsFilterParams(parseRatingsFilter({ section: "stories" })).section, "stories");
   assert.equal(ratingsFilterParams(parseRatingsFilter({ section: "all" })).section, undefined);
+});
+
+test("the language is read from the lang parameter, kept in the link and left out when it is both", () => {
+  assert.equal(parseRatingsFilter({}).language, null);
+  assert.equal(parseRatingsFilter({ lang: "de" }).language, "de");
+  assert.equal(parseRatingsFilter({ lang: "en" }).language, "en");
+  assert.equal(parseRatingsFilter({ lang: "fr" }).language, null);
+  assert.equal(ratingsFilterParams(parseRatingsFilter({ lang: "de" })).lang, "de");
+  assert.equal(ratingsFilterParams(parseRatingsFilter({})).lang, undefined);
+});
+
+test("a rating is German when what it followed has a German id, English otherwise", () => {
+  assert.equal(ratingLanguage("de-normal-3"), "de");
+  assert.equal(ratingLanguage("de-story-1-s2"), "de");
+  assert.equal(ratingLanguage("normal-3"), "en");
+  assert.equal(ratingLanguage("settings"), "en");
+  assert.equal(ratingLanguage(""), "en");
 });

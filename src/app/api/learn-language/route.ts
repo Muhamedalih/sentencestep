@@ -1,6 +1,9 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
+import { isAdmin } from "@/lib/admin/access";
+import { track } from "@/lib/analytics/track";
+import { VISITOR_TOKEN_COOKIE, parseVisitorToken } from "@/lib/opener/shared";
 import { isGermanOpen } from "@/lib/learn-language-server";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
@@ -35,6 +38,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false }, { status: 400 });
   }
   const store = await cookies();
+  const alreadyGerman = store.get(LEARN_LANGUAGE_COOKIE)?.value === "de";
   // The first-time picker (see LearnLanguagePicker) marks itself as shown, whatever the choice was.
   if (body.asked) {
     store.set(LEARN_LANGUAGE_ASKED_COOKIE, "1", {
@@ -52,8 +56,10 @@ export async function POST(request: Request) {
   });
   // Keep the choice on the account too, so another device starts in it. A failed write only means
   // that: the cookie above is what this browser follows.
+  let userId: string | null = null;
   try {
     const user = await getCurrentUser();
+    userId = user?.id ?? null;
     if (user) {
       await createServiceRoleClient()
         .from("profiles")
@@ -61,5 +67,17 @@ export async function POST(request: Request) {
         .eq("id", user.id);
     }
   } catch {}
+  // The counter on Admin > German: a visitor (not an admin trying it out) who newly switched to German.
+  if (body.language === "de" && !alreadyGerman && !(await isAdmin().catch(() => true))) {
+    const visitor = parseVisitorToken(store.get(VISITOR_TOKEN_COOKIE)?.value);
+    await track(
+      {
+        name: "GERMAN_CHOSEN",
+        category: "ENGAGEMENT",
+        properties: { via: body.asked ? "first_run" : "switch", ...(visitor ? { visitor } : {}) },
+      },
+      userId,
+    );
+  }
   return NextResponse.json({ ok: true });
 }

@@ -4,6 +4,7 @@ import {
   summarizeDistribution,
   type AppRatingStatus,
   type RatingsFilter,
+  type RatingsLanguage,
   type RatingsSection,
   type RatingsSource,
   type RatingsSummary,
@@ -26,6 +27,18 @@ function sourceMode(source: Exclude<RatingsSource, "app">): string {
     : source === "words" || source === "rounds"
       ? WORDS_RATING_MODE
       : PASSAGES_RATING_MODE;
+}
+
+/** Keeps one language's ratings: German ones follow content whose id starts with "de-", English is everything else. */
+function inLanguage<
+  T extends {
+    like: (column: string, pattern: string) => T;
+    not: (column: string, operator: string, value: string) => T;
+  },
+>(query: T, language: RatingsLanguage | null | undefined): T {
+  if (language === "de") return query.like("lesson_id", "de-%");
+  if (language === "en") return query.not("lesson_id", "like", "de-%");
+  return query;
 }
 
 /** The two tabs that share the mode "words" are told apart by the lesson id: the word rounds' is "rounds". */
@@ -98,6 +111,7 @@ export async function listAppRatings(
   if (filter.stars) query = query.eq("rating", filter.stars);
   if (filter.userType) query = query.eq("user_type", filter.userType);
   if (filter.commentOnly) query = query.neq("comment", "");
+  query = inLanguage(query, filter.language);
 
   const from = (filter.page - 1) * RATINGS_PAGE_SIZE;
   const { data, error, count } = await query.range(from, from + RATINGS_PAGE_SIZE - 1);
@@ -131,6 +145,7 @@ export async function listAppRatings(
 export async function getAppRatingsOverview(
   source: RatingsSource,
   section: RatingsSection = "all",
+  language: RatingsLanguage | null = null,
 ): Promise<
   RatingsSummary & {
     newCount: number;
@@ -151,7 +166,7 @@ export async function getAppRatingsOverview(
     } else {
       query = query.not("mode", "in", scope.except);
     }
-    return query;
+    return inLanguage(query, language);
   };
 
   // The per-star spread: the passages, video and whole-app figures come from the database functions
@@ -170,7 +185,7 @@ export async function getAppRatingsOverview(
       ? supabase.rpc("passage_rating_distribution")
       : source === "video"
         ? supabase.rpc("video_rating_distribution")
-        : source === "words" || source === "rounds" || section !== "all"
+        : source === "words" || source === "rounds" || section !== "all" || language !== null
           ? perStar().then((data) => ({ data, error: null }))
           : supabase.rpc("app_rating_distribution"),
     head().eq("status", "new"),
@@ -192,10 +207,15 @@ export async function getAppRatingsOverview(
 }
 
 /** How many ratings nobody has opened yet on each tab of Admin > Ratings. */
-export async function countNewRatingsBySource(): Promise<Record<RatingsSource, number>> {
+export async function countNewRatingsBySource(
+  language: RatingsLanguage | null = null,
+): Promise<Record<RatingsSource, number>> {
   const supabase = await createClient();
   const unread = () =>
-    supabase.from("app_ratings").select("id", { count: "exact", head: true }).eq("status", "new");
+    inLanguage(
+      supabase.from("app_ratings").select("id", { count: "exact", head: true }).eq("status", "new"),
+      language,
+    );
 
   const [passages, video, words, rounds, app] = await Promise.all([
     unread().eq("mode", PASSAGES_RATING_MODE),
@@ -222,14 +242,19 @@ export async function countNewRatingsBySource(): Promise<Record<RatingsSource, n
  * How many ratings (archived ones left out) each section of the App tab holds, for the small tabs under
  * it: "all" is the whole App tab, so it equals the three sections together plus any other mode.
  */
-export async function countAppRatingsBySection(): Promise<Record<RatingsSection, number>> {
+export async function countAppRatingsBySection(
+  language: RatingsLanguage | null = null,
+): Promise<Record<RatingsSection, number>> {
   const supabase = await createClient();
   const results = await Promise.all(
     RATINGS_SECTIONS.map((section) => {
-      const query = supabase
-        .from("app_ratings")
-        .select("id", { count: "exact", head: true })
-        .neq("status", "archived");
+      const query = inLanguage(
+        supabase
+          .from("app_ratings")
+          .select("id", { count: "exact", head: true })
+          .neq("status", "archived"),
+        language,
+      );
       return section === "all"
         ? query.not("mode", "in", APP_EXCLUDED_MODES)
         : query.eq("mode", section);
