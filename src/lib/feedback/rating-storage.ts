@@ -1,3 +1,4 @@
+import type { TargetLanguage } from "@/lib/learn-language";
 import { parseRoundsRatingState, type RoundsRatingState } from "@/lib/word-ladder/rating-gate";
 
 /**
@@ -10,7 +11,14 @@ import { parseRoundsRatingState, type RoundsRatingState } from "@/lib/word-ladde
  * never throw, and — since "never nag twice" matters more here than "always
  * show once" — a storage failure is treated as "already shown" rather than
  * "never shown", so the safe failure mode is silence, not a repeat prompt.
+ *
+ * Every one-time gate is kept per learned language (permission germanTrack): someone who used the app
+ * in English and then tries German is asked about German as if never asked before, once per section.
+ * English keeps the original keys.
  */
+
+const keyFor = (key: string, language: TargetLanguage) =>
+  language === "en" ? key : `${key}:${language}`;
 
 const RATED_KEY = "looma:rated-app:v1";
 const RATED_PASSAGES_KEY = "looma:rated-passages:v1";
@@ -18,20 +26,20 @@ const RATED_VIDEO_KEY = "looma:rated-video:v1";
 const ANON_ID_KEY = "looma:rating-anon-id:v1";
 const RATED_ROUNDS_KEY = "looma:rated-rounds:v2";
 
-export function hasRatedApp(): boolean {
+export function hasRatedApp(language: TargetLanguage = "en"): boolean {
   if (typeof window === "undefined") return true;
   try {
-    return window.localStorage.getItem(RATED_KEY) === "1";
+    return window.localStorage.getItem(keyFor(RATED_KEY, language)) === "1";
   } catch {
     return true;
   }
 }
 
 /** Called the instant the prompt is shown — before the learner rates, comments, or skips — so it never reappears regardless of what they do with it. */
-export function markRatedApp(): void {
+export function markRatedApp(language: TargetLanguage = "en"): void {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(RATED_KEY, "1");
+    window.localStorage.setItem(keyFor(RATED_KEY, language), "1");
   } catch {
     // Best-effort only — worst case the prompt can show again later.
   }
@@ -42,19 +50,19 @@ export function markRatedApp(): void {
  * kept apart from the app's: telling us what you think of Passages never retires the app prompt,
  * and the other way round. Same failure rule — storage that can't be read counts as "already shown".
  */
-export function hasRatedPassages(): boolean {
+export function hasRatedPassages(language: TargetLanguage = "en"): boolean {
   if (typeof window === "undefined") return true;
   try {
-    return window.localStorage.getItem(RATED_PASSAGES_KEY) === "1";
+    return window.localStorage.getItem(keyFor(RATED_PASSAGES_KEY, language)) === "1";
   } catch {
     return true;
   }
 }
 
-export function markRatedPassages(): void {
+export function markRatedPassages(language: TargetLanguage = "en"): void {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(RATED_PASSAGES_KEY, "1");
+    window.localStorage.setItem(keyFor(RATED_PASSAGES_KEY, language), "1");
   } catch {
     // Best-effort only — worst case the card can show again later.
   }
@@ -101,19 +109,22 @@ export function getOrCreateAnonId(): string {
  * how many times "not now" was chosen, how many rounds were finished. Storage that cannot be read
  * counts as "already rated" (silence, never a repeat prompt).
  */
-export function readRoundsRatingState(): RoundsRatingState {
+export function readRoundsRatingState(language: TargetLanguage = "en"): RoundsRatingState {
   if (typeof window === "undefined") return { rated: true, skips: 0, finished: 0 };
   try {
-    return parseRoundsRatingState(window.localStorage.getItem(RATED_ROUNDS_KEY));
+    return parseRoundsRatingState(window.localStorage.getItem(keyFor(RATED_ROUNDS_KEY, language)));
   } catch {
     return { rated: true, skips: 0, finished: 0 };
   }
 }
 
-export function writeRoundsRatingState(state: RoundsRatingState): void {
+export function writeRoundsRatingState(
+  state: RoundsRatingState,
+  language: TargetLanguage = "en",
+): void {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(RATED_ROUNDS_KEY, JSON.stringify(state));
+    window.localStorage.setItem(keyFor(RATED_ROUNDS_KEY, language), JSON.stringify(state));
   } catch {
     // Best-effort only: worst case the card is offered again a little sooner.
   }

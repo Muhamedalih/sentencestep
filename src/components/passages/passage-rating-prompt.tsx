@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import { RatingModal } from "@/components/learning/rating-modal";
 import { hasRatedPassages, markRatedPassages } from "@/lib/feedback/rating-storage";
+import { languageOfContentId } from "@/lib/learn-language";
 
 /** How long the finished passage's score is left alone on screen before the question appears. */
 const SHOW_AFTER_MS = 1800;
@@ -30,13 +31,14 @@ export function PassageRatingPrompt({
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    if (!show || hasRatedPassages()) return;
+    const language = languageOfContentId(passageId);
+    if (!show || hasRatedPassages(language)) return;
     const timer = window.setTimeout(() => {
-      markRatedPassages();
+      markRatedPassages(language);
       setVisible(true);
     }, SHOW_AFTER_MS);
     return () => window.clearTimeout(timer);
-  }, [show]);
+  }, [show, passageId]);
 
   return (
     <RatingModal open={visible} onOpenChange={setVisible} lessonId={passageId} mode="passages" />

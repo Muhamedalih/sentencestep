@@ -20,6 +20,7 @@ import {
   markRatedPassages,
   markRatedVideo,
 } from "@/lib/feedback/rating-storage";
+import { languageOfContentId } from "@/lib/learn-language";
 import { popIn, transitions } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { videoRatingCopy } from "@/lib/video-dictation/strings";
@@ -121,9 +122,10 @@ function sendRating({
     anonId: getOrCreateAnonId(),
     contactEmail: isGuest ? email : undefined,
   });
-  if (mode === "passages") markRatedPassages();
+  const language = languageOfContentId(lessonId);
+  if (mode === "passages") markRatedPassages(language);
   else if (mode === "video") markRatedVideo();
-  else if (mode !== "words") markRatedApp();
+  else if (mode !== "words") markRatedApp(language);
 }
 
 /** The same card with five faces: the section's headline, the faces' own words, and the same sending. */

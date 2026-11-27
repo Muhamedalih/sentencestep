@@ -12,6 +12,7 @@ import {
 } from "@/lib/admin/ratings-domain";
 import {
   PASSAGES_RATING_MODE,
+  GERMAN_ROUNDS_RATING_LESSON_ID,
   ROUNDS_RATING_LESSON_ID,
   VIDEO_RATING_MODE,
   WORDS_RATING_MODE,
@@ -41,10 +42,11 @@ function inLanguage<
   return query;
 }
 
-/** The two tabs that share the mode "words" are told apart by the lesson id: the word rounds' is "rounds". */
-type ModeScope =
-  | { only: string; lessonId?: string; notLessonId?: string }
-  | { except: string };
+/** The two tabs that share the mode "words" are told apart by the lesson id: the word rounds' is "rounds" ("de-rounds" in German). */
+const ROUNDS_IDS = [ROUNDS_RATING_LESSON_ID, GERMAN_ROUNDS_RATING_LESSON_ID];
+const NOT_ROUNDS_IDS = `(${ROUNDS_IDS.join(",")})`;
+
+type ModeScope = { only: string; rounds?: boolean } | { except: string };
 
 /**
  * Which `mode`s a tab shows: one mode (a section's own tab, or one section of the app: the rating pop-up
@@ -52,12 +54,9 @@ type ModeScope =
  * every mode except the sections that have their own tab (the App tab as a whole, which is what the
  * site's average is made of).
  */
-function modeScope(
-  source: RatingsSource,
-  section: RatingsSection,
-): ModeScope {
-  if (source === "rounds") return { only: sourceMode(source), lessonId: ROUNDS_RATING_LESSON_ID };
-  if (source === "words") return { only: sourceMode(source), notLessonId: ROUNDS_RATING_LESSON_ID };
+function modeScope(source: RatingsSource, section: RatingsSection): ModeScope {
+  if (source === "rounds") return { only: sourceMode(source), rounds: true };
+  if (source === "words") return { only: sourceMode(source), rounds: false };
   if (source !== "app") return { only: sourceMode(source) };
   return section === "all" ? { except: APP_EXCLUDED_MODES } : { only: section };
 }
@@ -99,8 +98,8 @@ export async function listAppRatings(
   const scope = modeScope(filter.source, filter.section);
   if ("only" in scope) {
     query = query.eq("mode", scope.only);
-    if (scope.lessonId) query = query.eq("lesson_id", scope.lessonId);
-    if (scope.notLessonId) query = query.neq("lesson_id", scope.notLessonId);
+    if (scope.rounds === true) query = query.in("lesson_id", ROUNDS_IDS);
+    if (scope.rounds === false) query = query.not("lesson_id", "in", NOT_ROUNDS_IDS);
   } else {
     query = query.not("mode", "in", scope.except);
   }
@@ -161,8 +160,8 @@ export async function getAppRatingsOverview(
     let query = supabase.from("app_ratings").select("id", { count: "exact", head: true });
     if ("only" in scope) {
       query = query.eq("mode", scope.only);
-      if (scope.lessonId) query = query.eq("lesson_id", scope.lessonId);
-      if (scope.notLessonId) query = query.neq("lesson_id", scope.notLessonId);
+      if (scope.rounds === true) query = query.in("lesson_id", ROUNDS_IDS);
+      if (scope.rounds === false) query = query.not("lesson_id", "in", NOT_ROUNDS_IDS);
     } else {
       query = query.not("mode", "in", scope.except);
     }
@@ -220,8 +219,8 @@ export async function countNewRatingsBySource(
   const [passages, video, words, rounds, app] = await Promise.all([
     unread().eq("mode", PASSAGES_RATING_MODE),
     unread().eq("mode", VIDEO_RATING_MODE),
-    unread().eq("mode", WORDS_RATING_MODE).neq("lesson_id", ROUNDS_RATING_LESSON_ID),
-    unread().eq("mode", WORDS_RATING_MODE).eq("lesson_id", ROUNDS_RATING_LESSON_ID),
+    unread().eq("mode", WORDS_RATING_MODE).not("lesson_id", "in", NOT_ROUNDS_IDS),
+    unread().eq("mode", WORDS_RATING_MODE).in("lesson_id", ROUNDS_IDS),
     unread().not("mode", "in", APP_EXCLUDED_MODES),
   ]);
   if (passages.error) throw passages.error;

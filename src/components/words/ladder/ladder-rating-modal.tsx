@@ -3,8 +3,13 @@
 import { FacesRatingCard } from "@/components/feedback/faces-rating-card";
 import { useLocale } from "@/components/providers/locale-provider";
 import { submitAppRatingAction } from "@/lib/feedback/actions";
-import { ROUNDS_RATING_LESSON_ID, WORDS_RATING_MODE } from "@/lib/feedback/rating-record";
+import {
+  GERMAN_ROUNDS_RATING_LESSON_ID,
+  ROUNDS_RATING_LESSON_ID,
+  WORDS_RATING_MODE,
+} from "@/lib/feedback/rating-record";
 import { getOrCreateAnonId } from "@/lib/feedback/rating-storage";
+import type { TargetLanguage } from "@/lib/learn-language";
 import { ladderStrings } from "@/lib/word-ladder/strings";
 
 /**
@@ -16,10 +21,13 @@ import { ladderStrings } from "@/lib/word-ladder/strings";
  */
 export function LadderRatingModal({
   open,
+  language,
   onRated,
   onSkip,
 }: {
   open: boolean;
+  /** The language of the round's words. */
+  language: TargetLanguage;
   /** The rating was sent. */
   onRated: () => void;
   /** "Not now": closed without a rating. */
@@ -40,7 +48,7 @@ export function LadderRatingModal({
         void submitAppRatingAction({
           rating: level,
           comment,
-          lessonId: ROUNDS_RATING_LESSON_ID,
+          lessonId: language === "de" ? GERMAN_ROUNDS_RATING_LESSON_ID : ROUNDS_RATING_LESSON_ID,
           mode: WORDS_RATING_MODE,
           locale,
           anonId: getOrCreateAnonId(),

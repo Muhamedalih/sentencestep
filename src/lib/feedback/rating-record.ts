@@ -26,6 +26,8 @@ export const WORDS_RATING_MODE = "words";
  * the Words tab keeps to the rest.
  */
 export const ROUNDS_RATING_LESSON_ID = "rounds";
+/** The same for German word rounds: the "de-" prefix is how Admin > Ratings tells German ratings apart. */
+export const GERMAN_ROUNDS_RATING_LESSON_ID = "de-rounds";
 
 /**
  * The `mode` of a rating given at the end of a Video lesson (its `lesson_id` is then the video).

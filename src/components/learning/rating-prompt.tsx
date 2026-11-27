@@ -4,13 +4,14 @@ import { useEffect, useState } from "react";
 
 import { RatingModal } from "@/components/learning/rating-modal";
 import { hasRatedApp, markRatedApp } from "@/lib/feedback/rating-storage";
+import { languageOfContentId } from "@/lib/learn-language";
 import type { LearningMode } from "@/types/content";
 
 /**
  * The one-time automatic trigger for RatingModal — shown over the ordinary
  * LessonCompletion screen the moment a learner finishes their second lesson
  * ever, never over OnboardingLessonComplete, and never more than once per
- * browser regardless of outcome (rated, commented, or skipped all count the
+ * browser and learned language regardless of outcome (rated, commented, or skipped all count the
  * same). `show` only ever asks "are the app-level conditions met right now"
  * (see LessonSession's own eligibility check); this component owns the
  * actual one-time gate itself via rating-storage, and sets that flag the
@@ -32,10 +33,11 @@ export function RatingPrompt({
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    if (!show || hasRatedApp()) return;
-    markRatedApp();
+    const language = languageOfContentId(lessonId);
+    if (!show || hasRatedApp(language)) return;
+    markRatedApp(language);
     setVisible(true);
-  }, [show]);
+  }, [show, lessonId]);
 
   return <RatingModal open={visible} onOpenChange={setVisible} lessonId={lessonId} mode={mode} />;
 }
