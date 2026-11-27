@@ -62,7 +62,7 @@ export interface PassageReaderProps {
   /** The next passage in the list, for the end screen; null on the last one. */
   nextPassage: { id: string; title: string } | null;
   /** Today's session ("Today's session (new Home)"): where the end screen's one big button goes — on to the story — instead of the next passage. */
-  todayNext?: { href: string } | null;
+  todayNext?: { href: string; scene?: boolean } | null;
   /** The taste of the day (see lib/hybrid): set when this passage is it, so the end screen offers the full plan. Counts: how many Premium passages and stories it opens. */
   hybridMoment?: { passages: number; stories: number } | null;
   /** Where "Practice these words" goes, and whether it is the real Word Lists page or the admin-only preview of a lesson that is not published yet. Null when the passage has no word lesson. */

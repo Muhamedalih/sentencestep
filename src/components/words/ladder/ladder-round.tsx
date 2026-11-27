@@ -1,6 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+  type RefObject,
+} from "react";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowLeft, Check, ChevronLeft, ChevronRight, Volume2, X } from "lucide-react";
@@ -650,7 +658,7 @@ function MeetScreen({
  * moves on; a wrong one shakes the chosen option, marks it with a red edge and a cross, shows the
  * right one in green with a tick, and moves on a moment later.
  */
-function ChoiceScreen({
+export function ChoiceScreen({
   kind,
   word,
   options,
@@ -659,6 +667,7 @@ function ChoiceScreen({
   onSettled,
   onSpeak,
   listenLabel,
+  context,
 }: {
   kind: "meaning" | "listen";
   word: LadderWord;
@@ -670,6 +679,8 @@ function ChoiceScreen({
   onSettled: (correct: boolean) => void;
   onSpeak?: () => void;
   listenLabel?: string;
+  /** Drawn under the word, above the choices (the day's scene puts the word's own line there). */
+  context?: ReactNode;
 }) {
   const { dir } = useLocale();
   const reducedMotion = useReducedMotion() ?? false;
@@ -728,6 +739,7 @@ function ChoiceScreen({
           <Volume2 className="size-9" aria-hidden="true" />
         </button>
       )}
+      {context}
       <div className="grid w-full max-w-[780px] grid-cols-1 gap-3 sm:grid-cols-2">
         {options.map((option, index) => {
           const right = option === answer;
@@ -782,7 +794,7 @@ function ChoiceScreen({
  * or typed on the keyboard. A right word plays the achievement sound and turns green; a wrong one
  * shakes the row, turns it red and shows the right spelling under it before the round moves on.
  */
-function LettersScreen({
+export function LettersScreen({
   s,
   word,
   seed,

@@ -1,12 +1,16 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
+import { SceneWords } from "@/components/today/scene/scene-words";
 import { TodayWordsRunner } from "@/components/today/today-words-runner";
 import { getDefaultPronunciationVoiceId } from "@/lib/admin/voices-queries";
 import { fetchTodayWordsAction } from "@/lib/features/daily-session-actions";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { WORDS_PER_ROUND } from "@/lib/today/plan";
+import { sceneReviewWords, sceneWordCards } from "@/lib/today/scene";
+import { loadTodayScene } from "@/lib/today/scene-load";
+import { withoutBank } from "@/lib/today/session-words";
 
 // What is due changes by the minute, and it is per learner.
 export const dynamic = "force-dynamic";
@@ -30,6 +34,22 @@ export default async function TodayWordsPage({
 
   // "5 more words" (`?more=1`) is a further round: only the day's words that the first round left.
   const { more } = await searchParams;
+
+  // A scene day (permission dailyScene): the words of the scene's lines, in three moves.
+  const scene = await loadTodayScene(user.id, features);
+  if (scene) {
+    if (more === "1") redirect("/learn/today/end");
+    const reviews = sceneReviewWords(scene.passage, scene.scene);
+    return (
+      <SceneWords
+        key={scene.passage.id}
+        cards={sceneWordCards(scene.passage.id, scene.scene)}
+        // The words bank remembers them only for a learner it is open to.
+        reviews={features.rollouts.wordBank ? reviews : reviews.map(withoutBank)}
+      />
+    );
+  }
+
   const words = await fetchTodayWordsAction(WORDS_PER_ROUND, more === "1");
   if (words.length === 0) redirect("/learn/today/end");
 

@@ -110,6 +110,8 @@ export interface TodayQuestInfo {
   paid: boolean;
   /** The listening task's passage, as its poster is drawn on Home (the todayCover permission decides whether it is shown). */
   poster?: TodayPoster | null;
+  /** The day is a scene (permission dailyScene): all three tasks are one passage, and this is how many lines it has. */
+  scene?: { lines: number };
 }
 
 /** What a passage's poster is drawn from: the same tone and number as the Passages list, and the picture an admin chose (if any). */

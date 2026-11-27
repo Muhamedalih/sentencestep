@@ -7,7 +7,8 @@ import { Check, ChevronDown, Flame, RotateCcw, Snowflake } from "lucide-react";
 
 import { QuestsCard } from "@/components/app/quests-card";
 import { StreakStrip } from "@/components/app/streak-strip";
-import { TodayGlow, TodayTasksPanel, todayTaskTitle } from "@/components/today/today-tasks";
+import { sceneHeading, taskCopy } from "@/components/today/task-copy";
+import { TodayGlow, TodayTasksPanel } from "@/components/today/today-tasks";
 import { useLocale } from "@/components/providers/locale-provider";
 import type { StreakCalendarData } from "@/lib/features/calendar-actions";
 import { questTitle } from "@/lib/features/quest-labels";
@@ -68,7 +69,7 @@ export function WeekDots({
  * day's lessons, each one started again (todayTaskRepeatHref), so a learner who wants more picks one.
  */
 export function RepeatLessonMenu({ quests }: { quests: DailyQuestsPayload["quests"] }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
   const menuId = useId();
@@ -111,7 +112,7 @@ export function RepeatLessonMenu({ quests }: { quests: DailyQuestsPayload["quest
                   className="hover:bg-muted focus-visible:bg-muted flex flex-col rounded-lg px-3 py-2 text-sm outline-none"
                 >
                   <span className="font-medium" dir="auto">
-                    {todayTaskTitle(t.today, info.kind)}
+                    {taskCopy(t.today, info, { locale, tidy: false }).title}
                   </span>
                   {info.title && (
                     <span className="text-muted-foreground truncate text-xs" dir="ltr">
@@ -153,7 +154,7 @@ export function EngagementStrip({
   trail?: ReactNode;
   className?: string;
 }) {
-  const { t, dir } = useLocale();
+  const { t, dir, locale } = useLocale();
   // "Today's session (daily tasks)": the quests are Today's three tasks, tied to specific lessons. The
   // box then opens by itself while something is left, with a soft glow, so it is the first thing seen.
   const todayMode = Boolean(quests?.quests.some((quest) => quest.today));
@@ -251,10 +252,11 @@ export function EngagementStrip({
                     )
                   ) : nextQuest.today ? (
                     <>
-                      {todayTaskTitle(t.today, nextQuest.today.kind)}
-                      {nextQuest.today.title && (
+                      {sceneHeading(quests.quests, locale)?.name ??
+                        taskCopy(t.today, nextQuest.today, { locale, tidy: false }).title}
+                      {(sceneHeading(quests.quests, locale)?.title ?? nextQuest.today.title) && (
                         <span className="text-muted-foreground ms-2 text-xs" dir="ltr">
-                          {nextQuest.today.title}
+                          {sceneHeading(quests.quests, locale)?.title ?? nextQuest.today.title}
                         </span>
                       )}
                     </>

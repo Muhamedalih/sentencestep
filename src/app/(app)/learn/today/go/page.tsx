@@ -19,6 +19,7 @@ export const dynamic = "force-dynamic";
  * open for it, the next one that has something — and to the finish screen after the last. The
  * passage's end screen and the story's use this instead of knowing what comes next themselves.
  * With `redo=1` ("Redo today's lessons") the story is the one finished today, not the next one.
+ * On a scene day (permission dailyScene) the story step is the passage's own lines.
  */
 export default async function TodayGoPage({
   searchParams,
@@ -40,6 +41,7 @@ export default async function TodayGoPage({
     admin,
     hybridOffers: features.rollouts.hybridOffers,
     passagesEnabled: features.passages.enabled,
+    scene: features.rollouts.dailyScene,
   });
   const redoing = redo === "1";
   const storyId = redoing
@@ -47,7 +49,12 @@ export default async function TodayGoPage({
     : next.storyId;
   const targets = {
     listen: next.passageId ? `/learn/passages/${next.passageId}?today=1` : null,
-    story: storyId ? `/learn/stories/${storyId}?today=1${redoing ? "&redo=1" : ""}` : null,
+    // A scene day types the passage's own lines instead of a story.
+    story: next.sceneToday
+      ? "/learn/today/scene"
+      : storyId
+        ? `/learn/stories/${storyId}?today=1${redoing ? "&redo=1" : ""}`
+        : null,
     words: next.wordsAvailable ? "/learn/today/words" : null,
   };
   for (const kind of STEP_KINDS.slice(STEP_KINDS.indexOf(wanted))) {

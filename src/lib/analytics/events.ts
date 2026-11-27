@@ -170,6 +170,12 @@ export type AnalyticsEvent =
       properties: { reviewTotal: number; reviewClean: number };
     }
   | {
+      name: "SCENE_LINES_COMPLETED";
+      category: "LEARNING";
+      /** A learner typed the last line of today's scene (permission dailyScene): its lines, how many were written with no word shown, and the wrong letters typed. */
+      properties: { lines: number; clean: number; mistakes: number };
+    }
+  | {
       name: "SENTENCE_REVIEW_STARTED";
       category: "ENGAGEMENT";
       /** A learner opened the sentence review (a visit, so a reload counts again): `count` sentences were asked, `partial`/`audio`/`translate` how many of them in each form. The share of visits that reach SENTENCE_REVIEW_FINISHED is what the stop rule "40% finish the block" is judged on. */

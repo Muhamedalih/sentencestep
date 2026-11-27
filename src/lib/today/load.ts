@@ -11,7 +11,7 @@ import { LEARNER_VIEW_COOKIE } from "@/lib/hybrid/learner-view";
 import { todayPicks } from "@/lib/hybrid/picks";
 import { getLocale } from "@/lib/i18n/get-locale";
 import type { SupportLocale } from "@/lib/i18n/locales";
-import { fetchPassageProgress, fetchPassageSummaries } from "@/lib/passages/queries";
+import { fetchPassage, fetchPassageProgress, fetchPassageSummaries } from "@/lib/passages/queries";
 import type { PassageProgress, PassageSummary } from "@/lib/passages/types";
 import { fetchProgressCached } from "@/lib/progress/cached";
 import { SENTENCE_REVIEW_HREF, SENTENCE_REVIEW_MINUTES } from "@/lib/sentence-bank/review";
@@ -29,6 +29,7 @@ import { WORDS_MINUTES, estimateStoryMinutes, medianWpm, planToday } from "./pla
 import type { StepKind, StepPlan } from "./plan";
 import { fetchRecentWpm, fetchSessionDatesSince } from "./queries";
 import { TODAY_QUEST_SLOT_BASE, questsByStep } from "./quests";
+import { SCENE_WORDS_MINUTES, buildScene, sceneDayPassageId, sceneLinesMinutes } from "./scene";
 import { weekDates, weekStartFor } from "./week";
 
 export interface TodayStepData extends StepPlan {
@@ -46,6 +47,8 @@ export interface TodayStepData extends StepPlan {
   accuracy: number | null;
   /** The listening step's passage, as its poster is drawn; null for the other steps and when there is no passage. */
   poster: TodayPoster | null;
+  /** The day is a scene (permission dailyScene): the three steps are one passage, and this is how many lines it has. */
+  scene?: { lines: number };
 }
 
 async function quiet<T>(label: string, read: () => Promise<T>, fallback: T): Promise<T> {
@@ -101,6 +104,27 @@ async function readLessonPicks(args: {
   };
 }
 
+/**
+ * The passage today's scene is made of (see scene.ts): the first one finished today, else the one open
+ * next. Null when the day has none, or the passage has no words of its own: the day then keeps its usual
+ * tasks.
+ */
+function scenePassageOf(
+  picks: Awaited<ReturnType<typeof readLessonPicks>>,
+  todayISO: string,
+  dayOf: (iso: string) => string,
+): PassageSummary | null {
+  const id = sceneDayPassageId({
+    progress: picks.passageProgress,
+    todayISO,
+    dayOf,
+    known: (passageId) => picks.summaries.some((entry) => entry.id === passageId),
+    next: picks.passage?.id ?? null,
+  });
+  const summary = picks.summaries.find((entry) => entry.id === id);
+  return summary?.wordGroupId ? summary : null;
+}
+
 /** The latest passage and the latest story the learner finished today (their own calendar day), or undefined for either. */
 function finishedToday<Story extends { completedAt: string }>(args: {
   passageProgress: readonly PassageProgress[];
@@ -147,6 +171,8 @@ export async function loadTodaySteps(args: {
   hybridOffers: boolean;
   passagesEnabled: boolean;
   quests: readonly DailyQuest[];
+  /** The dailyScene permission: the three steps are built around one passage. */
+  scene?: boolean;
 }): Promise<TodayStepsData> {
   const { userId, locale, timeZone, todayISO, progress } = args;
   const completions = progress?.completions ?? [];
@@ -199,26 +225,48 @@ export async function loadTodaySteps(args: {
       })
     : 0;
 
-  const listenShown = listenToday && listenDoneSummary ? listenDoneSummary : picks.passage;
+  // A scene day: the second step is the passage's own lines instead of a story, and the words are its.
+  const scenePassage = args.scene ? scenePassageOf(picks, todayISO, dayOf) : null;
+  const scene = scenePassage
+    ? await quiet(
+        "scene",
+        async () => {
+          const passage = await fetchPassage(scenePassage.id);
+          return passage ? buildScene(passage) : null;
+        },
+        null,
+      )
+    : null;
+  const sceneOf = scene && scenePassage ? { ...scene, passage: scenePassage } : null;
+
+  const listenShown =
+    sceneOf?.passage ?? (listenToday && listenDoneSummary ? listenDoneSummary : picks.passage);
   // The words step asks the target words of the day's story and passage and nothing else (see
   // loadLinkedWords), so it exists exactly when the day has one of them: open next, or finished today.
   const hasLessonsToday = Boolean(listenShown || storyShown);
   const plan = planToday(
     {
       listen: {
-        available: picks.passage !== null,
+        available: sceneOf !== null || picks.passage !== null,
         done: listenToday !== undefined || questOf.listen?.completed === true,
         minutes: listenShown?.estimatedMinutes ?? 0,
       },
-      story: {
-        available: picks.story !== null,
-        done: storyToday !== undefined || questOf.story?.completed === true,
-        minutes: storyMinutes,
-      },
+      // Only typing the lines ticks a scene's second step: a story read elsewhere does not.
+      story: sceneOf
+        ? {
+            available: true,
+            done: questOf.story?.completed === true,
+            minutes: sceneLinesMinutes(sceneOf, medianWpm(wpmValues)),
+          }
+        : {
+            available: picks.story !== null,
+            done: storyToday !== undefined || questOf.story?.completed === true,
+            minutes: storyMinutes,
+          },
       words: {
         available: hasLessonsToday,
         done: questOf.words?.completed === true,
-        minutes: WORDS_MINUTES,
+        minutes: sceneOf ? SCENE_WORDS_MINUTES : WORDS_MINUTES,
       },
     },
     sessionDone,
@@ -256,6 +304,37 @@ export async function loadTodaySteps(args: {
       poster: null,
     },
   };
+
+  if (sceneOf) {
+    const passage = sceneOf.passage;
+    const lines = { lines: sceneOf.steps.length };
+    const named = {
+      title: passage.title,
+      supportTitle: supportOf(passage.titleAr),
+      levelCode: passage.level,
+      scene: lines,
+    };
+    const finished = picks.passageProgress.some(
+      (entry) =>
+        entry.passageId === passage.id &&
+        entry.completedAt !== null &&
+        dayOf(entry.completedAt) === todayISO,
+    );
+    detail.listen = {
+      ...detail.listen,
+      ...named,
+      href: `/learn/passages/${passage.id}?today=1`,
+      redoHref: finished ? `/learn/passages/${passage.id}` : null,
+    };
+    detail.story = {
+      ...detail.story,
+      ...named,
+      href: "/learn/today/scene",
+      redoHref: questOf.story?.completed ? "/learn/today/scene" : null,
+      accuracy: null,
+    };
+    detail.words = { ...detail.words, scene: lines };
+  }
 
   return {
     steps: plan.steps.map((step) => ({ ...step, ...detail[step.kind] })),
@@ -327,6 +406,7 @@ export async function enrichTodayQuests(args: {
         hybridOffers: args.features.rollouts.hybridOffers,
         passagesEnabled: args.features.passages.enabled,
         quests: todayRows,
+        scene: args.features.rollouts.dailyScene,
       }),
       args.features.rollouts.sentenceBank
         ? dealSentenceQuest({
@@ -354,6 +434,7 @@ export async function enrichTodayQuests(args: {
         accuracy: step.accuracy,
         paid: quest.completed,
         poster: step.poster,
+        scene: step.scene,
       };
       enriched.push({
         ...quest,
@@ -400,13 +481,23 @@ export async function loadTodayNext(args: {
   admin: boolean;
   hybridOffers: boolean;
   passagesEnabled: boolean;
+  /** The dailyScene permission. */
+  scene?: boolean;
 }): Promise<{
   passageId: string | null;
   storyId: string | null;
   wordsAvailable: boolean;
   nextTitle: string | null;
+  /** Today's second step is the scene's lines, not a story. */
+  sceneToday: boolean;
 }> {
-  const empty = { passageId: null, storyId: null, wordsAvailable: false, nextTitle: null };
+  const empty = {
+    passageId: null,
+    storyId: null,
+    wordsAvailable: false,
+    nextTitle: null,
+    sceneToday: false,
+  };
   try {
     const [storiesUnits, progress, cookieStore] = await Promise.all([
       getLessonSummaries("stories", args.locale ?? undefined),
@@ -430,12 +521,15 @@ export async function loadTodayNext(args: {
     });
     // The words step asks the day's passage and story words: it is there while the day has one of
     // them — open next, or finished today (the last free story finished today still gets its words).
+    const dayOf = (iso: string) =>
+      localISODateInTimeZone(args.timeZone, new Date(iso)) ?? iso.slice(0, 10);
     const done = finishedToday({
       passageProgress: picks.passageProgress,
       storyCompletions,
       todayISO,
-      dayOf: (iso) => localISODateInTimeZone(args.timeZone, new Date(iso)) ?? iso.slice(0, 10),
+      dayOf,
     });
+    const sceneToday = Boolean(args.scene && scenePassageOf(picks, todayISO, dayOf));
     const hasLessonsToday = Boolean(
       picks.passage ||
       picks.story ||
@@ -445,8 +539,9 @@ export async function loadTodayNext(args: {
     return {
       passageId: picks.passage?.id ?? null,
       storyId: picks.story?.id ?? null,
-      wordsAvailable: hasLessonsToday,
+      wordsAvailable: hasLessonsToday || sceneToday,
       nextTitle: picks.passage?.title ?? picks.story?.title ?? null,
+      sceneToday,
     };
   } catch (error) {
     console.error("[today] loadTodayNext failed", error);
@@ -530,6 +625,35 @@ export async function loadTodayLessonIds(args: {
   hybridOffers: boolean;
   passagesEnabled: boolean;
 }): Promise<{ passageId: string | null; storyId: string | null }> {
+  const { picks, storiesUnits, storyCompletions, todayISO, dayOf } = await readToday(args);
+  const done = finishedToday({
+    passageProgress: picks.passageProgress,
+    storyCompletions,
+    todayISO,
+    dayOf,
+  });
+  // As in the tasks box, a lesson finished today counts while it is still in the lists.
+  const passageDone = picks.summaries.find((entry) => entry.id === done.listen?.passageId);
+  const storyDone = storiesUnits.find((entry) => entry.id === done.story?.lessonId);
+  return {
+    passageId: (passageDone ?? picks.passage)?.id ?? null,
+    storyId: (storyDone ?? picks.story)?.id ?? null,
+  };
+}
+
+/**
+ * The passage today's scene is made of, as Home's tasks box picks it, or null when the day is not a
+ * scene day (see scenePassageOf). Throws when a read fails (the caller decides).
+ */
+export async function loadScenePassageId(
+  args: Parameters<typeof loadTodayLessonIds>[0],
+): Promise<string | null> {
+  const { picks, todayISO, dayOf } = await readToday(args);
+  return scenePassageOf(picks, todayISO, dayOf)?.id ?? null;
+}
+
+/** The day as it stands for one learner: the open passage and story, and what they finished today. */
+async function readToday(args: Parameters<typeof loadTodayLessonIds>[0]) {
   const todayISO = localISODateInTimeZone(args.timeZone) ?? todayLocalISODate();
   const dayOf = (iso: string) =>
     localISODateInTimeZone(args.timeZone, new Date(iso)) ?? iso.slice(0, 10);
@@ -552,17 +676,5 @@ export async function loadTodayLessonIds(args: {
     storiesUnits,
     completedStoryIds: storyCompletions.map((entry) => entry.lessonId),
   });
-  const done = finishedToday({
-    passageProgress: picks.passageProgress,
-    storyCompletions,
-    todayISO,
-    dayOf,
-  });
-  // As in the tasks box, a lesson finished today counts while it is still in the lists.
-  const passageDone = picks.summaries.find((entry) => entry.id === done.listen?.passageId);
-  const storyDone = storiesUnits.find((entry) => entry.id === done.story?.lessonId);
-  return {
-    passageId: (passageDone ?? picks.passage)?.id ?? null,
-    storyId: (storyDone ?? picks.story)?.id ?? null,
-  };
+  return { picks, storiesUnits, storyCompletions, todayISO, dayOf };
 }

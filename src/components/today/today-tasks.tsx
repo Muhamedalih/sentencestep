@@ -14,7 +14,9 @@ import {
   Type,
 } from "lucide-react";
 
+import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
+import { rewardLine, sceneDetail, taskCopy } from "@/components/today/task-copy";
 import { Progress } from "@/components/ui/progress";
 import { questProgressPercent } from "@/lib/features/quests";
 import {
@@ -35,23 +37,11 @@ export const ICONS = { listen: Headphones, story: PenLine, words: Type, sentence
 const CHIP_LEVEL =
   "border-success/40 bg-success/10 text-success rounded-full border px-2 py-px text-[11px] font-semibold";
 
-type TodayCopy = ReturnType<typeof useLocale>["t"]["today"];
-
 export function fill(template: string, values: Record<string, string | number>): string {
   return Object.entries(values).reduce(
     (text, [key, value]) => text.replace(`{${key}}`, String(value)),
     template,
   );
-}
-
-/** The task's name: "Listen to a passage", "Write a story", "Write 5 words", "Today's exam". */
-export function todayTaskTitle(copy: TodayCopy, kind: TodayQuestInfo["kind"]): string {
-  return {
-    listen: copy.taskListen,
-    story: copy.taskStory,
-    words: copy.taskWords,
-    sentences: copy.taskSentences,
-  }[kind];
 }
 
 /**
@@ -120,32 +110,25 @@ export function TodayGlow() {
 }
 
 function TaskRow({ quest, current }: { quest: DailyQuest; current: boolean }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  const { rollouts } = useFeatures();
   const copy = t.today;
   const info = quest.today;
   if (!info) return null;
   const Icon = ICONS[info.kind];
   const done = quest.completed;
   const minutes = fill(copy.minutes, { n: info.minutes });
-  const start = {
-    listen: copy.startListen,
-    story: copy.startStory,
-    words: copy.startWords,
-    sentences: copy.startSentences,
-  }[info.kind];
-  const why = {
-    listen: copy.whyListen,
-    story: copy.whyStory,
-    words: copy.whyWords,
-    sentences: copy.whySentences,
-  }[info.kind];
+  const words = taskCopy(copy, info, { locale, tidy: rollouts.todayTidy });
+  const sceneRow = Boolean(info.scene) && (info.kind === "story" || info.kind === "words");
+  const detail = sceneDetail(info, locale);
   const accuracyLine =
     info.kind === "story" && done && info.accuracy !== null
       ? fill(info.accuracy >= STAR_ACCURACY ? copy.starEarned : copy.accuracyIs, {
           n: Math.round(info.accuracy * 100),
         })
       : null;
-  const showMeta = info.title || info.levelCode || info.supportTitle || !done || accuracyLine;
+  const showMeta =
+    !sceneRow && (info.title || info.levelCode || info.supportTitle || !done || accuracyLine);
   return (
     <li>
       <Link
@@ -179,7 +162,7 @@ function TaskRow({ quest, current }: { quest: DailyQuest; current: boolean }) {
           <div className="min-w-0 flex-1">
             <div className="flex items-baseline justify-between gap-3">
               <p className={cn("text-sm font-semibold", done && "text-success")}>
-                <span dir="auto">{todayTaskTitle(copy, info.kind)}</span>
+                <span dir="auto">{words.title}</span>
               </p>
               {quest.xp > 0 && (!done || info.paid) && (
                 <span
@@ -193,6 +176,11 @@ function TaskRow({ quest, current }: { quest: DailyQuest; current: boolean }) {
                 </span>
               )}
             </div>
+            {sceneRow && !done && detail && (
+              <p className="text-muted-foreground mt-1 text-[12.5px]" dir="auto">
+                {detail}
+              </p>
+            )}
             {showMeta && (
               <p className="text-muted-foreground mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12.5px]">
                 {info.title && (
@@ -228,10 +216,10 @@ function TaskRow({ quest, current }: { quest: DailyQuest; current: boolean }) {
             {current && !done && (
               <>
                 <p className="text-muted-foreground mt-3 text-[13px] leading-relaxed">
-                  <span dir="auto">{why}</span>
+                  <span dir="auto">{words.why}</span>
                 </p>
                 <span className="bg-primary text-primary-foreground mt-3 inline-flex h-11 items-center justify-center rounded-[10px] px-6 text-sm font-semibold max-sm:w-full">
-                  <span dir="auto">{`${start} · ${minutes}`}</span>
+                  <span dir="auto">{`${words.start} · ${minutes}`}</span>
                 </span>
               </>
             )}
@@ -371,7 +359,7 @@ export function TodayTasksPanel({
   payload: DailyQuestsPayload;
   className?: string;
 }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const copy = t.today;
   const quests = payload.quests;
   const current = quests.find((quest) => !quest.completed);
@@ -402,7 +390,7 @@ export function TodayTasksPanel({
             <span dir="auto">
               {payload.allDone
                 ? fill(copy.rewardEarned, { xp: earnedXp })
-                : fill(copy.rewardAll, { xp: totalXp })}
+                : rewardLine(copy, quests, totalXp, locale)}
             </span>
           </p>
         )}

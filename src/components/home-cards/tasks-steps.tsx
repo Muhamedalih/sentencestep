@@ -8,13 +8,13 @@ import { ArrowRight, Check, ChevronDown, RotateCcw, Snowflake, Target } from "lu
 import { RepeatLessonMenu, WeekDots } from "@/components/app/engagement-strip";
 import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
+import { rewardLine, sceneDetail, sceneHeading, taskCopy } from "@/components/today/task-copy";
 import {
   ICONS,
   STAR_ACCURACY,
   TaskIcon,
   WeeklyLineView,
   fill,
-  todayTaskTitle,
 } from "@/components/today/today-tasks";
 import type { StreakCalendarData } from "@/lib/features/calendar-actions";
 import type { DailyQuest, DailyQuestsPayload } from "@/lib/features/quests";
@@ -111,7 +111,8 @@ function StepRow({
   first: boolean;
   last: boolean;
 }) {
-  const { t, dir } = useLocale();
+  const { t, dir, locale } = useLocale();
+  const { rollouts } = useFeatures();
   const copy = t.today;
   const info = quest.today;
   if (!info) return null;
@@ -120,25 +121,18 @@ function StepRow({
   const state: RowState = done ? "done" : current ? "current" : "idle";
   const disc = TASKS.disc[state];
   const minutes = fill(copy.minutes, { n: info.minutes });
-  const start = {
-    listen: copy.startListen,
-    story: copy.startStory,
-    words: copy.startWords,
-    sentences: copy.startSentences,
-  }[info.kind];
-  const why = {
-    listen: copy.whyListen,
-    story: copy.whyStory,
-    words: copy.whyWords,
-    sentences: copy.whySentences,
-  }[info.kind];
+  const words = taskCopy(copy, info, { locale, tidy: rollouts.todayTidy });
+  // A scene day's second and third rows say what is in them, not the passage's title again.
+  const sceneRow = Boolean(info.scene) && (info.kind === "story" || info.kind === "words");
+  const detail = sceneDetail(info, locale);
   const accuracyLine =
     info.kind === "story" && done && info.accuracy !== null
       ? fill(info.accuracy >= STAR_ACCURACY ? copy.starEarned : copy.accuracyIs, {
           n: Math.round(info.accuracy * 100),
         })
       : null;
-  const showMeta = info.title || info.levelCode || info.supportTitle || !done || accuracyLine;
+  const showMeta =
+    !sceneRow && (info.title || info.levelCode || info.supportTitle || !done || accuracyLine);
   const xp = quest.xp > 0 && (!done || info.paid) ? fill(copy.xpChip, { xp: quest.xp }) : null;
 
   return (
@@ -185,7 +179,7 @@ function StepRow({
         <span className="block min-w-0 flex-1 max-sm:basis-[calc(100%-3rem)]">
           <span className="flex items-center gap-2.5 text-[15px] leading-[1.4] font-bold">
             <span style={done ? { color: TASKS.doneTitle } : undefined} dir="auto">
-              {todayTaskTitle(copy, info.kind)}
+              {words.title}
             </span>
             {xp && (
               <span
@@ -197,6 +191,11 @@ function StepRow({
               </span>
             )}
           </span>
+          {sceneRow && !done && detail && (
+            <span className="text-muted-foreground mt-[3px] block text-[13px]" dir="auto">
+              {detail}
+            </span>
+          )}
           {showMeta && (
             <span className="text-muted-foreground mt-[3px] flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[13px]">
               {info.title && (
@@ -241,13 +240,13 @@ function StepRow({
               style={{ color: TASKS.why }}
               dir={dir}
             >
-              {why}
+              {words.why}
             </span>
           )}
         </span>
         {current && !done && (
           <span className="inline-flex h-10 shrink-0 items-center gap-[9px] self-center rounded-[11px] bg-white px-[18px] text-sm font-bold whitespace-nowrap text-slate-900 max-sm:ms-12 max-sm:w-[calc(100%-3rem)] max-sm:justify-center">
-            <span dir="auto">{`${start} · ${minutes}`}</span>
+            <span dir="auto">{`${words.start} · ${minutes}`}</span>
             <ArrowRight className="size-4" strokeWidth={2} aria-hidden="true" />
           </span>
         )}
@@ -276,7 +275,7 @@ export function TasksStepsBox({
   streak: StreakCalendarData | null;
   className?: string;
 }) {
-  const { t, dir } = useLocale();
+  const { t, dir, locale } = useLocale();
   const copy = t.today;
   // The grey look of Home (permission "greyCalm"): the capsule is a flat neutral grey with small corners.
   const grey = useGreyHome();
@@ -297,14 +296,9 @@ export function TasksStepsBox({
   const finished = quests.allDone || !current;
   const washPercent = finished ? 100 : total > 0 ? Math.round((done / total) * 100) : 0;
   const nextInfo = current?.today ?? null;
-  const nextStart = nextInfo
-    ? {
-        listen: copy.startListen,
-        story: copy.startStory,
-        words: copy.startWords,
-        sentences: copy.startSentences,
-      }[nextInfo.kind]
-    : null;
+  const nextStart = nextInfo ? taskCopy(copy, nextInfo, { locale, tidy: false }).start : null;
+  // A scene day: the folded box names the scene and its passage, whichever step is next.
+  const scene = sceneHeading(quests.quests, locale);
   const remaining = streak?.freezesRemaining ?? 0;
   const totalXp = required.reduce((sum, quest) => sum + quest.xp, 0);
   const earnedXp = required.reduce(
@@ -321,7 +315,7 @@ export function TasksStepsBox({
     totalXp > 0
       ? quests.allDone
         ? fill(copy.rewardEarned, { xp: earnedXp })
-        : fill(copy.rewardAll, { xp: totalXp })
+        : rewardLine(copy, quests.quests, totalXp, locale)
       : null;
 
   return (
@@ -372,7 +366,8 @@ export function TasksStepsBox({
                       "truncate text-[13.5px]",
                       quests.allDone ? "text-success" : "text-muted-foreground",
                     )}
-                    dir={dir}
+                    // The scene's line ends in «+35 XP»: its own direction keeps XP after the number.
+                    dir={scene && !quests.allDone ? "auto" : dir}
                   >
                     {reward}
                   </span>
@@ -400,11 +395,12 @@ export function TasksStepsBox({
                     ) : (
                       <>
                         <b className="shrink-0 text-[15.5px] font-bold" dir={dir}>
-                          {todayTaskTitle(copy, current.today.kind)}
+                          {scene?.name ??
+                            taskCopy(copy, current.today, { locale, tidy: false }).title}
                         </b>
-                        {current.today.title && (
+                        {(scene?.title ?? current.today.title) && (
                           <span className="text-muted-foreground truncate text-[13.5px]" dir="ltr">
-                            {current.today.title}
+                            {scene?.title ?? current.today.title}
                           </span>
                         )}
                       </>

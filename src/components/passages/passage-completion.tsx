@@ -11,6 +11,7 @@ import type { PassageAnswer } from "@/components/passages/passage-question-dock"
 import { useLocale } from "@/components/providers/locale-provider";
 import { scorePercent } from "@/lib/passages/progress";
 import { splitAroundWord } from "@/lib/passages/text";
+import { sceneStrings } from "@/lib/today/scene-strings";
 import type { Passage, PassageQuestion, PassageWord } from "@/lib/passages/types";
 import { cn } from "@/lib/utils";
 
@@ -90,14 +91,14 @@ export function PassageCompletion({
   /** What finishing earned in the daily quests and badges ("Quest complete: …", "New badge: …"); empty when nothing. */
   rewardLines: string[];
   nextPassage: { id: string; title: string } | null;
-  /** Today's session: the way on to the story, shown as the one big button instead of "Next passage". */
-  todayNext: { href: string } | null;
+  /** Today's session: the way on, shown as the one big button instead of "Next passage". On a scene day (`scene`) it is this passage's own lines, not a story. */
+  todayNext: { href: string; scene?: boolean } | null;
   /** The taste of the day just finished: the card that offers the full plan (see lib/hybrid/moments.ts). */
   hybridMoment: { passages: number; stories: number } | null;
   wordsLink: { href: string; adminPreview: boolean } | null;
   onReadAgain: () => void;
 }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const reduced = useReducedMotion();
   const speaker = useWordSpeaker();
 
@@ -187,7 +188,7 @@ export function PassageCompletion({
               className="w-full justify-between"
               trailingIcon={<ArrowRight className="size-4" aria-hidden="true" />}
             >
-              {t.today.continueStory}
+              {todayNext.scene ? sceneStrings(locale).fromPassage : t.today.continueStory}
             </PassageLinkButton>
           ) : nextPassage ? (
             <PassageLinkButton

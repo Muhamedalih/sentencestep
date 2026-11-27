@@ -195,12 +195,15 @@ export function evaluateRollouts(
  * The Home cards are a new look of the classic page, so they are closed whenever the classic Home is.
  * The daily tasks as three steps are a look of the Home cards' tasks strip, so they are closed whenever
  * the Home cards are. The Home cards for visitors without an account are a look of the Home cards too.
+ * The daily scene is a shape of Today's tasks, so it is closed with them, and it brings the honest
+ * ticks with it: each of its steps must be ticked by its own work only.
  */
 export function withRolloutDependencies(
   access: Record<RolloutId, boolean>,
 ): Record<RolloutId, boolean> {
   const newHome = access.newHome && access.todaySession && !access.classicHome;
   const homeCards = access.homeCards && access.classicHome;
+  const dailyScene = access.dailyScene && access.todaySession;
   return {
     ...access,
     sentenceBank: access.sentenceBank && access.todaySession,
@@ -208,7 +211,8 @@ export function withRolloutDependencies(
     wordBank: access.wordBank && access.todaySession,
     dailyRule: access.dailyRule && access.todaySession,
     hybridOffers: access.hybridOffers && access.todaySession,
-    honestTicks: access.honestTicks && access.todaySession,
+    dailyScene,
+    honestTicks: (access.honestTicks && access.todaySession) || dailyScene,
     todayCover: access.todayCover && access.todaySession,
     todayRepeat: access.todayRepeat && access.todaySession,
     homePolish: access.homePolish && access.todaySession,

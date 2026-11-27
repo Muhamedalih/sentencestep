@@ -69,6 +69,8 @@ export const ROLLOUT_IDS = [
   "germanZero",
   "homeWordsFirst",
   "premiumStrip",
+  "dailyScene",
+  "todayTidy",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -874,6 +876,29 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "Nothing changes for a learner who still has free passages or stories to finish: the taste and the moments start only after those are done.",
       "A moment never shows in the first 24 hours after sign-up, to a learner with an order still unpaid, to a subscriber or to a guest. Two dismissals within a week pause the moments for seven days.",
       "Every shown, clicked and dismissed moment is recorded (OFFER_SHOWN, OFFER_CLICKED, OFFER_DISMISSED), so the result can be read per group. To test it, choose “A share of learners”: the accounts left out keep today's Home and lock screens.",
+    ],
+  },
+  dailyScene: {
+    id: "dailyScene",
+    audience: "learner",
+    title: "Daily scene: Today's tasks built around one passage",
+    description:
+      "Today's three tasks become one scene made from one passage. First it is heard (the passage as it is), then it is completed by ear (for each of the passage's words, the sentence that holds it is typed from the audio, letter by letter, and the rest of the script stays in view), then the same words are worked in three moves: their meaning, their letters put in order, then typed from memory in their line. Home's tasks box names the scene, and each step goes straight on to the next. The separate story is not a task while this is open; Stories stays its own section.",
+    notes: [
+      "Needs Today's session to be open for the same people, and stays closed while it is closed. It brings the honest ticks with it: only the day's passage ticks the first task, only the typed lines the second, only the words round the third.",
+      "A day with no passage that has words (a free learner who has finished the free passages) keeps the usual three tasks. The German track is not touched.",
+      "No new content and no new audio: the lines and their clips are the passage's own, the words are its own word lesson.",
+      "Each finished set of lines is recorded (SCENE_LINES_COMPLETED: lines, lines written with no help, wrong letters). To compare it with the usual day, choose “A share of learners” (say 50%).",
+    ],
+  },
+  todayTidy: {
+    id: "todayTidy",
+    audience: "learner",
+    title: "Tidy-up: true task explanations, one Stories page",
+    description:
+      "Two small corrections. The explanations under the story and words tasks no longer claim a link that is not there (the story is not the passage just heard, and the words come from the day's passage and story, not from the learner's review or the Words section). On laptops and tablets the side menu's “Stories” opens General Stories, as the phone's tab does; Daily Lessons stays one tap away under it.",
+    notes: [
+      "Only these two things change. Closed by default, so only admins see it until it is opened to others on the Permissions page.",
     ],
   },
   returnLoop: {
