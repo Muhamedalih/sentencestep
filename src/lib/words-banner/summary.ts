@@ -38,8 +38,17 @@ export interface BannerSummary {
   shelf: BannerTopic[];
   /** The topic the learner studied last, or null. */
   leanId: string | null;
-  /** The first topic the learner can open and has not begun, for a button that starts them. */
+  /**
+   * The first topic the learner can open and has not begun, for a button that starts them: the first one
+   * at or above their chosen starting level when they have one (a topic below it only when none is left).
+   */
   startId: string | null;
+  /**
+   * The topic a "continue" button opens: the one studied last while it still has a word left, otherwise
+   * the next topic (in the library's order) the learner can open and has not finished; the one studied
+   * last when everything is finished. Null for a learner who has not begun.
+   */
+  resumeId: string | null;
 }
 
 /** The library's order: level, then the topic's own order. */
@@ -59,6 +68,8 @@ export function summarizeBanner(
      * height, the rest make up the number up to MAX_FULL_SPINES in the library's own order.
      */
     fullShelf?: boolean;
+    /** The level the learner chose when they began (null or 0: none); only the start button reads it. */
+    startingLevel?: number | null;
   } = {},
 ): BannerSummary {
   const ordered = inLibraryOrder(groups);
@@ -111,9 +122,27 @@ export function summarizeBanner(
     ];
   }
 
-  const start = ordered.find(
+  const notBegun = ordered.filter(
     (group) => (group.isFree || isPremiumUser) && (topics.get(group.id)?.done ?? 0) === 0,
   );
+  const floor = options.startingLevel ?? 0;
+  const start =
+    (floor > 0 ? notBegun.find((group) => group.level >= floor) : undefined) ?? notBegun[0];
 
-  return { learned, going, shelf, leanId, startId: start?.id ?? null };
+  let resumeId = leanId;
+  if (leanId) {
+    const unfinished = ordered.filter(
+      (group) =>
+        (group.isFree || isPremiumUser || (topics.get(group.id)?.done ?? 0) > 0) &&
+        (topics.get(group.id)?.done ?? 0) < group.wordCount,
+    );
+    const leanTopic = topics.get(leanId)!;
+    if (leanTopic.done >= leanTopic.total && unfinished.length > 0) {
+      const at = ordered.findIndex((group) => group.id === leanId);
+      const next = unfinished.find((group) => ordered.indexOf(group) > at) ?? unfinished[0]!;
+      resumeId = next.id;
+    }
+  }
+
+  return { learned, going, shelf, leanId, startId: start?.id ?? null, resumeId };
 }

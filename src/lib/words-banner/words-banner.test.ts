@@ -205,3 +205,36 @@ test("a learner who has not begun still sees a full shelf when asked", () => {
   );
   assert.equal(summary.leanId, null);
 });
+
+test("a learner who has chosen a level starts at that level, and the continue button skips a finished topic", () => {
+  const l1 = group("family", 1, 1, 3, { isFree: true });
+  const l2 = group("friendship", 2, 1, 3, { isFree: true });
+  const l3 = group("travel", 3, 1, 3, { isFree: true });
+  const all = [l1, l2, l3];
+  // Nothing begun: no level chosen opens the library's first topic, a chosen level opens its first one.
+  assert.equal(summarizeBanner(all, [], true).startId, "family");
+  assert.equal(summarizeBanner(all, [], true, { startingLevel: 2 }).startId, "friendship");
+  assert.equal(summarizeBanner(all, [], true, { startingLevel: 3 }).startId, "travel");
+  // A level above everything falls back to the first topic rather than nothing.
+  assert.equal(summarizeBanner(all, [], true, { startingLevel: 9 }).startId, "family");
+  assert.equal(summarizeBanner(all, [], true).resumeId, null);
+  // Begun: continue opens the topic studied last while it has a word left...
+  assert.equal(summarizeBanner(all, ids(l2, 1), true).resumeId, "friendship");
+  // ...and, once that topic is finished, the next unfinished one.
+  assert.equal(summarizeBanner(all, ids(l2, 3), true).resumeId, "travel");
+  // The last topic finished: wrap to the first unfinished one.
+  assert.equal(summarizeBanner(all, [...ids(l3, 3), ...ids(l1, 1)], true).resumeId, "family");
+  // Everything finished: stay on the last one.
+  assert.equal(
+    summarizeBanner(all, [...ids(l1, 3), ...ids(l2, 3), ...ids(l3, 3)], true).resumeId,
+    "travel",
+  );
+  // A free learner is never sent to a locked topic.
+  const locked = group("colors", 1, 2, 3);
+  assert.equal(summarizeBanner([l1, locked, l2], ids(l1, 3), false).resumeId, "friendship");
+});
+
+test("the continue button just says «Continue» in every language", () => {
+  assert.equal(wordsBannerStrings("ar").resume, "تابع");
+  assert.equal(wordsBannerStrings(null).resume, "Continue");
+});

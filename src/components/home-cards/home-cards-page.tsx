@@ -17,7 +17,7 @@ import { PassagesSectionCard, VideoSectionCard } from "./section-cards";
 import { StatsPanel } from "./stats-panel";
 import type { BankCardData } from "@/lib/word-bank/shelves";
 
-import { WordsBanner } from "@/components/words/words-banner";
+import { HomeWordsBanner } from "./home-words-banner";
 import type { WordGroupSummary } from "@/types/word-lists";
 
 import { WordsSection } from "./words-section";
@@ -110,10 +110,9 @@ export function HomeCardsPage({
           </div>
         )}
         <div className={cn("grid gap-4 lg:grid-cols-[minmax(0,1fr)_13.5rem]", calm && "mt-5")}>
-          <WordsBanner
+          <HomeWordsBanner
             groups={wordsFirst}
             isPremiumUser={isPremiumUser}
-            reviewCount={reviewCount}
             reviewHref="/learn/word-lists/review"
             className={cn("min-w-0 xl:min-h-0", calm ? "xl:h-[17.78rem]" : "xl:h-[19.75rem]")}
             lively

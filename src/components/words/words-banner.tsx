@@ -56,6 +56,7 @@ export function WordsBanner({
   reviewHref,
   className,
   lively = false,
+  startingLevel = null,
 }: {
   groups: WordGroupSummary[];
   isPremiumUser: boolean;
@@ -66,6 +67,8 @@ export function WordsBanner({
   className?: string;
   /** Every topic on the shelf, taller books, a slow sway and a soft glow (the German Home). */
   lively?: boolean;
+  /** The level the learner chose when they began: the first topic of a learner who has not begun is picked at or above it. */
+  startingLevel?: number | null;
 }) {
   const { locale } = useLocale();
   const s = wordsBannerStrings(locale);
@@ -74,8 +77,12 @@ export function WordsBanner({
   const reducedMotion = useReducedMotion() ?? false;
 
   const summary = useMemo(
-    () => summarizeBanner(groups, completedWordIds, isPremiumUser, { fullShelf: lively }),
-    [groups, completedWordIds, isPremiumUser, lively],
+    () =>
+      summarizeBanner(groups, completedWordIds, isPremiumUser, {
+        fullShelf: lively,
+        startingLevel,
+      }),
+    [groups, completedWordIds, isPremiumUser, lively, startingLevel],
   );
 
   const shell = cn("relative overflow-hidden rounded-[18px] xl:min-h-[196px]", BAND, className);
@@ -88,8 +95,8 @@ export function WordsBanner({
   const cta =
     reviewCount > 0
       ? { label: s.review, href: reviewHref, badge: reviewCount }
-      : summary.leanId
-        ? { label: s.resume, href: topicHref(summary.leanId), badge: 0 }
+      : summary.resumeId
+        ? { label: s.resume, href: topicHref(summary.resumeId), badge: 0 }
         : summary.startId
           ? { label: s.start, href: topicHref(summary.startId), badge: 0 }
           : null;
