@@ -68,6 +68,7 @@ export const ROLLOUT_IDS = [
   "upgradeModal",
   "germanZero",
   "homeWordsFirst",
+  "premiumStrip",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -787,6 +788,18 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "Saving a missed word to «كلماتي» needs the Words bank permission to be open for the same people; without it the missed words are shown but not saved.",
       "Hard mode only offers words that already have a stored clip, and is switched off when fewer than eight words have one. The browser's own voice is never used.",
       "The best score is remembered in the learner's own browser only; there is no leaderboard yet.",
+    ],
+  },
+  premiumStrip: {
+    id: "premiumStrip",
+    audience: "learner",
+    title: "Home: the Premium strip",
+    description:
+      "One wide dark strip at the foot of the new Home page, under the boxes: a small yellow PREMIUM badge, one line (“Unlock all stories and passages with Premium”) and a yellow Upgrade button that opens the plans page. For a learner without a subscription only.",
+    notes: [
+      "Only adds the strip: nothing else on Home changes, and no extra read or write is made for it.",
+      "An admin’s own account counts as a free learner unless it holds a subscription, so an admin sees it.",
+      "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
     ],
   },
   mobilePath: {

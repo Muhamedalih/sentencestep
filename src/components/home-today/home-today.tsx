@@ -8,6 +8,7 @@ import { FitHome } from "@/components/home-today/fit-home";
 import { QuestsCard } from "@/components/app/quests-card";
 import { StarterPathProgress } from "@/components/app/starter-path-progress";
 import { HomeLessonCard } from "@/components/home-today/lesson-card";
+import { PremiumStrip } from "@/components/home-today/premium-strip";
 import { TodayBox, type RuleRowState } from "@/components/home-today/today-box";
 import { TodayEndCard } from "@/components/home-today/today-end-card";
 import { UpgradeMomentDialog } from "@/components/upgrade-moments/upgrade-moment-dialog";
@@ -185,6 +186,7 @@ export function HomeToday({
   banners,
   mobilePath = false,
   wordDrop = false,
+  showPremiumStrip = false,
 }: {
   stream: HomeEngagementStream;
   user: CurrentUser;
@@ -198,6 +200,7 @@ export function HomeToday({
   mobilePath?: boolean;
   /** The "wordDrop" permission, resolved for this visitor: a small card that opens the falling-words game. */
   wordDrop?: boolean;
+  showPremiumStrip?: boolean;
 }) {
   const topBar: TopBarProps = {
     user,
@@ -240,6 +243,8 @@ export function HomeToday({
         <Suspense fallback={null}>
           <WeeklySlot quests={stream.quests} />
         </Suspense>
+        {/* The Premium strip (permission premiumStrip), last on the page, for a learner without a subscription. */}
+        {showPremiumStrip && <PremiumStrip className="mt-5" />}
       </FitHome>
     </>
   );
