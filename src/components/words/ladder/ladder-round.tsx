@@ -33,6 +33,7 @@ import { useWordsRoundTracking } from "@/hooks/use-words-round-tracking";
 import { resolveSectionFontFamily } from "@/lib/admin/lesson-font-settings";
 import { resolveSectionSentenceCompleteSound } from "@/lib/admin/typing-sound-settings";
 import { readRoundsRatingState, writeRoundsRatingState } from "@/lib/feedback/rating-storage";
+import { languageOfContentId } from "@/lib/learn-language";
 import { splitAroundWord } from "@/lib/passages/text";
 import { cn } from "@/lib/utils";
 import { recordBankWordAction } from "@/lib/word-bank/actions";
@@ -163,6 +164,8 @@ export function LadderRound({
   const [ratingOpen, setRatingOpen] = useState(false);
 
   const finished = pos >= queue.length;
+  // German rounds keep their own rating gate and are filed as German ratings.
+  const language = languageOfContentId(words[0]?.id ?? "");
   const card = queue[pos];
   const word = card ? byId.get(card.wordId) : undefined;
 
@@ -202,8 +205,8 @@ export function LadderRound({
     if (!finished || exam) return;
     tracking.finish();
     if (askRef.current === null) {
-      const state = withFinishedRound(readRoundsRatingState());
-      writeRoundsRatingState(state);
+      const state = withFinishedRound(readRoundsRatingState(language));
+      writeRoundsRatingState(state, language);
       askRef.current = shouldAskRoundsRating(state);
     }
     if (!askRef.current) return;
@@ -533,12 +536,13 @@ export function LadderRound({
       </div>
       <LadderRatingModal
         open={ratingOpen}
+        language={language}
         onRated={() => {
-          writeRoundsRatingState(withRated(readRoundsRatingState()));
+          writeRoundsRatingState(withRated(readRoundsRatingState(language)), language);
           setRatingOpen(false);
         }}
         onSkip={() => {
-          writeRoundsRatingState(withSkip(readRoundsRatingState()));
+          writeRoundsRatingState(withSkip(readRoundsRatingState(language)), language);
           setRatingOpen(false);
         }}
       />

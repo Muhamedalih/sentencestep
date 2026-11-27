@@ -32,6 +32,7 @@ import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import { usePronunciationSettings } from "@/components/providers/pronunciation-settings-provider";
 import { useTypingSoundSettings } from "@/components/providers/typing-sound-settings-provider";
+import { isAppRatingDue } from "@/lib/feedback/app-rating-due";
 import { transitions } from "@/lib/motion";
 import {
   trackAudioPlayedAction,
@@ -316,9 +317,9 @@ export function LessonSession({
   // only updates once recordCompletionAction resolves (see useProgress's own
   // doc comment), so reading `completions.length` any earlier would race a
   // stale value. `completions` is deduped by lessonId (one entry per
-  // distinct lesson ever completed, not per attempt), so `=== 2` fires
-  // exactly once — the first non-opening lesson completed after the opening
-  // one — and never again for a replay of that same second lesson.
+  // distinct lesson ever completed, not per attempt), so in English the second
+  // lesson asks and later ones never do. Lessons are counted per learned
+  // language (see isAppRatingDue).
   // RatingPrompt itself still gates on its own one-time localStorage flag on
   // top of this, so this only ever needs to be "roughly right," not perfect.
   const eligibleForRatingPrompt =
@@ -328,7 +329,7 @@ export function LessonSession({
     !isFixingMistakes &&
     !isViewingWords &&
     saveStatus === "saved" &&
-    completions.length === 2;
+    isAppRatingDue(completions, unit.id);
   const mistakes = useMistakes({ skipCountFetch: unit.mode === "stories" });
   const typingSoundSettings = useTypingSoundSettings();
   const { play, playSentenceComplete, playLessonComplete } = useTypingSound({
