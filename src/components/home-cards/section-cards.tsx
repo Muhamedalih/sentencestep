@@ -1,6 +1,7 @@
 "use client";
 
 import { HomeVideoNew } from "@/components/app/home-video-new";
+import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import type { PassagesHomeData } from "@/lib/passages/home-card";
 import type { VideoCardData } from "@/lib/video-dictation/content";
@@ -59,8 +60,11 @@ export function VideoSectionCard({
   wide?: boolean;
 }) {
   const { locale } = useLocale();
+  const { rollouts } = useFeatures();
   const s = homeCardsStrings(locale);
   const grey = useGreyHome();
+  // The calm look: the Video row is 20% shorter (19.2rem instead of 24rem) and its player is drawn smaller to fit.
+  const short = wide && rollouts.homeCalm;
   return (
     <CategoryCard
       colors={homeCardColors(grey, "video")}
@@ -81,7 +85,8 @@ export function VideoSectionCard({
       }
       index={index}
       wide={wide}
-      className={wide ? "lg:min-h-[24rem]" : undefined}
+      short={short}
+      className={wide ? (short ? "lg:min-h-[19.2rem]" : "lg:min-h-[24rem]") : undefined}
     />
   );
 }
