@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import type { ReactNode } from "react";
 
 import { UpgradeModalHost } from "@/components/billing/upgrade-modal-host";
@@ -15,6 +16,8 @@ import { getLessonFontSettings } from "@/lib/admin/lesson-font-queries";
 import { getTypingSoundSettings } from "@/lib/admin/typing-sound-queries";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { getVoiceSettings } from "@/lib/admin/voice-queries";
+import { resolvePricingCountry } from "@/lib/billing/geo-pricing";
+import { upgradeModalForCountry } from "@/lib/billing/upgrade-modal-audience";
 import { getCurrentUser } from "@/lib/supabase/auth";
 
 /**
@@ -56,6 +59,9 @@ export async function LearnerProviders({
     getEffectiveFeatures(),
   ]);
   const lessonColorCss = buildLessonColorCss(lessonColorSettings);
+  // Not in Egypt (see upgradeModalForCountry): without the host a locked card and a plans link are plain links again.
+  const upgradePopup =
+    !asGuest && upgradeModalForCountry(resolvePricingCountry(await headers()).country);
 
   return (
     <>
@@ -95,7 +101,7 @@ export async function LearnerProviders({
                   <PronunciationSettingsProvider>
                     {children}
                     {/* The upgrade pop-up (permission upgradeModal): listens for presses on locked cards and plans links. */}
-                    {!asGuest && <UpgradeModalHost />}
+                    {upgradePopup && <UpgradeModalHost />}
                   </PronunciationSettingsProvider>
                 </LessonCompletionThemeProvider>
               </LessonFontSettingsProvider>
