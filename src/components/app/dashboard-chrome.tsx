@@ -3,7 +3,6 @@
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
-import { useGreyHome } from "@/components/home-cards/use-grey-home";
 import { useLocale } from "@/components/providers/locale-provider";
 
 /**
@@ -29,8 +28,7 @@ export function DashboardChrome({
   const { t } = useLocale();
   // The side menu runs the full height of the window (the logo is at its top) and the top bar sits above the page only, beside it.
   const focusedDesktopScreen = pathname === "/learn/settings";
-  // The grey look of Home (permission "greyCalm"): on Home alone the page and the side menu wear the grey colours (see globals.css, data-grey-calm).
-  const grey = useGreyHome();
+  // The grey look of Home (permission "greyCalm") colours the cards only (see use-grey-home.ts): the page and the side menu stay black, so no data-grey-calm is set here any more (the rules in globals.css are left, unused).
 
   return (
     <>
@@ -40,7 +38,7 @@ export function DashboardChrome({
       >
         {t.nav.skipToContent}
       </a>
-      <div className="flex flex-1 flex-col md:flex-row" data-grey-calm={grey ? "" : undefined}>
+      <div className="flex flex-1 flex-col md:flex-row">
         <div className={focusedDesktopScreen ? "md:hidden" : undefined}>{sidebar}</div>
         <div className="flex min-w-0 flex-1 flex-col">
           <div className={focusedDesktopScreen ? "md:hidden" : undefined}>{header}</div>

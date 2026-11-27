@@ -210,6 +210,8 @@ What stays under `homeCalm` (Home only):
 
 ## The grey look (2026-11-16)
 
+**Update 2026-11-27:** the grey look now colours the **cards only** (admins). The page and the side menu stay black: DashboardChrome no longer sets `data-grey-calm`, so the page/side rules below are unused. Everyone else keeps the black cards of the Home cards palette.
+
 Permission `greyCalm` ("Home: a grey page and tinted cards"; Admins only; no read, no request, no migration; independent of `homeCards`, `todaySession` and `homeCalm`). The owner picked it from a mock-up (`reports/home-grey-calm-v2-2026-11-15.html`): midnight violet Stories, flat colour, 8 px corners. An earlier version of the proposal (plum Stories, teal Video, near-black fills) was rejected, so do not bring those colours back.
 
 - **Where it applies:** Home only (`useGreyHome()` = the permission is open AND the path is `/learn`). The Word Lists page shows the words card too and keeps its usual colours; the other pages keep their black page.

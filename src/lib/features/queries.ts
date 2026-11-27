@@ -142,9 +142,5 @@ export const getEffectiveFeatures = cache(async (): Promise<EffectiveFeatures> =
   // The return loop's card, likewise, only while the server may send reminders: it promises one.
   const returnLoop =
     access.returnLoop && reminderSendsPerRun(process.env.SESSION_REMINDER_MAX_PER_RUN) > 0;
-  // TRIAL (2026-11-27): the grey look of Home (greyCalm) is switched off for admins too, so the owner sees Home on the black page like everyone else. The permission still exists on the Permissions page; remove the `greyCalm: false` line to give it back to whoever it is open to.
-  return {
-    ...features,
-    rollouts: { ...access, greyCalm: false, sessionReminders: reminders, returnLoop },
-  };
+  return { ...features, rollouts: { ...access, sessionReminders: reminders, returnLoop } };
 });
