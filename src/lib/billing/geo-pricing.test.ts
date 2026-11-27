@@ -4,6 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 
 import { parseNetlifyGeoCountry, resolvePricingCountry } from "./geo-pricing";
+import { upgradeModalForCountry } from "./upgrade-modal-audience";
 
 function geoHeader(value: unknown): string {
   return Buffer.from(JSON.stringify(value)).toString("base64");
@@ -224,4 +225,10 @@ test("resolvePricingCountry: the secret is read from ORIGIN_AUTH_SECRET when not
     if (original === undefined) delete process.env.ORIGIN_AUTH_SECRET;
     else process.env.ORIGIN_AUTH_SECRET = original;
   }
+});
+
+test("the upgrade pop-up is used everywhere except Egypt", () => {
+  assert.equal(upgradeModalForCountry("eg"), false);
+  assert.equal(upgradeModalForCountry("iq"), true);
+  assert.equal(upgradeModalForCountry(null), true);
 });
