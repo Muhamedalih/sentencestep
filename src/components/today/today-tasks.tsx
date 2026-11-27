@@ -177,7 +177,7 @@ function TaskRow({ quest, current }: { quest: DailyQuest; current: boolean }) {
               )}
             </div>
             {sceneRow && !done && detail && (
-              <p className="text-muted-foreground mt-1 text-[12.5px]" dir="auto">
+              <p className="text-muted-foreground mt-1 text-[12.5px] md:text-left" dir="auto">
                 {detail}
               </p>
             )}

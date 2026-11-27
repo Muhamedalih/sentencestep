@@ -192,7 +192,10 @@ function StepRow({
             )}
           </span>
           {sceneRow && !done && detail && (
-            <span className="text-muted-foreground mt-[3px] block text-[13px]" dir="auto">
+            <span
+              className="text-muted-foreground mt-[3px] block text-[13px] md:text-left"
+              dir="auto"
+            >
               {detail}
             </span>
           )}

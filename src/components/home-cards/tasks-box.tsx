@@ -139,7 +139,10 @@ function TaskRow({
             )}
           </span>
           {sceneRow && !done && detail && (
-            <span className="text-muted-foreground mt-1.5 block text-[13px]" dir="auto">
+            <span
+              className="text-muted-foreground mt-1.5 block text-[13px] md:text-left"
+              dir="auto"
+            >
               {detail}
             </span>
           )}
