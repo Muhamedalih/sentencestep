@@ -63,7 +63,7 @@ export function VideoSectionCard({
   const { rollouts } = useFeatures();
   const s = homeCardsStrings(locale);
   const grey = useGreyHome();
-  // The calm look: the Video row is 20% shorter (19.2rem instead of 24rem) and its player is drawn smaller to fit.
+  // The calm look: the Video row is 20% shorter (17.28rem instead of 24rem) and its player is drawn smaller to fit.
   const short = wide && rollouts.homeCalm;
   return (
     <CategoryCard
@@ -86,7 +86,7 @@ export function VideoSectionCard({
       index={index}
       wide={wide}
       short={short}
-      className={wide ? (short ? "lg:min-h-[19.2rem]" : "lg:min-h-[24rem]") : undefined}
+      className={wide ? (short ? "lg:min-h-[17.28rem]" : "lg:min-h-[24rem]") : undefined}
     />
   );
 }

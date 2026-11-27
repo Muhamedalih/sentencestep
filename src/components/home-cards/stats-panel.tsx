@@ -8,6 +8,7 @@ import type { LessonStatsMap } from "@/components/app/home-hero";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useSharedProgress } from "@/components/providers/progress-provider";
 import { learnerLevelSupportLabel } from "@/lib/progress/learner-level";
+import { cn } from "@/lib/utils";
 
 import { GREY, HOME_CARD_COLORS, STATS } from "./palette";
 import { countFinishedStories, levelPercent } from "./stats";
@@ -75,12 +76,15 @@ export function StatsPanel({
   sessionCount,
   videosFinished,
   narrow = false,
+  short = false,
 }: {
   lessonStats: LessonStatsMap;
   sessionCount: number | null;
   videosFinished: number | null;
   /** The words-first Home: the panel is drawn 35% narrower (the page sets its width), so the «to next level» line goes under the name. */
   narrow?: boolean;
+  /** The calm look: the panel is 10% shorter than the 19.75rem it was (17.78rem), so its rows sit closer. */
+  short?: boolean;
 }) {
   const { t, dir, locale } = useLocale();
   const s = homeCardsStrings(locale);
@@ -97,7 +101,12 @@ export function StatsPanel({
   return (
     <section
       aria-label={s.statsLabel}
-      className="hc-rise relative isolate flex min-h-[19.75rem] flex-col justify-between gap-3 overflow-hidden rounded-2xl border px-5 py-4 text-white xl:h-[19.75rem] xl:min-h-0"
+      className={cn(
+        "hc-rise relative isolate flex flex-col justify-between overflow-hidden rounded-2xl border px-5 text-white xl:min-h-0",
+        short
+          ? "min-h-[17.78rem] gap-1.5 py-3 xl:h-[17.78rem]"
+          : "min-h-[19.75rem] gap-3 py-4 xl:h-[19.75rem]",
+      )}
       style={
         {
           background: colors.background,
@@ -119,7 +128,10 @@ export function StatsPanel({
           }
         >
           <b
-            className="truncate text-[1.7rem] leading-tight font-extrabold tracking-tight"
+            className={cn(
+              "truncate leading-tight font-extrabold tracking-tight",
+              short ? "text-[1.45rem]" : "text-[1.7rem]",
+            )}
             dir={dir}
           >
             {levelName}
@@ -138,7 +150,7 @@ export function StatsPanel({
           aria-valuemax={100}
           aria-valuenow={percent}
           aria-label={s.levelLabel}
-          className="mt-2.5 h-[5px] overflow-hidden rounded-[3px]"
+          className={cn("h-[5px] overflow-hidden rounded-[3px]", short ? "mt-2" : "mt-2.5")}
           style={{ background: STATS.track }}
         >
           <i
@@ -153,7 +165,7 @@ export function StatsPanel({
         style={{ borderColor: grey ? GREY.hairline : STATS.hairline }}
       />
 
-      <div className="flex flex-col gap-[9px]">
+      <div className={short ? "flex flex-col gap-0" : "flex flex-col gap-[9px]"}>
         <Stat
           tile="stories"
           icon={<BookOpen className="size-[19px]" strokeWidth={1.8} />}
