@@ -335,7 +335,9 @@ export function ContinueCard({
         <div
           aria-hidden="true"
           className={cn(
-            "hc-tilt-r hc-book absolute end-24 top-14 hidden h-[21.6rem] w-[15.6rem] sm:block",
+            "hc-tilt-r absolute end-24 top-14 hidden h-[21.6rem] w-[15.6rem] sm:block",
+            // The calm look: the book rises and opens a little under the pointer (see .hc-book in globals.css).
+            calm && "hc-book",
             // The 20% shorter card: the book is drawn at 0.8 so it stays whole, anchored at its top right corner.
             merged && "origin-top-right scale-[0.8]",
           )}
@@ -349,26 +351,31 @@ export function ContinueCard({
             }}
           />
           {/* The first page, which the cover uncovers when it swings open under the pointer; its lines are written in. */}
+          {calm && (
+            <div
+              className="hc-page absolute inset-0 rounded-[3px_9px_9px_3px] pt-[5.4rem] pr-4 pl-[11.5rem]"
+              style={{
+                background: `linear-gradient(90deg,rgba(60,20,40,0.3),transparent 48%),${STORY_BOOK.page}`,
+              }}
+            >
+              {["100%", "82%", "92%", "58%"].map((width, i) => (
+                <i
+                  key={i}
+                  className="mb-3.5 block h-[5px] origin-left rounded-[3px]"
+                  style={{
+                    width,
+                    background: STORY_BOOK.pageLine,
+                    transitionDelay: `${180 + i * 90}ms`,
+                  }}
+                />
+              ))}
+            </div>
+          )}
           <div
-            className="hc-page absolute inset-0 rounded-[3px_9px_9px_3px] pt-[5.4rem] pr-4 pl-[11.5rem]"
-            style={{
-              background: `linear-gradient(90deg,rgba(60,20,40,0.3),transparent 48%),${STORY_BOOK.page}`,
-            }}
-          >
-            {["100%", "82%", "92%", "58%"].map((width, i) => (
-              <i
-                key={i}
-                className="mb-3.5 block h-[5px] origin-left rounded-[3px]"
-                style={{
-                  width,
-                  background: STORY_BOOK.pageLine,
-                  transitionDelay: `${180 + i * 90}ms`,
-                }}
-              />
-            ))}
-          </div>
-          <div
-            className="hc-cover absolute inset-0 overflow-hidden rounded-[5px_12px_12px_5px]"
+            className={cn(
+              "absolute inset-0 overflow-hidden rounded-[5px_12px_12px_5px]",
+              calm && "hc-cover",
+            )}
             style={{ background: STORY_BOOK.cover, boxShadow: STORY_BOOK.coverEdge }}
           >
             <span
