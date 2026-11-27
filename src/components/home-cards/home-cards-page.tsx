@@ -130,11 +130,19 @@ export function HomeCardsPage({
             fallback={
               <CardSkeleton
                 feature="passages"
-                className="min-h-[13.75rem] lg:min-h-[22rem] xl:h-[24.7rem]"
+                className={cn(
+                  "min-h-[13.75rem]",
+                  calm ? "lg:min-h-[24.7rem] xl:h-[27.4rem]" : "lg:min-h-[22rem] xl:h-[24.7rem]",
+                )}
               />
             }
           >
-            <PassagesSlot data={passages} className="lg:min-h-[22rem] xl:h-[24.7rem]" />
+            <PassagesSlot
+              data={passages}
+              className={
+                calm ? "lg:min-h-[24.7rem] xl:h-[27.4rem]" : "lg:min-h-[22rem] xl:h-[24.7rem]"
+              }
+            />
           </Suspense>
           <div className="flex min-w-0 flex-col gap-3">
             <ContinueCard

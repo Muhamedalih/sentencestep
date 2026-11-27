@@ -113,6 +113,9 @@ export function ContinueCard({
   const whiteButtonStyle = grey ? { borderRadius: GREY.radius.button } : undefined;
   // The calm look (permission "homeCalm"): the two choices are tabs above the card instead of a pill inside it; the card itself is unchanged.
   const calm = rollouts.homeCalm;
+  // The words-first Home in the calm look: the two choices sit inside the card (the pill), not in a row above it, and the card takes
+  // the height that row used to take (2.7rem) so nothing is left empty between the banner and this card.
+  const merged = calm && tall;
 
   const noCurrentLesson = units.length > 0 && !currentLesson;
   // A free learner who has done every free lesson still gets a real lesson to show (as the old card did).
@@ -151,8 +154,9 @@ export function ContinueCard({
     <section
       aria-label={s.continueTitle}
       className={cn(
-        "hc-card hc-rise relative isolate min-h-[22rem] overflow-hidden rounded-2xl border text-white transition-[border-color] duration-300 xl:min-h-0",
-        tall ? "xl:h-[24.7rem]" : "xl:h-[19.75rem]",
+        "hc-card hc-rise relative isolate overflow-hidden rounded-2xl border text-white transition-[border-color] duration-300 xl:min-h-0",
+        merged ? "min-h-[24.7rem]" : "min-h-[22rem]",
+        tall ? (merged ? "xl:h-[27.4rem]" : "xl:h-[24.7rem]") : "xl:h-[19.75rem]",
       )}
       style={
         {
@@ -167,7 +171,7 @@ export function ContinueCard({
         <span className="text-[15px] font-bold" dir={dir}>
           {s.continueTitle}
         </span>
-        {!calm && (
+        {(!calm || merged) && (
           <div
             role="tablist"
             aria-label={s.continueTitle}
@@ -203,6 +207,11 @@ export function ContinueCard({
                 {label}
               </button>
             ))}
+          </div>
+        )}
+        {merged && extra && (
+          <div className="[&_.bg-muted]:bg-white/20 [&_.bg-primary]:bg-white [&_.text-foreground]:text-white [&_.text-muted-foreground]:text-white/70">
+            {extra}
           </div>
         )}
       </div>
@@ -391,7 +400,7 @@ export function ContinueCard({
     </section>
   );
 
-  if (!calm) return card;
+  if (!calm || merged) return card;
 
   // The calm look: the two choices (Stories first) are tabs above the card, the free plan's progress at the far end.
   return (
