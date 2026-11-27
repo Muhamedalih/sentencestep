@@ -219,3 +219,12 @@ Permission `greyCalm` ("Home: a grey page and tinted cards"; Admins only; no rea
 - **Cards (`GREY` in `home-cards/palette.ts`, the only place the colours live):** one flat fill and a lighter edge of the same hue, each from `hsl(hue, saturation, 14%)` with the edge at 28% lightness: Stories H258 S38 (`#1e1631` / `#3f325d`), Passages H214 S38, Video H2 S52 (YouTube's red), Words and the lesson side H236 S34, the level panel and the tasks capsule H220 S6. The tag's edge is the card's edge mixed 12% toward white. The Stories tile of the achievements panel follows the Stories hue (`GREY.storiesTile`). The art on the cards is not recoloured.
 - **Corners:** cards 8 px, the small tiles 6 px, the white buttons 8 px, the tags 6 px, the capsule 8 px (inline `borderRadius` from `GREY.radius` while the permission is on, so the Tailwind classes stay as they were for everyone else).
 - **Tasks capsule:** neutral grey, its wash `GREY.wash` (indigo 15% to 5%), its dividers `GREY.hairline`.
+
+## The daily scene (2026-11-28)
+
+Permission `dailyScene` (Admins only until the owner opens it; needs `todaySession`, and brings `honestTicks` with it). The three tasks become one scene made from one passage: **hear it** (the passage reader as it is), **complete it by ear** (`/learn/today/scene`: for each of the passage's words, the sentence that holds it is typed letter by letter from the line's own clip; the rest of the script stays in view), then **its words** in three moves (`/learn/today/words`: meaning, letters, from memory in the line). The report and mock-ups: `reports/sentencestep-daily-scene-2026-11-27.html` (phase 0 and 1 of it are built).
+
+- **Which passage:** the first one finished today, else the next open one (`sceneDayPassageId`). A day with no such passage, or one with no word lesson, keeps the usual tasks. The German track is not touched.
+- **Pure rules:** `src/lib/today/scene.ts` (which words, one line each; the typed sentence, cut to a part when longer than 14 words; the script never shows a line still to be typed). Words and strings: `scene-strings.ts`.
+- **Ticks:** typing the lines is the second task (the `lessons` row, a "today" event from `recordSceneLinesAction`); a story finished on a scene day does not tick it (`hasSceneToday` in the completion action). Each finished set of lines records `SCENE_LINES_COMPLETED`.
+- **Phase 0** is its own permission, `todayTidy`: the story and words explanations no longer claim a link that is not there, and on laptops the side menu's «القصص» opens General Stories, as the phone's tab does.

@@ -53,6 +53,7 @@ import { setCountryAction, setStartingLevelAction } from "@/lib/supabase/profile
 import { recordVocabularyEncountersForLesson } from "@/lib/vocabulary-recall/record-encounters";
 import type { ValidatedGuestCompletion } from "@/lib/progress/guest-migration";
 import type { LessonCompletion, ProgressState, RewardEvent } from "@/lib/progress/types";
+import { hasSceneToday } from "@/lib/today/scene-load";
 import type { LearningMode } from "@/types/content";
 
 /**
@@ -237,7 +238,11 @@ export async function recordCompletionAction(
         questEventsForLesson({
           sentenceCount,
           accuracy: safeAccuracy,
-          story: features.rollouts.honestTicks && mode === "stories",
+          // On a scene day the second task is the passage's own lines: a story does not tick it.
+          story:
+            features.rollouts.honestTicks &&
+            mode === "stories" &&
+            !(await hasSceneToday(userId, features)),
         }),
         todayISO,
         features,

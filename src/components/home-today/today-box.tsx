@@ -9,7 +9,7 @@ import { fill, withXp } from "@/components/home-today/format";
 import { TASK_ICONS, TaskIcon } from "@/components/home-today/task-icon";
 import { LockedTestCard, TestYourselfCard } from "@/components/home-today/test-card";
 import { useLocale } from "@/components/providers/locale-provider";
-import { todayTaskTitle } from "@/components/today/today-tasks";
+import { taskCopy } from "@/components/today/task-copy";
 import { ruleStrings } from "@/lib/daily-rule/strings";
 import type { DailyQuest, DailyQuestsPayload, TodayPoster } from "@/lib/features/quests";
 import { posterArtFor } from "@/lib/passages/art";
@@ -284,19 +284,14 @@ function TaskRow({
   /** The row's repeat button and its pressable motion (the todayRepeat permission). */
   repeat: boolean;
 }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const copy = t.today;
   const info = quest.today;
   if (!info) return null;
   const Icon = TASK_ICONS[info.kind];
   const done = quest.completed;
   const minutes = fill(copy.minutes, { n: info.minutes });
-  const start = {
-    listen: copy.startListen,
-    story: copy.startStory,
-    words: copy.startWords,
-    sentences: copy.startSentences,
-  }[info.kind];
+  const words = taskCopy(copy, info, { locale, tidy: false });
   const accuracyLine =
     info.kind === "story" && done && info.accuracy !== null
       ? fill(info.accuracy >= STAR_ACCURACY ? copy.starEarned : copy.accuracyIs, {
@@ -350,7 +345,7 @@ function TaskRow({
                   done && "text-muted-foreground",
                 )}
               >
-                <span dir="auto">{todayTaskTitle(copy, info.kind)}</span>
+                <span dir="auto">{words.title}</span>
               </p>
               {quest.xp > 0 && (!done || info.paid) && (
                 <span
@@ -395,13 +390,13 @@ function TaskRow({
             {info.kind === "words" && !done && <TypingHint />}
             {current && !done && (
               <span className="bg-primary text-primary-foreground roomy:mt-[clamp(0.4rem,1.2svh,0.85rem)] roomy:h-[clamp(2.25rem,5svh,2.75rem)] roomy:px-8 roomy:text-base mt-3 inline-flex h-11 items-center justify-center rounded-[10px] px-6 text-sm font-semibold max-sm:w-full">
-                <span dir="auto">{`${start} · ${minutes}`}</span>
+                <span dir="auto">{`${words.start} · ${minutes}`}</span>
               </span>
             )}
           </div>
         </div>
       </Link>
-      {repeatHref && <RepeatButton href={repeatHref} name={todayTaskTitle(copy, info.kind)} />}
+      {repeatHref && <RepeatButton href={repeatHref} name={words.title} />}
     </li>
   );
 }

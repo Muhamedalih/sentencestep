@@ -4,11 +4,9 @@ import type { ReactNode } from "react";
 import { AppHeader } from "@/components/app/app-header";
 import { GermanAnnouncement } from "@/components/app/german-announcement";
 import { DashboardChrome } from "@/components/app/dashboard-chrome";
-import { LearnSidebar } from "@/components/app/learn-sidebar";
+import { ViewerLearnSidebar } from "@/components/app/viewer-learn-sidebar";
 import { ReportProblemButton } from "@/components/app/report-problem-button";
 import { isAdmin } from "@/lib/admin/access";
-import { hasPremiumAccess } from "@/lib/billing/access";
-import { getEffectiveFeatures } from "@/lib/features/queries";
 import { LearnLanguagePicker } from "@/components/app/learn-language-picker";
 import { LEARN_LANGUAGE_ASKED_COOKIE } from "@/lib/learn-language";
 import { getLearnLanguage, isGermanOpen } from "@/lib/learn-language-server";
@@ -52,43 +50,20 @@ export default async function LearnDashboardLayout({ children }: { children: Rea
   // user.id), so they used to wait on isAdmin's role lookup for no reason,
   // adding a full round trip to every dashboard page.
   const user = await getCurrentUser();
-  const [isAdminUser, savedCount, features] = await Promise.all([
+  const [isAdminUser, savedCount] = await Promise.all([
     isAdmin(),
     user ? fetchMySavedSentencesCount(user.id) : 0,
-    // Already resolved for this request by LearnLayout (cache()'d), so it costs nothing here.
-    getEffectiveFeatures(),
   ]);
   // The learning-language chip is there for everyone German is open to (permission germanTrack).
   const learnLanguage = (await isGermanOpen()) ? await getLearnLanguage() : undefined;
   // The first-time picker: shown to an admin once, until they have answered or dismissed it.
   const askLanguage = isAdminUser && !(await cookies()).get(LEARN_LANGUAGE_ASKED_COOKIE)?.value;
 
-  // The Library's menu item: admins always; a subscriber once the "libraryGift" permission is open for
-  // them. The subscription is only looked up when that permission is open, so while it is closed this
-  // costs nothing (the pages check the same rule: see canOpenLibrary).
-  const libraryOpen = isAdminUser || (features.rollouts.libraryGift && (await hasPremiumAccess()));
-
   return (
     <div className="app-shell bg-background flex min-h-svh flex-col">
       <DashboardChrome
         header={<AppHeader user={user} savedCount={savedCount} learnLanguage={learnLanguage} />}
-        sidebar={
-          <LearnSidebar
-            isAdminUser={isAdminUser}
-            libraryOpen={libraryOpen}
-            passagesEnabled={features.passages.enabled}
-            mobilePath={features.rollouts.mobilePath}
-            rulesEnabled={Boolean(user) && features.rollouts.dailyRule}
-            videoEnabled={features.rollouts.videoDictation}
-            videoLocked={learnLanguage === "de"}
-            wordDropEnabled={features.rollouts.wordDrop}
-            contactInstagram={features.rollouts.contactInstagram}
-            wordBankEnabled={
-              Boolean(user) && (features.rollouts.wordBank || features.personalCards.page)
-            }
-            wordsHub={features.rollouts.wordsPage}
-          />
-        }
+        sidebar={<ViewerLearnSidebar />}
       >
         {askLanguage && <LearnLanguagePicker />}
         {learnLanguage === "en" && <GermanAnnouncement />}

@@ -235,6 +235,8 @@ test("evaluateRollouts: default config opens everything for admins only", () => 
     germanZero: false,
     homeWordsFirst: false,
     premiumStrip: false,
+    dailyScene: false,
+    todayTidy: false,
   });
 });
 
@@ -337,6 +339,7 @@ test("the sentence bank lives inside Today's box: it is never open without Today
       todayRepeat: true,
       homePolish: true,
       videoNews: true,
+      dailyScene: true,
     },
     {
       ...before,
@@ -350,6 +353,7 @@ test("the sentence bank lives inside Today's box: it is never open without Today
       todayRepeat: true,
       homePolish: true,
       videoNews: true,
+      dailyScene: true,
     },
   );
   assert.equal(before.sentenceBank, true);
@@ -423,7 +427,10 @@ test("honest task ticks: never open without Today's session", () => {
   const open = evaluateRollouts(defaultRolloutConfig(), admin);
   assert.equal(withRolloutDependencies(open).honestTicks, true);
   assert.equal(withRolloutDependencies({ ...open, todaySession: false }).honestTicks, false);
-  assert.equal(withRolloutDependencies({ ...open, honestTicks: false }).honestTicks, false);
+  assert.equal(
+    withRolloutDependencies({ ...open, honestTicks: false, dailyScene: false }).honestTicks,
+    false,
+  );
 });
 
 test("the words bank is fed by Today's words step: it is never open without Today's session", () => {
@@ -586,4 +593,21 @@ test("the classic Home: Admins only, and it closes the new Home page and its Â«Ø
   assert.equal(withRolloutDependencies(evaluateRollouts(config, learner)).newHome, true);
   config.classicHome = entry({ mode: "everyone" });
   assert.equal(withRolloutDependencies(evaluateRollouts(config, learner)).newHome, false);
+});
+
+test("the daily scene: Admins only, closed without Today's session, and it brings the honest ticks", () => {
+  const admins = withRolloutDependencies(evaluateRollouts(defaultRolloutConfig(), admin));
+  assert.equal(admins.dailyScene, true);
+  assert.equal(admins.todayTidy, true);
+  assert.equal(withRolloutDependencies({ ...admins, todaySession: false }).dailyScene, false);
+  const learners = withRolloutDependencies(evaluateRollouts(defaultRolloutConfig(), learner));
+  assert.equal(learners.dailyScene, false);
+  assert.equal(learners.todayTidy, false);
+  // Opened to learners who have Today's session but not the honest ticks: it brings them.
+  const config = defaultRolloutConfig();
+  config.todaySession = entry({ mode: "everyone" });
+  config.dailyScene = entry({ mode: "everyone" });
+  const scene = withRolloutDependencies(evaluateRollouts(config, learner));
+  assert.equal(scene.dailyScene, true);
+  assert.equal(scene.honestTicks, true);
 });

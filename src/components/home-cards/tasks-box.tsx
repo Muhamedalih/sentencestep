@@ -10,13 +10,13 @@ import { RepeatLessonMenu, WeekDots } from "@/components/app/engagement-strip";
 import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Progress } from "@/components/ui/progress";
+import { rewardLine, sceneDetail, sceneHeading, taskCopy } from "@/components/today/task-copy";
 import {
   ICONS,
   STAR_ACCURACY,
   TaskIcon,
   WeeklyLineView,
   fill,
-  todayTaskTitle,
 } from "@/components/today/today-tasks";
 import type { StreakCalendarData } from "@/lib/features/calendar-actions";
 import { questTitle } from "@/lib/features/quest-labels";
@@ -54,7 +54,8 @@ function TaskRow({
   first: boolean;
   last: boolean;
 }) {
-  const { t, dir } = useLocale();
+  const { t, dir, locale } = useLocale();
+  const { rollouts } = useFeatures();
   const copy = t.today;
   const info = quest.today;
   if (!info) return null;
@@ -63,25 +64,18 @@ function TaskRow({
   const state: RowState = done ? "done" : current ? "current" : "idle";
   const disc = TASKS.disc[state];
   const minutes = fill(copy.minutes, { n: info.minutes });
-  const start = {
-    listen: copy.startListen,
-    story: copy.startStory,
-    words: copy.startWords,
-    sentences: copy.startSentences,
-  }[info.kind];
-  const why = {
-    listen: copy.whyListen,
-    story: copy.whyStory,
-    words: copy.whyWords,
-    sentences: copy.whySentences,
-  }[info.kind];
+  const words = taskCopy(copy, info, { locale, tidy: rollouts.todayTidy });
+  // A scene day's second and third rows say what is in them, not the passage's title again.
+  const sceneRow = Boolean(info.scene) && (info.kind === "story" || info.kind === "words");
+  const detail = sceneDetail(info, locale);
   const accuracyLine =
     info.kind === "story" && done && info.accuracy !== null
       ? fill(info.accuracy >= STAR_ACCURACY ? copy.starEarned : copy.accuracyIs, {
           n: Math.round(info.accuracy * 100),
         })
       : null;
-  const showMeta = info.title || info.levelCode || info.supportTitle || !done || accuracyLine;
+  const showMeta =
+    !sceneRow && (info.title || info.levelCode || info.supportTitle || !done || accuracyLine);
   const xp = quest.xp > 0 && (!done || info.paid) ? fill(copy.xpChip, { xp: quest.xp }) : null;
 
   return (
@@ -132,7 +126,7 @@ function TaskRow({
               style={done ? { color: TASKS.doneTitle } : undefined}
               dir="auto"
             >
-              {todayTaskTitle(copy, info.kind)}
+              {words.title}
             </span>
             {xp && (
               <span
@@ -144,6 +138,11 @@ function TaskRow({
               </span>
             )}
           </span>
+          {sceneRow && !done && detail && (
+            <span className="text-muted-foreground mt-1.5 block text-[13px]" dir="auto">
+              {detail}
+            </span>
+          )}
           {showMeta && (
             <span className="text-muted-foreground mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[13px]">
               {info.title && (
@@ -192,10 +191,10 @@ function TaskRow({
                 style={{ color: TASKS.why }}
                 dir={dir}
               >
-                {why}
+                {words.why}
               </span>
               <span className="mt-3.5 inline-flex h-11 items-center gap-2 rounded-xl bg-white px-5 text-sm font-bold text-slate-900 max-sm:w-full max-sm:justify-center">
-                <span dir="auto">{`${start} · ${minutes}`}</span>
+                <span dir="auto">{`${words.start} · ${minutes}`}</span>
                 <ArrowRight className="size-4" aria-hidden="true" />
               </span>
             </>
@@ -208,7 +207,7 @@ function TaskRow({
 
 /** The card that opens under the strip: today's three steps on one rail, and once they are done the way to do them again. */
 function TasksPanel({ payload }: { payload: DailyQuestsPayload }) {
-  const { t, dir } = useLocale();
+  const { t, dir, locale } = useLocale();
   const copy = t.today;
   // The grey look of Home (permission "greyCalm"): the same neutral grey and small corners as the tasks capsule.
   const grey = useGreyHome();
@@ -244,11 +243,12 @@ function TasksPanel({ payload }: { payload: DailyQuestsPayload }) {
           <p
             className={cn("text-[12.5px]", payload.allDone && "text-success")}
             style={payload.allDone ? undefined : { color: TASKS.reward }}
-            dir={dir}
+            // The scene's line ends in «+35 XP»: its own direction keeps XP after the number.
+            dir={sceneHeading(quests, locale) && !payload.allDone ? "auto" : dir}
           >
             {payload.allDone
               ? fill(copy.rewardEarned, { xp: earnedXp })
-              : fill(copy.rewardAll, { xp: totalXp })}
+              : rewardLine(copy, quests, totalXp, locale)}
           </p>
         )}
       </div>
@@ -309,7 +309,7 @@ export function TasksBox({
   streak: StreakCalendarData | null;
   className?: string;
 }) {
-  const { t, dir } = useLocale();
+  const { t, dir, locale } = useLocale();
   const grey = useGreyHome();
   const colors = grey ? GREY.colors.neutral : HOME_CARD_COLORS.lesson;
   const [open, setOpen] = useState(false);
@@ -342,8 +342,10 @@ export function TasksBox({
     if (finished) {
       heading = t.quests.allDoneExplore;
     } else if (nextQuest?.today) {
-      heading = todayTaskTitle(t.today, nextQuest.today.kind);
-      detail = nextQuest.today.title;
+      // A scene day names the scene and its passage; else the next task and its lesson.
+      const scene = sceneHeading(quests.quests, locale);
+      heading = scene?.name ?? taskCopy(t.today, nextQuest.today, { locale, tidy: false }).title;
+      detail = scene?.title ?? nextQuest.today.title;
     } else if (nextQuest) {
       heading = questTitle(t, nextQuest.type);
       detail = `${nextQuest.progress} / ${nextQuest.target}`;

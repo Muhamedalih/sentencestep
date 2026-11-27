@@ -53,6 +53,7 @@ export default async function TodayEndPage({
       admin,
       hybridOffers: features.rollouts.hybridOffers,
       passagesEnabled: features.passages.enabled,
+      scene: features.rollouts.dailyScene,
     }),
     loadTodayWeek({
       userId: user.id,
@@ -93,7 +94,8 @@ export default async function TodayEndPage({
     <TodayEnd
       weekDays={week.days}
       nextTitle={next.nextTitle}
-      moreWords={moreWords}
+      // A scene day's words are the scene's alone: there is no further round of them.
+      moreWords={moreWords && !next.sceneToday}
       testHref={testWaiting ? `${SENTENCE_REVIEW_HREF}?flow=1` : null}
     />
   );

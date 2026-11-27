@@ -54,10 +54,12 @@ export async function generateMetadata({
 async function todayNextLink(
   open: boolean,
   searchParams: Promise<{ today?: string; redo?: string }>,
-): Promise<{ href: string } | null> {
+  /** A scene day (permission dailyScene): the next step is this passage's own lines. */
+  scene: boolean,
+): Promise<{ href: string; scene: boolean } | null> {
   const query = await searchParams;
   if (!open || query.today !== "1") return null;
-  return { href: `/learn/today/go?step=story${query.redo === "1" ? "&redo=1" : ""}` };
+  return { href: `/learn/today/go?step=story${query.redo === "1" ? "&redo=1" : ""}`, scene };
 }
 
 export default async function PassageReaderPage({
@@ -211,7 +213,11 @@ export default async function PassageReaderPage({
         }
         // A step of Today's session (opened from Home): the end screen carries on to the story.
         // (`redo=1`, from "Redo today's lessons", keeps the story that follows today's own.)
-        todayNext={await todayNextLink(features.rollouts.todaySession, searchParams)}
+        todayNext={await todayNextLink(
+          features.rollouts.todaySession,
+          searchParams,
+          features.rollouts.dailyScene && passage.wordGroupId !== null,
+        )}
         wordsLink={wordsLink}
       />
     </div>

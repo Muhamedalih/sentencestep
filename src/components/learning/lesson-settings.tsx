@@ -85,8 +85,10 @@ export const LessonSettings = forwardRef<
   PronunciationButtonHandle,
   Omit<PronunciationButtonProps, "className" | "label" | "variant" | "size" | "headless"> & {
     className?: string;
+    /** Whether a touch screen gets its own big replay button here. A screen with its own replay controls (the day's scene) leaves it out. */
+    touchReplay?: boolean;
   }
->(function LessonSettings({ inputRef, className, ...pronunciation }, ref) {
+>(function LessonSettings({ inputRef, className, touchReplay = true, ...pronunciation }, ref) {
   const { t, dir } = useLocale();
   const reducedMotion = useReducedMotion() ?? false;
   const { isActive, speedIndex, setSpeed } = usePronunciationSettings();
@@ -225,7 +227,7 @@ export const LessonSettings = forwardRef<
       {/* Touch devices have no Shift key, so the replay and speed controls live
           on the screen itself (one tap each) instead of behind the gear. Fine
           pointers keep the original gear-only layout. */}
-      {showReplay && (
+      {showReplay && touchReplay && (
         <button
           type="button"
           onMouseDown={keepInputFocus}

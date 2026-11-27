@@ -96,6 +96,7 @@ export function LearnSidebar({
   contactInstagram = false,
   wordBankEnabled = false,
   wordsHub = false,
+  storiesFirst = false,
 }: {
   isAdminUser?: boolean;
   /** Whether the Library's menu item exists for this visitor: admins, and subscribers once the "libraryGift" permission is open for them. Defaults to isAdminUser. */
@@ -118,6 +119,8 @@ export function LearnSidebar({
   wordBankEnabled?: boolean;
   /** The "wordsPage" permission, resolved for this visitor: «كلماتي» and Word Lists are ONE menu item, «الكلمات», and one row of the phone's More sheet; every page under /learn/words lights it up. */
   wordsHub?: boolean;
+  /** The "todayTidy" permission: on md: up, «Stories» opens General Stories, as the phone's tab does (Daily Lessons stays in its sub-menu). */
+  storiesFirst?: boolean;
 }) {
   const pathname = usePathname();
   const { t, dir, locale } = useLocale();
@@ -177,7 +180,12 @@ export function LearnSidebar({
   // passagesEnabled (the "passages" feature switch: Admin preview = admins only).
   const NAV_ITEMS = [
     { key: "home", href: "/learn", label: t.nav.home, icon: Home },
-    { key: "stories", href: "/learn/normal", label: t.nav.stories, icon: NotebookText },
+    {
+      key: "stories",
+      href: storiesFirst ? "/learn/stories" : "/learn/normal",
+      label: t.nav.stories,
+      icon: NotebookText,
+    },
     { key: "passages", href: "/learn/passages", label: t.nav.passages, icon: Headphones },
     { key: "video", href: "/learn/video", label: videoStrings(locale).navLabel, icon: Play },
     { key: "library", href: "/learn/library", label: t.nav.library, icon: Library },
