@@ -38,6 +38,57 @@ import { runWithinBudget } from "@/lib/voice/word-list-word-audio";
 export interface WordVoice {
   id: string;
   providerVoiceId: string;
+  /** Voices tried only when `id` has no clip for a word (German lessons: the other Voice Studio German voice). */
+  fallbackIds?: string[];
+}
+
+/** Every German lesson, story and onboarding lesson has an id that starts with this. */
+export function isGermanLessonId(lessonId: string | null | undefined): boolean {
+  return typeof lessonId === "string" && lessonId.startsWith("de-");
+}
+
+/** The voice ids to look a word's clip up under, in tiers: a later tier is asked only for words the earlier ones lack. */
+export function wordVoiceTiers(narratorVoiceId: string, wordVoice: WordVoice): string[][] {
+  const tiers = [[...new Set([narratorVoiceId, wordVoice.id])]];
+  if (wordVoice.fallbackIds && wordVoice.fallbackIds.length > 0) tiers.push(wordVoice.fallbackIds);
+  return tiers;
+}
+
+/** pickWordClip over tiers of voices: the best spelling under the first tier wins, later tiers only fill gaps. */
+export function pickWordClipTiered(
+  candidates: readonly string[],
+  tiers: readonly (readonly string[])[],
+  clips: ReadonlyMap<string, string>,
+): string | undefined {
+  for (const tier of tiers) {
+    const url = pickWordClip(candidates, tier, clips);
+    if (url) return url;
+  }
+  return undefined;
+}
+
+/**
+ * The Voice Studio German voices (made offline, one per gender): the one of `gender` first, the other as fallback.
+ * A free German lesson is narrated by an ElevenLabs voice, but its single words were recorded in the Voice Studio
+ * German voices before that, so a German lesson's words are heard from them, never from the American Edge
+ * stand-in a paid narrator normally gets. Null when no such voice is registered.
+ */
+export async function germanStudioWordVoice(gender: "female" | "male"): Promise<WordVoice | null> {
+  const supabase = createServiceRoleClient();
+  const { data } = await supabase
+    .from("voices")
+    .select("id, provider_voice_id, gender")
+    .eq("source", "voice-studio")
+    .ilike("name", "%German%")
+    .order("id");
+  if (!data || data.length === 0) return null;
+  const same = data.find((voice) => voice.gender === gender) ?? data[0];
+  if (!same) return null;
+  return {
+    id: same.id,
+    providerVoiceId: same.provider_voice_id,
+    fallbackIds: data.filter((voice) => voice.id !== same.id).map((voice) => voice.id),
+  };
 }
 
 export async function lookupVoice(
@@ -93,9 +144,16 @@ export async function pickGenderMatchedEdgeTtsVoice(
 const WORD_VOICE_TTL_MS = 10 * 60_000;
 const wordVoiceCache = new Map<string, { promise: Promise<WordVoice | null>; expiresAt: number }>();
 
-async function computeWordVoice(narratorVoiceId: string): Promise<WordVoice | null> {
+async function computeWordVoice(
+  narratorVoiceId: string,
+  german: boolean,
+): Promise<WordVoice | null> {
   const voice = await lookupVoice(narratorVoiceId);
   if (!voice) return null;
+  if (german && voice.source !== "voice-studio" && voice.source !== "edge-tts") {
+    const studio = await germanStudioWordVoice(voice.gender);
+    if (studio) return studio;
+  }
   // A voice-studio narrator's words are made offline on the owner's PC (scripts/voice-studio) under the
   // narrator's own id, exactly like an Edge narrator's — so they are looked up there, not under a stand-in.
   return voice.source === "edge-tts" || voice.source === "voice-studio"
@@ -116,22 +174,27 @@ async function computeWordVoice(narratorVoiceId: string): Promise<WordVoice | nu
  * successful resolution is kept, so a missing voice is re-checked on the next
  * call rather than remembered.
  */
-export function resolveWordVoice(narratorVoiceId: string): Promise<WordVoice | null> {
+export function resolveWordVoice(
+  narratorVoiceId: string,
+  lessonId?: string | null,
+): Promise<WordVoice | null> {
+  const german = isGermanLessonId(lessonId);
+  const cacheKey = german ? `${narratorVoiceId}|de` : narratorVoiceId;
   const now = Date.now();
-  const cached = wordVoiceCache.get(narratorVoiceId);
+  const cached = wordVoiceCache.get(cacheKey);
   if (cached && cached.expiresAt > now) return cached.promise;
 
-  const promise = computeWordVoice(narratorVoiceId).then(
+  const promise = computeWordVoice(narratorVoiceId, german).then(
     (voice) => {
-      if (!voice) wordVoiceCache.delete(narratorVoiceId);
+      if (!voice) wordVoiceCache.delete(cacheKey);
       return voice;
     },
     (error: unknown) => {
-      wordVoiceCache.delete(narratorVoiceId);
+      wordVoiceCache.delete(cacheKey);
       throw error;
     },
   );
-  wordVoiceCache.set(narratorVoiceId, { promise, expiresAt: now + WORD_VOICE_TTL_MS });
+  wordVoiceCache.set(cacheKey, { promise, expiresAt: now + WORD_VOICE_TTL_MS });
   return promise;
 }
 
@@ -376,9 +439,11 @@ export async function resolveWordAudioForText(input: {
   text: string;
   voiceId: string;
   generate?: boolean;
+  /** The lesson the sentence belongs to: a German lesson's words are heard in the Voice Studio German voices. */
+  lessonId?: string | null;
 }): Promise<SentenceWordAudio | null> {
-  const { sentenceId, text, voiceId, generate = false } = input;
-  const wordVoice = await resolveWordVoice(voiceId);
+  const { sentenceId, text, voiceId, generate = false, lessonId } = input;
+  const wordVoice = await resolveWordVoice(voiceId, lessonId);
   if (!wordVoice) return null;
 
   const entries = sentenceWordEntries(sentenceId, text).slice(0, MAX_WORDS_PER_SENTENCE);
@@ -387,14 +452,14 @@ export async function resolveWordAudioForText(input: {
   // The narrator's own id first: a one-word sentence ("Yes.") is a real
   // narrator clip, which is what this lookup has always preferred. Otherwise
   // the word voice — where every other isolated word actually lives.
-  const voiceIds = [...new Set([voiceId, wordVoice.id])];
+  const tiers = wordVoiceTiers(voiceId, wordVoice);
   const candidatesByEntry = entries.map((entry) => wordTextCandidates(entry.raw, entry.key));
-  const clips = await lookupReadyClips(candidatesByEntry.flat(), voiceIds);
+  const clips = await lookupReadyClips(candidatesByEntry.flat(), tiers.flat());
 
   const urls: Record<string, string> = {};
   const missingEntries: typeof entries = [];
   entries.forEach((entry, index) => {
-    const url = pickWordClip(candidatesByEntry[index] ?? [], voiceIds, clips);
+    const url = pickWordClipTiered(candidatesByEntry[index] ?? [], tiers, clips);
     if (url) urls[entry.contentId] = url;
     else missingEntries.push(entry);
   });
@@ -429,12 +494,18 @@ export async function resolveSentenceWordAudio(input: {
   const { sentenceId, voiceId, generate } = input;
   const supabase = createServiceRoleClient();
   const [sentenceRow] = await Promise.all([
-    supabase.from("sentences").select("en").eq("id", sentenceId).maybeSingle(),
+    supabase.from("sentences").select("en, lesson_id").eq("id", sentenceId).maybeSingle(),
     resolveWordVoice(voiceId), // warms the memo the call below reads
   ]);
   const text = sentenceRow.data?.en;
   if (!text) return null;
-  return resolveWordAudioForText({ sentenceId, text, voiceId, generate });
+  return resolveWordAudioForText({
+    sentenceId,
+    text,
+    voiceId,
+    generate,
+    lessonId: sentenceRow.data?.lesson_id,
+  });
 }
 
 /** A lesson never has this many sentences in practice; the cap keeps one request's lookup bounded whatever a caller asks. */
@@ -473,15 +544,27 @@ export async function resolveLessonWordAudio(input: {
       .eq("lesson_id", anchor.lesson_id)
       .order("order_index")
       .limit(MAX_LESSON_SENTENCES),
-    resolveWordVoice(voiceId),
+    resolveWordVoice(voiceId, anchor.lesson_id),
   ]);
   if (!wordVoice || !rows || rows.length === 0) return null;
 
   const plans = rows.map((row) => planSentenceWords(row.id, row.en, MAX_WORDS_PER_SENTENCE));
-  const voiceIds = [...new Set([voiceId, wordVoice.id])];
-  const clips = await lookupReadyClips(planCandidateTexts(plans), voiceIds);
+  const tiers = wordVoiceTiers(voiceId, wordVoice);
+  const clips = await lookupReadyClips(planCandidateTexts(plans), tiers.flat());
 
   return Object.fromEntries(
-    plans.map((plan) => [plan.sentenceId, answerFromClips(plan, voiceIds, clips)]),
+    plans.map((plan) => {
+      // Tier by tier: the first tier's clips win, a later tier only answers the words it still lacks.
+      const answer = answerFromClips(plan, tiers[0] ?? [], clips);
+      for (const tier of tiers.slice(1)) {
+        if (answer.missing.length === 0) break;
+        const more = answerFromClips(plan, tier, clips);
+        for (const [contentId, url] of Object.entries(more.urls)) {
+          if (!(contentId in answer.urls)) answer.urls[contentId] = url;
+        }
+        answer.missing = answer.missing.filter((contentId) => !(contentId in answer.urls));
+      }
+      return [plan.sentenceId, answer];
+    }),
   );
 }

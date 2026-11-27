@@ -300,6 +300,17 @@ export async function resolveWordCacheVoiceId(narratorVoiceId: string): Promise<
   return (await resolveWordVoice(narratorVoiceId))?.id ?? null;
 }
 
+async function lookupSentenceLessonId(sentenceId: string | undefined): Promise<string | null> {
+  if (!sentenceId) return null;
+  const supabase = createServiceRoleClient();
+  const { data } = await supabase
+    .from("sentences")
+    .select("lesson_id")
+    .eq("id", sentenceId)
+    .maybeSingle();
+  return data?.lesson_id ?? null;
+}
+
 /**
  * Resolves a ready-to-play audio URL for real SentenceStep content spoken
  * by a real, existing voice. Cache-only for every content type except
@@ -339,7 +350,10 @@ export async function resolvePronunciationAudioAction(input: {
   // re-synthesized and re-uploaded a clip that already existed. Look under
   // the voice the clip really lives under first, and only rate-limit and
   // synthesize on a genuine miss.
-  const wordVoice = await resolveWordVoice(voiceId);
+  // A German lesson's words are heard in the Voice Studio German voices (see resolveWordVoice).
+  const wordLessonId =
+    contentType === "sentence_word" ? await lookupSentenceLessonId(contentId.split("::")[0]) : null;
+  const wordVoice = await resolveWordVoice(voiceId, wordLessonId);
   if (!wordVoice) return null;
 
   // The clip may be cached under the word's raw spelling ("Hello,", what a
@@ -353,6 +367,10 @@ export async function resolvePronunciationAudioAction(input: {
     contentType === "sentence_word" ? wordTextCandidates(text, normalizedKey) : [text];
   const cachedWord = await lookupCachedClipForTexts(candidates, wordVoice.id);
   if (cachedWord) return cachedWord;
+  for (const fallbackId of wordVoice.fallbackIds ?? []) {
+    const fallbackWord = await lookupCachedClipForTexts(candidates, fallbackId);
+    if (fallbackWord) return fallbackWord;
+  }
 
   if (await isSynthesisRateLimited()) return null;
   // New lesson-word clips are made under the canonical (normalized) spelling,

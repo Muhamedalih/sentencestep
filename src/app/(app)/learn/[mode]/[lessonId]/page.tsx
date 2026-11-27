@@ -335,6 +335,7 @@ export default async function LessonPage({
           sentenceId: firstSentence.id,
           text: firstSentence.en,
           voiceId: resolvedVoiceId,
+          lessonId: unit.id,
         })
           .then((result) => result?.urls)
           .catch((error: unknown) => {
