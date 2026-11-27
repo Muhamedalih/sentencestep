@@ -345,6 +345,7 @@ export default async function LearnHomePage({
             hasWeakWords={reviewWaiting.count > 0}
             mobilePath={mobilePath}
             wordDrop={features.rollouts.wordDrop}
+            showPremiumStrip={features.rollouts.premiumStrip && !access.isPremium}
             banners={
               <>
                 {expiryEndsAt && <PremiumExpiryBanner endsAt={expiryEndsAt} className="mb-6" />}

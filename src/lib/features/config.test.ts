@@ -456,6 +456,7 @@ test("rollouts: resolveFeatures leaves every Permissions feature closed for ever
       signupLanding: false,
       germanZero: false,
       homeWordsFirst: false,
+      premiumStrip: false,
     });
   }
 });

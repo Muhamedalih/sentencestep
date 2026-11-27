@@ -234,6 +234,7 @@ test("evaluateRollouts: default config opens everything for admins only", () => 
     signupLanding: false,
     germanZero: false,
     homeWordsFirst: false,
+    premiumStrip: false,
   });
 });
 
