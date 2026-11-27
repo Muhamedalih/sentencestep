@@ -36,6 +36,7 @@ function Texts({
   support,
   lines,
   narrow = false,
+  compact = false,
   children,
 }: {
   title: string;
@@ -43,12 +44,14 @@ function Texts({
   lines: ReactNode;
   /** Keeps the text clear of the story's cover on the right. */
   narrow?: boolean;
+  /** The calm look's 20% shorter card: less room above the title. */
+  compact?: boolean;
   children: ReactNode;
 }) {
   const { dir } = useLocale();
   return (
     <div
-      className={`relative flex h-full flex-col px-7 pt-28 pb-7 sm:pt-[4.75rem] ${narrow ? "max-w-[32rem]" : "max-w-[44rem]"}`}
+      className={`relative flex h-full flex-col px-7 pt-28 pb-7 ${compact ? "sm:pt-[4rem]" : "sm:pt-[4.75rem]"} ${narrow ? "max-w-[32rem]" : "max-w-[44rem]"}`}
     >
       <h2
         dir="ltr"
@@ -155,8 +158,8 @@ export function ContinueCard({
       aria-label={s.continueTitle}
       className={cn(
         "hc-card hc-rise relative isolate overflow-hidden rounded-2xl border text-white transition-[border-color] duration-300 xl:min-h-0",
-        merged ? "min-h-[24.7rem]" : "min-h-[22rem]",
-        tall ? (merged ? "xl:h-[27.4rem]" : "xl:h-[24.7rem]") : "xl:h-[19.75rem]",
+        merged ? "min-h-[19.76rem]" : "min-h-[22rem]",
+        tall ? (merged ? "xl:h-[21.92rem]" : "xl:h-[24.7rem]") : "xl:h-[19.75rem]",
       )}
       style={
         {
@@ -241,6 +244,7 @@ export function ContinueCard({
         />
         {lesson ? (
           <Texts
+            compact={merged}
             title={lesson.title}
             support={lesson.supportTitle ?? lesson.title}
             lines={
@@ -284,6 +288,7 @@ export function ContinueCard({
           </Texts>
         ) : (
           <Texts
+            compact={merged}
             title={noCurrentLesson ? t.premium.homeAllDoneHeading : t.nav.normalLessons}
             support={noCurrentLesson ? t.premium.homeAllDoneBody : ""}
             lines={null}
@@ -329,7 +334,11 @@ export function ContinueCard({
         </span>
         <div
           aria-hidden="true"
-          className="hc-tilt-r absolute end-24 top-14 hidden h-[21.6rem] w-[15.6rem] sm:block"
+          className={cn(
+            "hc-tilt-r hc-book absolute end-24 top-14 hidden h-[21.6rem] w-[15.6rem] sm:block",
+            // The 20% shorter card: the book is drawn at 0.8 so it stays whole, anchored at its top right corner.
+            merged && "origin-top-right scale-[0.8]",
+          )}
         >
           <i
             className="absolute rounded-[4px_10px_10px_4px]"
@@ -339,8 +348,27 @@ export function ContinueCard({
               boxShadow: STORY_BOOK.shadow,
             }}
           />
+          {/* The first page, which the cover uncovers when it swings open under the pointer; its lines are written in. */}
           <div
-            className="absolute inset-0 overflow-hidden rounded-[5px_12px_12px_5px]"
+            className="hc-page absolute inset-0 rounded-[3px_9px_9px_3px] pt-[5.4rem] pr-4 pl-[11.5rem]"
+            style={{
+              background: `linear-gradient(90deg,rgba(60,20,40,0.3),transparent 48%),${STORY_BOOK.page}`,
+            }}
+          >
+            {["100%", "82%", "92%", "58%"].map((width, i) => (
+              <i
+                key={i}
+                className="mb-3.5 block h-[5px] origin-left rounded-[3px]"
+                style={{
+                  width,
+                  background: STORY_BOOK.pageLine,
+                  transitionDelay: `${180 + i * 90}ms`,
+                }}
+              />
+            ))}
+          </div>
+          <div
+            className="hc-cover absolute inset-0 overflow-hidden rounded-[5px_12px_12px_5px]"
             style={{ background: STORY_BOOK.cover, boxShadow: STORY_BOOK.coverEdge }}
           >
             <span
@@ -369,6 +397,7 @@ export function ContinueCard({
         {story ? (
           <Texts
             narrow
+            compact={merged}
             title={story.title}
             support={story.supportTitle ?? s.storyLine}
             lines={
@@ -389,7 +418,13 @@ export function ContinueCard({
             </Link>
           </Texts>
         ) : (
-          <Texts narrow title={t.nav.stories} support={s.storiesAllDone} lines={null}>
+          <Texts
+            narrow
+            compact={merged}
+            title={t.nav.stories}
+            support={s.storiesAllDone}
+            lines={null}
+          >
             <Link href="/learn/stories" className={WHITE_BUTTON} style={whiteButtonStyle}>
               <span dir={dir}>{t.nav.stories}</span>
               <ArrowRight className="size-4" aria-hidden="true" />

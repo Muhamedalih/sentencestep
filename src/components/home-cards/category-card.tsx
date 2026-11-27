@@ -267,6 +267,7 @@ export function CategoryCard({
   index = 0,
   className: extraClassName,
   wide = false,
+  short = false,
 }: {
   colors: CardColors;
   art: CategoryArt;
@@ -290,6 +291,8 @@ export function CategoryCard({
   className?: string;
   /** A card that takes a whole row (the Home's Video row): the picture is drawn large on the far side from lg up. */
   wide?: boolean;
+  /** The wide card in the calm look is 20% shorter, so its player is drawn at 1.55× instead of 1.8×. */
+  short?: boolean;
 }) {
   const { dir } = useLocale();
   // The grey look of Home (permission "greyCalm"): small corners (the colours come from the caller).
@@ -363,7 +366,8 @@ export function CategoryCard({
         className={cn(
           "hc-peek pointer-events-none absolute",
           wide
-            ? "end-5 -bottom-[1.9rem] h-[11.4rem] w-[16.75rem] max-lg:block lg:end-8 lg:top-1/2 lg:bottom-auto lg:h-[20.5rem] lg:w-[30.1rem] lg:-translate-y-1/2"
+            ? "end-5 -bottom-[1.9rem] h-[11.4rem] w-[16.75rem] max-lg:block lg:end-8 lg:top-1/2 lg:bottom-auto lg:-translate-y-1/2 " +
+                (short ? "lg:h-[17.7rem] lg:w-[26rem]" : "lg:h-[20.5rem] lg:w-[30.1rem]")
             : "end-5 w-[16.75rem] xl:end-[1.9rem]",
           !wide && (art === "sheet" ? "-bottom-14 h-[13.4rem]" : "-bottom-[1.9rem] h-[11.4rem]"),
         )}
@@ -372,7 +376,8 @@ export function CategoryCard({
           className={cn(
             "relative origin-bottom-right",
             wide
-              ? "size-full max-lg:scale-[0.66] lg:h-[11.4rem] lg:w-[16.75rem] lg:origin-top-left lg:scale-[1.8]"
+              ? "size-full max-lg:scale-[0.66] lg:h-[11.4rem] lg:w-[16.75rem] lg:origin-top-left " +
+                  (short ? "lg:scale-[1.55]" : "lg:scale-[1.8]")
               : "size-full max-xl:scale-[0.66]",
           )}
         >

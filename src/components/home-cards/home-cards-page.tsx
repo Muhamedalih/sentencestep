@@ -132,7 +132,7 @@ export function HomeCardsPage({
                 feature="passages"
                 className={cn(
                   "min-h-[13.75rem]",
-                  calm ? "lg:min-h-[24.7rem] xl:h-[27.4rem]" : "lg:min-h-[22rem] xl:h-[24.7rem]",
+                  calm ? "lg:min-h-[19.76rem] xl:h-[21.92rem]" : "lg:min-h-[22rem] xl:h-[24.7rem]",
                 )}
               />
             }
@@ -140,7 +140,7 @@ export function HomeCardsPage({
             <PassagesSlot
               data={passages}
               className={
-                calm ? "lg:min-h-[24.7rem] xl:h-[27.4rem]" : "lg:min-h-[22rem] xl:h-[24.7rem]"
+                calm ? "lg:min-h-[19.76rem] xl:h-[21.92rem]" : "lg:min-h-[22rem] xl:h-[24.7rem]"
               }
             />
           </Suspense>

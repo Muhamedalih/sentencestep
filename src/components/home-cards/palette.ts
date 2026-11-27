@@ -165,6 +165,9 @@ export const STORY_BOOK = {
   coverEdge: "inset 0 0 0 1px rgba(255,255,255,0.07)",
   /** The spine's shading, from the binding out. */
   spine: "linear-gradient(90deg,rgba(0,0,0,0.3),rgba(255,255,255,0.1) 55%,rgba(0,0,0,0.12))",
+  /** The first page under the cover (what shows when it opens) and the lines written on it. */
+  page: "#f1ebde",
+  pageLine: "rgba(147,63,100,0.28)",
   /** The cream of the letter, the frame and the lines on the cover. */
   ink: "#f6ead6",
   frame: "rgba(246,234,214,0.5)",
