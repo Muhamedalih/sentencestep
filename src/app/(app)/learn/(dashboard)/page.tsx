@@ -425,6 +425,7 @@ export default async function LearnHomePage({
               )}
             </>
           }
+          premiumStrip={features.rollouts.premiumStrip && !access.isPremium}
           footer={
             isAdminUser ? (
               <div className="mt-6">
