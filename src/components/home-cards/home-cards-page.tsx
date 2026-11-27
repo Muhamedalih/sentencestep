@@ -115,7 +115,7 @@ export function HomeCardsPage({
             isPremiumUser={isPremiumUser}
             reviewCount={reviewCount}
             reviewHref="/learn/word-lists/review"
-            className="min-w-0 xl:h-[19.75rem] xl:min-h-0"
+            className={cn("min-w-0 xl:min-h-0", calm ? "xl:h-[17.78rem]" : "xl:h-[19.75rem]")}
             lively
           />
           <StatsPanel
@@ -123,6 +123,7 @@ export function HomeCardsPage({
             sessionCount={sessionCount}
             videosFinished={videosFinished}
             narrow
+            short={calm}
           />
         </div>
         <div className="mt-4 grid gap-4 lg:grid-cols-2 lg:items-end">
@@ -132,7 +133,7 @@ export function HomeCardsPage({
                 feature="passages"
                 className={cn(
                   "min-h-[13.75rem]",
-                  calm ? "lg:min-h-[19.76rem] xl:h-[21.92rem]" : "lg:min-h-[22rem] xl:h-[24.7rem]",
+                  calm ? "lg:min-h-[17.78rem] xl:h-[19.73rem]" : "lg:min-h-[22rem] xl:h-[24.7rem]",
                 )}
               />
             }
@@ -140,7 +141,7 @@ export function HomeCardsPage({
             <PassagesSlot
               data={passages}
               className={
-                calm ? "lg:min-h-[19.76rem] xl:h-[21.92rem]" : "lg:min-h-[22rem] xl:h-[24.7rem]"
+                calm ? "lg:min-h-[17.78rem] xl:h-[19.73rem]" : "lg:min-h-[22rem] xl:h-[24.7rem]"
               }
             />
           </Suspense>

@@ -51,7 +51,7 @@ function Texts({
   const { dir } = useLocale();
   return (
     <div
-      className={`relative flex h-full flex-col px-7 pt-28 pb-7 ${compact ? "sm:pt-[4rem]" : "sm:pt-[4.75rem]"} ${narrow ? "max-w-[32rem]" : "max-w-[44rem]"}`}
+      className={`relative flex h-full flex-col px-7 pt-28 pb-7 ${compact ? "sm:pt-[3.5rem]" : "sm:pt-[4.75rem]"} ${narrow ? "max-w-[32rem]" : "max-w-[44rem]"}`}
     >
       <h2
         dir="ltr"
@@ -158,8 +158,8 @@ export function ContinueCard({
       aria-label={s.continueTitle}
       className={cn(
         "hc-card hc-rise relative isolate overflow-hidden rounded-2xl border text-white transition-[border-color] duration-300 xl:min-h-0",
-        merged ? "min-h-[19.76rem]" : "min-h-[22rem]",
-        tall ? (merged ? "xl:h-[21.92rem]" : "xl:h-[24.7rem]") : "xl:h-[19.75rem]",
+        merged ? "min-h-[17.78rem]" : "min-h-[22rem]",
+        tall ? (merged ? "xl:h-[19.73rem]" : "xl:h-[24.7rem]") : "xl:h-[19.75rem]",
       )}
       style={
         {
@@ -338,8 +338,8 @@ export function ContinueCard({
             "hc-tilt-r absolute end-24 top-14 hidden h-[21.6rem] w-[15.6rem] sm:block",
             // The calm look: the book rises and opens a little under the pointer (see .hc-book in globals.css).
             calm && "hc-book",
-            // The 20% shorter card: the book is drawn at 0.8 so it stays whole, anchored at its top right corner.
-            merged && "origin-top-right scale-[0.8]",
+            // The 20% shorter card: the book is drawn at 0.68 so it stays whole, anchored at its top right corner.
+            merged && "origin-top-right scale-[0.68]",
           )}
         >
           <i
