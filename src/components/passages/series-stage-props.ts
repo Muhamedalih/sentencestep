@@ -13,6 +13,15 @@ export interface SeriesAsk {
   reminderSubject: string;
 }
 
+/** One guess with both its ends, for the admin's quick try. */
+export interface SeriesPreview {
+  ask: SeriesAsk;
+  /** The season as the answering episode shows it. */
+  place: SeasonPlace;
+  line: string;
+  lineSupport: string | null;
+}
+
 export interface PassageSeriesStages {
   /** The guess asked at the end of this episode. */
   after: SeriesAsk | null;
