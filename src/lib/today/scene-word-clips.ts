@@ -25,10 +25,10 @@ import type { Scene } from "@/lib/today/scene";
  */
 const MAIN_VOICE = "edge-tts-en-us-andrew";
 const SECOND_VOICE = "edge-tts-en-us-aria";
-/** Voice Studio "The Teacher" and "Christopher". Only ever looked up: the site cannot synthesise them. */
+/** Voice Studio "The Teacher" and "The Champion". Only ever looked up: the site cannot synthesise them. */
 const SERIES_VOICES = {
   female: ["voicestudio-aee032c3", SECOND_VOICE],
-  male: ["voicestudio-a1a05fb7", MAIN_VOICE],
+  male: ["voicestudio-ae41ea30", MAIN_VOICE],
 } as const;
 
 /** Every distinct word the learner types in the scene, with the spellings its clip may be filed under. */
