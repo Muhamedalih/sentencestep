@@ -5,6 +5,7 @@ import { CardSkeleton } from "@/components/app/home-engagement";
 import { HomeEngagementSection } from "@/components/app/home-engagement-section";
 import type { LessonStatsMap } from "@/components/app/home-hero";
 import { StarterPathProgress } from "@/components/app/starter-path-progress";
+import { PremiumStrip } from "@/components/home-today/premium-strip";
 import type { HomeEngagementStream } from "@/lib/features/home-engagement";
 import type { PassagesHomeData } from "@/lib/passages/home-card";
 import type { VideoCardData } from "@/lib/video-dictation/content";
@@ -47,6 +48,7 @@ export function HomeCardsPage({
   heading,
   banners,
   footer,
+  premiumStrip = false,
   units,
   storiesUnits,
   isPremiumUser,
@@ -67,6 +69,8 @@ export function HomeCardsPage({
   heading: string;
   banners?: ReactNode;
   footer?: ReactNode;
+  /** The Premium strip (permission premiumStrip) at the foot of the page, before the admin switch. */
+  premiumStrip?: boolean;
   units: LessonUnit[];
   storiesUnits: LessonUnit[];
   isPremiumUser: boolean;
@@ -166,6 +170,7 @@ export function HomeCardsPage({
             />
           </div>
         )}
+        {premiumStrip && <PremiumStrip className="mt-4" />}
         {footer}
       </div>
     );
@@ -215,6 +220,7 @@ export function HomeCardsPage({
         )}
       </div>
       <WordsSection reviewCount={reviewCount} words={dueWords} hints={wordHints} bank={wordsBank} />
+      {premiumStrip && <PremiumStrip className="mt-4" />}
       {footer}
     </div>
   );
