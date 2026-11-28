@@ -145,6 +145,12 @@ export default async function AdminConsoleLayout({ children }: { children: React
                     Give Premium
                   </Link>
                   <Link
+                    href="/admin/premium-strip"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Premium strip
+                  </Link>
+                  <Link
                     href="/admin/features"
                     className="text-muted-foreground hover:text-foreground transition-colors"
                   >

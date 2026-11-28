@@ -815,6 +815,7 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "One wide dark strip at the foot of the new Home page, under the boxes: a small yellow PREMIUM badge, one line (“Unlock all stories and passages with Premium”) and a yellow Upgrade button that opens the plans page. For a learner without a subscription only.",
     notes: [
       "Only adds the strip: nothing else on Home changes, and no extra read or write is made for it.",
+      "Presses on its button, and what each member did in the week after, are listed on Admin > Premium strip.",
       "An admin’s own account counts as a free learner unless it holds a subscription, so an admin sees it.",
       "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
     ],

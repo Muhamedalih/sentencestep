@@ -3,6 +3,7 @@
 import Link from "next/link";
 
 import { useLocale } from "@/components/providers/locale-provider";
+import { STRIP_UPGRADE_HREF } from "@/lib/premium-strip/source";
 import { premiumStripStrings } from "@/lib/premium-strip/strings";
 
 /**
@@ -28,7 +29,7 @@ export function PremiumStrip({ className }: { className?: string }) {
         </p>
       </div>
       <Link
-        href="/upgrade"
+        href={STRIP_UPGRADE_HREF}
         className="shrink-0 rounded-lg bg-[#f2c744] px-7 py-3.5 text-center text-[17px] leading-none font-bold text-[#2b2410] transition-colors outline-none hover:bg-[#f7d35f] focus-visible:ring-2 focus-visible:ring-[#f2c744] focus-visible:ring-offset-2 focus-visible:ring-offset-[#1c1a15]"
       >
         {copy.cta}
