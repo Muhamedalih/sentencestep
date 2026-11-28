@@ -84,8 +84,10 @@ export type AnalyticsEvent =
       properties:
         | GateSource
         | Record<string, never>
+        /** Opened with the button of Home's Premium strip (see premium-strip/source); Admin > Premium strip counts these. */
+        | { src?: "home_strip" }
         /** Opened as the pop-up of the "upgradeModal" permission instead of the page: `surface` says so, next to the lock words when the press came from a lock card. */
-        | ({ surface: "modal" } & Partial<GateSource>);
+        | ({ surface: "modal"; src?: "home_strip" } & Partial<GateSource>);
     }
   /** A hybrid-offer moment (src/lib/hybrid/moments.ts) was shown, tapped or dismissed: B after the taste's passage, D when the day's tasks are done, star after a story with 90% or more. Two dismissals within a week pause them, so the three are read together. */
   | { name: "OFFER_SHOWN"; category: "PREMIUM"; properties: { moment: HybridMoment } }

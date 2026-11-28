@@ -25,6 +25,7 @@ import { formatCount } from "@/lib/i18n/format-count";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { decidePayStrip } from "@/lib/in-app-strip/strip";
 import type { StripDecision } from "@/lib/in-app-strip/strip";
+import { parseStripSource } from "@/lib/premium-strip/source";
 import type { GateProgress } from "@/lib/progress/honest-numbers";
 import { getCombinedRatingsProof } from "@/lib/stats/public-ratings";
 import { getCurrentUser } from "@/lib/supabase/auth";
@@ -135,7 +136,11 @@ export async function loadUpgradeModal(
 
   // Counted like a view of the plans page, with `surface` telling the pop-up apart from the page;
   // written after the answer has been sent, so it never makes the pop-up wait.
-  const properties = { surface: "modal" as const, ...partialSource(params) };
+  const properties = {
+    surface: "modal" as const,
+    ...partialSource(params),
+    ...parseStripSource(params.get("src") ?? undefined),
+  };
   after(() => track({ name: "UPGRADE_VIEWED", category: "PREMIUM", properties }, user?.id ?? null));
 
   return {

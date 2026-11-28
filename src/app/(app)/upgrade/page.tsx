@@ -34,6 +34,7 @@ import {
   showUsdOnWaylPage,
 } from "@/lib/billing/provider-registry";
 import { getEffectiveFeatures, isFeaturePublished } from "@/lib/features/queries";
+import { parseStripSource } from "@/lib/premium-strip/source";
 import { getDictionary, fallbackDictionary } from "@/lib/i18n/dictionary";
 import { formatCount } from "@/lib/i18n/format-count";
 import { formatLongDate } from "@/lib/i18n/format-date";
@@ -69,6 +70,8 @@ export default async function UpgradePage({
     from?: string | string[];
     at?: string | string[];
     v?: string | string[];
+    /** Which button outside the lock cards opened the page (see premium-strip/source). */
+    src?: string | string[];
     /** Looking at the "open in browser" strip on purpose (see decidePayStrip). */
     in_app_strip?: string | string[];
   }>;
@@ -137,7 +140,11 @@ export default async function UpgradePage({
   // Opened with a lock card's button (see PremiumGate)? Then the event says which lock, which button
   // and which card, so the presses can be counted before and after a change to the card.
   await track(
-    { name: "UPGRADE_VIEWED", category: "PREMIUM", properties: parseGateSource(params) ?? {} },
+    {
+      name: "UPGRADE_VIEWED",
+      category: "PREMIUM",
+      properties: { ...(parseGateSource(params) ?? {}), ...parseStripSource(params.src) },
+    },
     user?.id ?? null,
   );
 
