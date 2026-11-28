@@ -25,7 +25,12 @@ export default async function TodayScenePage() {
 
   return (
     <div className="lesson-shell bg-background text-foreground min-h-svh w-full">
-      <SceneLines key={today.passage.id} scene={today.scene} title={today.passage.title} />
+      <SceneLines
+        key={today.passage.id}
+        passageId={today.passage.id}
+        scene={today.scene}
+        title={today.passage.title}
+      />
     </div>
   );
 }

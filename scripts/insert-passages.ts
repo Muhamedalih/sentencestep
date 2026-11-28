@@ -28,6 +28,7 @@
  *   npx tsx --env-file=.env.local scripts/insert-passages.ts --only=my-cat-is-my-boss
  */
 import { createClient } from "@supabase/supabase-js";
+import { SERIES_PASSAGE_IDS } from "../src/lib/passages/series";
 
 import { PASSAGE_SEEDS } from "../src/data/passages";
 import { passageIdFor, wordGroupIdFor } from "../src/lib/passages/ids";
@@ -250,7 +251,7 @@ async function main() {
           // A draft: hidden from learners until the Passages switch publishes it.
           supabase
             .from("word_groups")
-            .insert(wordGroupRowFor(seed, nextGroupOrder, true))
+            .insert(wordGroupRowFor(seed, nextGroupOrder, !SERIES_PASSAGE_IDS.includes(seed.slug)))
             .select("id"),
         );
       }
@@ -290,8 +291,9 @@ async function main() {
             .from("passages")
             .insert({
               id: passageId,
-              status: "published",
-              is_free: true,
+              // A series episode starts as a Premium draft: only an admin sees it until published.
+              status: SERIES_PASSAGE_IDS.includes(passageId) ? "draft" : "published",
+              is_free: !SERIES_PASSAGE_IDS.includes(passageId),
               order_index: newPlace,
               ...passageFields,
             })

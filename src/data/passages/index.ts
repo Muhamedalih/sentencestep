@@ -23,6 +23,7 @@ import { B2_PASSAGES_PART_3 } from "@/data/passages/b2-part-3";
 import { B2_PASSAGES_PART_4 } from "@/data/passages/b2-part-4";
 import { B2_PASSAGES_PART_5 } from "@/data/passages/b2-part-5";
 import { B2_PASSAGES_PART_6 } from "@/data/passages/b2-part-6";
+import { RED_BOOK_EPISODES } from "@/data/passages/series-red-book";
 import type { PassageSeed } from "@/data/passages/types";
 
 /** Every authored passage, in list order. */
@@ -33,6 +34,7 @@ export const PASSAGE_SEEDS: PassageSeed[] = [
   ...A1_PASSAGES_PART_4,
   ...A1_PASSAGES_PART_5,
   ...A1_PASSAGES_PART_6,
+  ...RED_BOOK_EPISODES,
   ...A2_PASSAGES_PART_1,
   ...A2_PASSAGES_PART_2,
   ...A2_PASSAGES_PART_3,

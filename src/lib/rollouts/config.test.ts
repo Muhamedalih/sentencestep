@@ -236,6 +236,7 @@ test("evaluateRollouts: default config opens everything for admins only", () => 
     premiumStrip: false,
     dailyScene: false,
     todayTidy: false,
+    passageSeries: false,
   });
 });
 

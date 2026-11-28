@@ -9,6 +9,7 @@ import { PassagesBanner } from "@/components/passages/passages-banner";
 import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import { passageStatus } from "@/lib/passages/progress";
+import { episodeOf, seriesLabels } from "@/lib/passages/series";
 import type { PassageLevel, PassageProgress, PassageSummary } from "@/lib/passages/types";
 import { cn } from "@/lib/utils";
 
@@ -19,6 +20,58 @@ const LEVEL_KEYS: Record<PassageLevel, "a1" | "a2" | "b1" | "b2"> = {
   B2: "b2",
 };
 
+/** The series (permission passageSeries): its name, how far the season is, and its written episodes. */
+function SeriesShelf({
+  episodes,
+  progressById,
+}: {
+  episodes: PassageSummary[];
+  progressById: Map<string, PassageProgress>;
+}) {
+  const { locale } = useLocale();
+  const labels = seriesLabels(locale);
+  const first = episodeOf(episodes[0]!.id, locale);
+  if (!first) return null;
+  const done = episodes.filter(
+    (passage) => passageStatus(progressById.get(passage.id), passage.sectionCount) === "done",
+  ).length;
+  return (
+    <section className="mb-12">
+      <div className="border-border mb-6 flex items-center justify-between gap-4 border-b pb-3">
+        <h2 className="flex items-center gap-3 text-lg font-semibold">
+          <span className="border-primary/25 bg-primary/10 text-primary rounded-full border px-3 py-0.5 text-xs">
+            {labels.series}
+          </span>
+          <bdi>{first.seriesTitle}</bdi>
+        </h2>
+        <span className="text-muted-foreground text-sm tabular-nums">
+          {done} / {first.total}
+        </span>
+      </div>
+      <ul className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+        {episodes.map((passage) => {
+          const episode = episodeOf(passage.id, locale);
+          return (
+            <li key={passage.id}>
+              {episode && (
+                <p className="text-primary mb-2 text-sm font-semibold">
+                  <bdi>{labels.episode(episode.number, episode.total)}</bdi>
+                </p>
+              )}
+              <PassageCard
+                passage={passage}
+                status={passageStatus(progressById.get(passage.id), passage.sectionCount)}
+                isUpNext={false}
+                locked={false}
+              />
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
 /**
  * The Passages list: a heading (a "Listening training" tag, the title, one line on how it
  * works), the posters grouped by level, and — for admins
@@ -27,12 +80,15 @@ const LEVEL_KEYS: Record<PassageLevel, "a1" | "a2" | "b1" | "b2"> = {
  * screen, so the ten passages of a level are two tidy rows.
  */
 export function PassagesLibrary({
+  series = [],
   passages,
   progress,
   upNextId,
   lockedIds,
   adminState,
 }: {
+  /** Series episodes (see series.ts), on their own shelf above the levels. */
+  series?: PassageSummary[];
   passages: PassageSummary[];
   progress: PassageProgress[];
   /** The passage to point at ("Up next"), or null once everything is done. */
@@ -85,6 +141,8 @@ export function PassagesLibrary({
           </p>
         </header>
       )}
+
+      {series.length > 0 && <SeriesShelf episodes={series} progressById={progressById} />}
 
       {passages.length === 0 ? (
         <div className="border-border rounded-2xl border border-dashed px-6 py-14 text-center">
