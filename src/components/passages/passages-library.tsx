@@ -6,6 +6,8 @@ import { LevelBadge } from "@/components/passages/level-badge";
 import { PassageCard } from "@/components/passages/passage-card";
 import { PassagesAdminBar } from "@/components/passages/passages-admin-bar";
 import { PassagesBanner } from "@/components/passages/passages-banner";
+import { SeriesAdminPreview } from "@/components/passages/series-admin-preview";
+import type { SeriesPreview } from "@/components/passages/series-stage-props";
 import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import { passageStatus } from "@/lib/passages/progress";
@@ -24,9 +26,11 @@ const LEVEL_KEYS: Record<PassageLevel, "a1" | "a2" | "b1" | "b2"> = {
 function SeriesShelf({
   episodes,
   progressById,
+  preview,
 }: {
   episodes: PassageSummary[];
   progressById: Map<string, PassageProgress>;
+  preview: { userId: string; previews: SeriesPreview[] } | null;
 }) {
   const { locale } = useLocale();
   const labels = seriesLabels(locale);
@@ -48,6 +52,7 @@ function SeriesShelf({
           {done} / {first.total}
         </span>
       </div>
+      {preview && <SeriesAdminPreview {...preview} />}
       <ul className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         {episodes.map((passage) => {
           const episode = episodeOf(passage.id, locale);
@@ -81,6 +86,7 @@ function SeriesShelf({
  */
 export function PassagesLibrary({
   series = [],
+  seriesPreview = null,
   passages,
   progress,
   upNextId,
@@ -89,6 +95,8 @@ export function PassagesLibrary({
 }: {
   /** Series episodes (see series.ts), on their own shelf above the levels. */
   series?: PassageSummary[];
+  /** An admin's quick try of the series stages; null for everyone else. */
+  seriesPreview?: { userId: string; previews: SeriesPreview[] } | null;
   passages: PassageSummary[];
   progress: PassageProgress[];
   /** The passage to point at ("Up next"), or null once everything is done. */
@@ -142,7 +150,9 @@ export function PassagesLibrary({
         </header>
       )}
 
-      {series.length > 0 && <SeriesShelf episodes={series} progressById={progressById} />}
+      {series.length > 0 && (
+        <SeriesShelf preview={seriesPreview} episodes={series} progressById={progressById} />
+      )}
 
       {passages.length === 0 ? (
         <div className="border-border rounded-2xl border border-dashed px-6 py-14 text-center">

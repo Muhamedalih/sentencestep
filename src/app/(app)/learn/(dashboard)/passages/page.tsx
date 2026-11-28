@@ -13,6 +13,7 @@ import { getLocale } from "@/lib/i18n/get-locale";
 import { canOpenPassage, openablePassages } from "@/lib/passages/access";
 import { localizeSummary } from "@/lib/passages/localize";
 import { recommendedPassageId } from "@/lib/passages/progress";
+import { seriesPreviews } from "@/lib/passages/series-guess-load";
 import {
   fetchGermanPassageSummaries,
   fetchPassageProgress,
@@ -79,6 +80,12 @@ export default async function PassagesPage() {
   return (
     <PassagesLibrary
       series={series}
+      // The admin's quick try of «What happens next?»: never for a learner, nor an admin looking as one.
+      seriesPreview={
+        user && isAdminUser && !learnerView && features.rollouts.seriesGuess && series.length > 0
+          ? { userId: user.id, previews: seriesPreviews(pageLocale) }
+          : null
+      }
       passages={passages}
       progress={progress}
       upNextId={recommendedPassageId(
