@@ -2,13 +2,22 @@
  * Today's scene (permission dailyScene): the day is built around ONE passage. The learner listens to
  * it, then completes it from the ear (for each of its words, the sentence that holds the word), then
  * works with those same words. This is the pure part: which words, which lines, which part of each
- * line is typed, and how the script screen is laid out. Nothing here reads or writes anything.
+ * line is typed, which words are written for the learner, and which lines the stage shows. Nothing
+ * here reads or writes anything.
  */
 
+import {
+  applyDictationInput,
+  dictationView,
+  isDictationComplete,
+  rawDictationTokens,
+  type DictationView,
+} from "@/lib/features/dictation";
 import { normalizeMistakeWord } from "@/lib/mistakes/normalize";
 import { containsWholeWord, splitAroundWord } from "@/lib/passages/text";
 import type { Passage, PassageProgress } from "@/lib/passages/types";
 import { isImportantWord } from "@/lib/today/important-words";
+import { isAutoSkipChar } from "@/lib/typing";
 import type { SessionReviewWord } from "@/lib/today/session-words";
 import { definitionOf, meaningChoices, termOf } from "@/lib/word-ladder/options";
 import type { LadderWord } from "@/lib/word-ladder/types";
@@ -388,59 +397,147 @@ export function sceneReviewWords(
   });
 }
 
-/** How many finished lines stay on screen above the one being typed. */
-const SCRIPT_KEEP_DONE = 3;
+/** How many lines above and below the current one the stage keeps. */
+const STAGE_ABOVE = 3;
+const STAGE_BELOW = 2;
 
-export type ScriptRow =
-  | { kind: "done"; step: SceneStep }
-  /** Lines left out: a wide screen shows the one before the next line, a phone shows "…". */
-  | { kind: "gap"; context: SceneLine | null }
-  | { kind: "context"; line: SceneLine }
-  | { kind: "current"; step: SceneStep }
-  /** The rest of the scene, not shown yet. */
-  | { kind: "locked" };
+export interface StageRow {
+  line: SceneLine;
+  /** Lines from the one being typed: 0 itself, below zero above it, above zero below it. */
+  distance: number;
+  /** `locked`: the line is still to be typed, or spells a word still to be typed, so it is not shown. */
+  role: "current" | "done" | "context" | "locked";
+  /** The typed line's step, for `current` and `done`. */
+  step?: SceneStep;
+}
 
 /**
- * The script as the screen draws it while line number `current` (0-based; the number of steps once all
- * are done) is being typed: the last finished lines, the line itself, one line of what follows, and a
- * locked mark for the rest. A line that is still to be typed is NEVER shown, not even as context, nor
- * is a context line that spells a word still to be typed, so the screen cannot give an answer away.
+ * The lines the stage draws while step `current` is being typed: from a few above (and always the
+ * last typed one, so it can slide up) to a couple below. A line still to be typed is NEVER shown, nor
+ * is a line that spells a word still to be typed, so the stage cannot give an answer away.
  */
-export function sceneScript(scene: Scene, current: number): ScriptRow[] {
-  const typedLines = new Set(scene.steps.map((step) => step.line.index));
-  const waiting = scene.steps.slice(current).flatMap((step) => step.words);
-  const gives = (line: SceneLine) => waiting.some((word) => containsWholeWord(line.en, word.word));
-  const done = scene.steps.slice(0, current);
-  const shown = done.slice(-SCRIPT_KEEP_DONE);
+export function stageRows(scene: Scene, current: number): StageRow[] {
   const step = scene.steps[current];
-  const rows: ScriptRow[] = [];
-  const contextBefore = (index: number) => {
-    const line = scene.lines[index - 1];
-    return line && !typedLines.has(line.index) && !gives(line) ? line : null;
-  };
+  if (!step) return [];
+  const at = step.line.index;
+  const previous = scene.steps[current - 1]?.line.index ?? at;
+  const from = Math.max(0, Math.min(at - STAGE_ABOVE, previous));
+  const to = Math.min(scene.lines.length - 1, at + STAGE_BELOW);
+  const stepOf = new Map(scene.steps.map((entry, index) => [entry.line.index, index]));
+  const waiting = scene.steps.slice(current).flatMap((entry) => entry.words);
+  const gives = (line: SceneLine) => waiting.some((word) => containsWholeWord(line.en, word.word));
 
-  let last = -1;
-  const place = (index: number) => {
-    if (index - last > 1) rows.push({ kind: "gap", context: contextBefore(index) });
-    last = index;
-  };
-  for (const item of shown) {
-    place(item.line.index);
-    rows.push({ kind: "done", step: item });
-  }
-  if (step) {
-    place(step.line.index);
-    rows.push({ kind: "current", step });
-  }
-  if (last < 0) return rows;
+  return scene.lines.slice(from, to + 1).map((line) => {
+    const distance = line.index - at;
+    const index = stepOf.get(line.index);
+    if (index === current) return { line, distance, role: "current", step };
+    if (index !== undefined) {
+      return index < current
+        ? { line, distance, role: "done", step: scene.steps[index]! }
+        : { line, distance, role: "locked" };
+    }
+    return { line, distance, role: gives(line) ? "locked" : "context" };
+  });
+}
 
-  const next = scene.lines[last + 1];
-  if (!next) return rows;
-  if (typedLines.has(next.index) || gives(next)) {
-    rows.push({ kind: "locked" });
-    return rows;
+// --- What the learner does not have to type -------------------------------
+
+/** Capitalized words that are still worth typing: they are English words a learner must spell. */
+const TYPED_ANYWAY = new Set(
+  (
+    "I Monday Tuesday Wednesday Thursday Friday Saturday Sunday January February March April May June " +
+    "July August September October November December English Arabic Spanish French German American " +
+    "British Christmas Mom Dad Grandma Grandpa Mr Mrs Ms Dr Coach Aunt Uncle God OK"
+  ).split(" "),
+);
+
+/** A token without the punctuation around it and without a possessive ending. */
+export const bareWord = (token: string) =>
+  token.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, "").replace(/['’]s$/, "");
+
+/**
+ * The names of people and places of a passage: a speaker's name, or a word written with a capital in
+ * the middle of a sentence, that never appears in the passage in lowercase and is not a day, a month,
+ * a language or a family word. They are written for the learner on the stage: spelling "Millbrook" is
+ * not what the day is for.
+ */
+export function passageNames(lines: readonly Pick<SceneLine, "en" | "speaker">[]): Set<string> {
+  const lower = new Set<string>();
+  const candidates = new Set<string>();
+  for (const line of lines) {
+    for (const word of line.en.match(/(?<![\p{L}'’])\p{Ll}[\p{L}'’]*/gu) ?? []) {
+      lower.add(word.replace(/['’]s$/, ""));
+    }
+    for (const part of (line.speaker ?? "").split(/\s+/)) {
+      const word = bareWord(part);
+      if (/^\p{Lu}\p{Ll}+$/u.test(word)) candidates.add(word);
+    }
+    // A capital also opens a quotation, or follows a colon or a dash: such a word is not a sign.
+    for (const [from, to] of sentenceSpans(line.en)) {
+      for (const part of line.en.slice(from, to).split(/[:;!?…—–"“”()]+/)) {
+        const tokens = part.split(/[\s-]+/).filter((token) => /[\p{L}\p{N}]/u.test(token));
+        for (const token of tokens.slice(1)) {
+          const word = bareWord(token);
+          if (/^\p{Lu}\p{Ll}+$/u.test(word)) candidates.add(word);
+        }
+      }
+    }
   }
-  rows.push({ kind: "context", line: next });
-  if (scene.lines[next.index + 1]) rows.push({ kind: "locked" });
-  return rows;
+  return new Set(
+    [...candidates].filter((word) => !TYPED_ANYWAY.has(word) && !lower.has(word.toLowerCase())),
+  );
+}
+
+/** Which graded words of a typed part (see dictationView) are names the learner does not type. */
+export function nameWordIndexes(typed: string, names: ReadonlySet<string>): Set<number> {
+  const indexes = rawDictationTokens(typed).flatMap((token, index) =>
+    names.has(bareWord(token)) ? [index] : [],
+  );
+  return new Set(indexes);
+}
+
+/** Which graded words of a typed part are the day's own words. */
+export function targetWordIndexes(typed: string, words: readonly SceneWord[]): Set<number> {
+  const wanted = new Set(words.map((word) => normalizeMistakeWord(word.word)));
+  const indexes = rawDictationTokens(typed).flatMap((token, index) =>
+    wanted.has(bareWord(token).toLowerCase()) ? [index] : [],
+  );
+  return new Set(indexes);
+}
+
+/** The line as drawn: a given word stands written from the start, before the learner reaches it. */
+export function showGiven(view: DictationView, given: ReadonlySet<number>): DictationView {
+  if (given.size === 0) return view;
+  return {
+    ...view,
+    tokens: view.tokens.map((token) =>
+      token.kind === "space"
+        ? token
+        : {
+            ...token,
+            cells: token.cells.map((cell) =>
+              cell.kind === "slot" && given.has(cell.word)
+                ? { ...cell, typed: cell.typed ?? cell.char }
+                : cell,
+            ),
+          },
+    ),
+  };
+}
+
+/** The answer with every given word that comes next written in (a word the learner began is left to them). */
+export function fillGiven(typed: string, value: string, given: ReadonlySet<number>): string {
+  const tokens = rawDictationTokens(typed);
+  let filled = value;
+  while (!isDictationComplete(typed, filled)) {
+    const cursor = dictationView(typed, filled).cursor;
+    if (!cursor || cursor.letter !== 0 || !given.has(cursor.word)) break;
+    const letters = Array.from(tokens[cursor.word] ?? "")
+      .filter((char) => !isAutoSkipChar(char))
+      .join("");
+    const next = applyDictationInput(typed, filled, filled + letters);
+    if (next === filled) break;
+    filled = next;
+  }
+  return filled;
 }

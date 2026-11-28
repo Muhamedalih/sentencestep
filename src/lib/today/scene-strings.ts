@@ -28,17 +28,14 @@ export interface SceneStrings {
   reward: (xp: number) => string;
   /** The small line over the passage title on the lines screen. */
   position: (n: number, total: number) => string;
-  /** The chip: lines in a row written with no help. */
-  noHelp: (n: number) => string;
+  /** The two named buttons of the lines screen's corner toolbar. */
+  showSentence: string;
   replay: string;
-  showWord: string;
-  playLine: string;
   /** The accessible name of the hidden answer field. */
   typeLine: string;
   /** A wrong letter, said to a screen reader. */
   wrongLetter: string;
   sideTitle: string;
-  sideHint: string;
   exit: string;
   /** The end of the lines. */
   doneTitle: string;
@@ -69,15 +66,11 @@ const EN: SceneStrings = {
   about: (n) => `about ${n} min`,
   reward: (xp) => `Complete the scene: +${xp} XP`,
   position: (n, total) => `Complete the scene · ${n} of ${total}`,
-  noHelp: (n) => `No help: ${n}`,
-  replay: "Replay",
-  showWord: "Show the word",
-  playLine: "Hear the line",
+  showSentence: "Show sentence",
+  replay: "Replay audio",
   typeLine: "Type what you hear",
   wrongLetter: "Wrong letter",
   sideTitle: "Scene words",
-  sideHint:
-    "Every line you write goes back into place and its word lights up here. They are the words of the next step.",
   exit: "Close",
   doneTitle: "Scene complete",
   doneBody: "You wrote its lines by ear. Now its words.",
@@ -106,14 +99,11 @@ const AR: SceneStrings = {
     n === 1 ? "نحو دقيقة" : n === 2 ? "نحو دقيقتين" : n <= 10 ? `نحو ${n} دقائق` : `نحو ${n} دقيقة`,
   reward: (xp) => `أكمل المشهد: +${xp} XP`,
   position: (n, total) => `أكمل المشهد · ${n} من ${total}`,
-  noHelp: (n) => `بلا مساعدة: ${n}`,
-  replay: "أعد الصوت",
-  showWord: "أظهر الكلمة",
-  playLine: "اسمع السطر",
+  showSentence: "إظهار الجملة",
+  replay: "إعادة الصوت",
   typeLine: "اكتب ما تسمعه",
   wrongLetter: "حرف خاطئ",
   sideTitle: "كلمات المشهد",
-  sideHint: "كل سطر تكتبه يعود إلى مكانه، وكلمته تضيء هنا. هي نفسها كلمات المحطة التالية.",
   exit: "إغلاق",
   doneTitle: "أكملت المشهد",
   doneBody: "كتبت أسطره من أذنك. الآن كلماته.",
@@ -141,15 +131,11 @@ const ES: SceneStrings = {
   about: (n) => `unos ${n} min`,
   reward: (xp) => `Completa la escena: +${xp} XP`,
   position: (n, total) => `Completa la escena · ${n} de ${total}`,
-  noHelp: (n) => `Sin ayuda: ${n}`,
+  showSentence: "Mostrar la frase",
   replay: "Repetir audio",
-  showWord: "Mostrar la palabra",
-  playLine: "Escuchar la línea",
   typeLine: "Escribe lo que oyes",
   wrongLetter: "Letra incorrecta",
   sideTitle: "Palabras de la escena",
-  sideHint:
-    "Cada línea que escribes vuelve a su sitio y su palabra se ilumina aquí. Son las palabras del siguiente paso.",
   exit: "Cerrar",
   doneTitle: "Escena completa",
   doneBody: "Escribiste sus líneas de oído. Ahora sus palabras.",
@@ -177,15 +163,11 @@ const TR: SceneStrings = {
   about: (n) => `yaklaşık ${n} dk`,
   reward: (xp) => `Sahneyi tamamla: +${xp} XP`,
   position: (n, total) => `Sahneyi tamamla · ${n}/${total}`,
-  noHelp: (n) => `Yardımsız: ${n}`,
+  showSentence: "Cümleyi göster",
   replay: "Sesi tekrarla",
-  showWord: "Kelimeyi göster",
-  playLine: "Satırı dinle",
   typeLine: "Duyduğunu yaz",
   wrongLetter: "Yanlış harf",
   sideTitle: "Sahne kelimeleri",
-  sideHint:
-    "Yazdığın her satır yerine döner ve kelimesi burada parlar. Sonraki adımın kelimeleri bunlar.",
   exit: "Kapat",
   doneTitle: "Sahne tamamlandı",
   doneBody: "Satırlarını kulaktan yazdın. Şimdi kelimeleri.",
