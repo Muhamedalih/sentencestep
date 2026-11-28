@@ -1,3 +1,4 @@
+import { SERIES_PASSAGE_IDS } from "@/lib/passages/series";
 import {
   pickWordClip,
   sentenceWordEntries,
@@ -17,10 +18,14 @@ import type { Scene } from "@/lib/today/scene";
  * The single-word clips of the day's scene: a wrong letter is answered by the word alone, never by
  * the whole line and never by the browser's voice. One neural voice says every word (Andrew, the one
  * with the most words already recorded); Aria's recording stands in when only she has the word. A
- * German passage's words come from the Voice Studio German voice. Server only.
+ * German passage's words come from the Voice Studio German voice. A series episode's words come from
+ * a Voice Studio voice made offline (scripts/voice-studio), Andrew and Aria standing in for a word it
+ * has not recorded. Server only.
  */
 const MAIN_VOICE = "edge-tts-en-us-andrew";
 const SECOND_VOICE = "edge-tts-en-us-aria";
+/** Voice Studio "The Teacher". Only ever looked up: the site cannot synthesise it. */
+const SERIES_VOICE = "voicestudio-aee032c3";
 
 /** Every distinct word the learner types in the scene, with the spellings its clip may be filed under. */
 export function sceneWordEntries(scene: Scene): { key: string; candidates: string[] }[] {
@@ -39,7 +44,10 @@ async function sceneVoices(passageId: string): Promise<WordVoice[]> {
     return german ? [german, ...(german.fallbackIds ?? []).map((id) => ({ ...german, id }))] : [];
   }
   const voices = await Promise.all(
-    [MAIN_VOICE, SECOND_VOICE].map(async (id) => {
+    (SERIES_PASSAGE_IDS.includes(passageId)
+      ? [SERIES_VOICE, MAIN_VOICE, SECOND_VOICE]
+      : [MAIN_VOICE, SECOND_VOICE]
+    ).map(async (id) => {
       const voice = await lookupVoice(id);
       return voice ? { id, providerVoiceId: voice.providerVoiceId } : null;
     }),
@@ -78,6 +86,6 @@ export async function makeSceneWordClip(
   key: string,
 ): Promise<string | null> {
   if (!sceneWordEntries(scene).some((entry) => entry.key === key)) return null;
-  const voice = (await sceneVoices(passageId))[0];
+  const voice = (await sceneVoices(passageId)).find(({ id }) => id !== SERIES_VOICE);
   return voice ? generateIsolatedWordAudio(key, voice.id, voice.providerVoiceId) : null;
 }
