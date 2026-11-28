@@ -10,7 +10,6 @@ import { safeLessonPath } from "@/lib/billing/after-payment";
 import { EGYPT_COUNTRY } from "@/lib/billing/egypt-wallet/constants";
 import { effectiveRate } from "@/lib/billing/egypt-wallet/rate";
 import { createEgyptWalletStore } from "@/lib/billing/egypt-wallet/store";
-import { resolvePricingCountry } from "@/lib/billing/geo-pricing";
 import { GATE_KINDS, GATE_PLACES, GATE_VARIANTS } from "@/lib/billing/gate-source";
 import type { GateSource } from "@/lib/billing/gate-source";
 import { getGateProgress } from "@/lib/billing/gate-progress";
@@ -19,6 +18,7 @@ import { getLaunchOffer } from "@/lib/billing/launch-offer-queries";
 import { buildPlanViews } from "@/lib/billing/plan-views";
 import type { PlanView } from "@/lib/billing/plan-views";
 import { tierForCountry } from "@/lib/billing/pricing";
+import { resolveViewerCountry } from "@/lib/billing/viewer-country";
 import { isBinancePayConfigured, isEgyptWalletConfigured } from "@/lib/billing/provider-registry";
 import { getEffectiveFeatures, isFeaturePublished } from "@/lib/features/queries";
 import { formatCount } from "@/lib/i18n/format-count";
@@ -94,7 +94,7 @@ export async function loadUpgradeModal(
   nextCandidate: string | null,
 ): Promise<UpgradeModalData | null> {
   const requestHeaders = await headers();
-  const { country } = resolvePricingCountry(requestHeaders);
+  const { country } = await resolveViewerCountry(requestHeaders);
   // A visitor in Egypt is shown Vodafone Cash, so its rate is read together with everything else;
   // anyone else only reads it when an admin previews that tile from another country (below).
   const earlyRate = country === EGYPT_COUNTRY && isEgyptWalletConfigured() ? readEgpRate() : null;

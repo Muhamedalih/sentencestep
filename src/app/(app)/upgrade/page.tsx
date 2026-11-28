@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckoutCard } from "@/components/billing/checkout-card";
 import { CheckoutCardV2 } from "@/components/billing/checkout-card-v2";
+import { EgyptViewChip } from "@/components/billing/egypt-view-chip";
 import { LearnerReviews } from "@/components/marketing/learner-reviews";
 import { ContentStatsRow } from "@/components/billing/content-stats-row";
 import { PremiumFaq } from "@/components/billing/premium-faq";
@@ -20,11 +21,11 @@ import { firstParam, safeLessonPath } from "@/lib/billing/after-payment";
 import { premiumBenefits } from "@/lib/billing/benefits";
 import { devSetPlan } from "@/lib/billing/dev-actions";
 import { parseGateSource } from "@/lib/billing/gate-source";
-import { resolvePricingCountry } from "@/lib/billing/geo-pricing";
 import { isOfferActive, offerBonusDaysByPlan, sharedBonusDays } from "@/lib/billing/launch-offer";
 import { getLaunchOffer } from "@/lib/billing/launch-offer-queries";
 import { buildPlanViews, cheapestPerMonth } from "@/lib/billing/plan-views";
 import { tierForCountry } from "@/lib/billing/pricing";
+import { resolveViewerCountry } from "@/lib/billing/viewer-country";
 import { EGYPT_COUNTRY } from "@/lib/billing/egypt-wallet/constants";
 import { effectiveRate } from "@/lib/billing/egypt-wallet/rate";
 import { createEgyptWalletStore } from "@/lib/billing/egypt-wallet/store";
@@ -102,7 +103,7 @@ export default async function UpgradePage({
   // resolved here from the hosting platform's own geolocation — the same resolution the
   // checkout action repeats server-side — never from anything the client sends.
   const requestHeaders = await headers();
-  const { country } = resolvePricingCountry(requestHeaders);
+  const { country, view: egyptView } = await resolveViewerCountry(requestHeaders);
   // Permission inAppPayStrip: inside Facebook's or Instagram's browser a signed-in learner paying by
   // card gets a strip above the Pay button that gets them into their own browser. Only a signed-in
   // learner has a Pay button, and the card only draws it while a card is the chosen way to pay (so a
@@ -332,6 +333,8 @@ export default async function UpgradePage({
 
         {!freeNow && <PremiumFaq t={t} />}
       </div>
+
+      {egyptView && <EgyptViewChip view={egyptView} />}
 
       {showDevTools && (
         <Card className="border-dashed">

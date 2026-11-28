@@ -4,7 +4,11 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 
 import { parseNetlifyGeoCountry, resolvePricingCountry } from "./geo-pricing";
-import { upgradeModalForCountry } from "./upgrade-modal-audience";
+import {
+  parseEgyptView,
+  upgradeModalForCountry,
+  upgradeModalForViewer,
+} from "./upgrade-modal-audience";
 
 function geoHeader(value: unknown): string {
   return Buffer.from(JSON.stringify(value)).toString("base64");
@@ -231,4 +235,15 @@ test("the upgrade pop-up is used everywhere except Egypt", () => {
   assert.equal(upgradeModalForCountry("eg"), false);
   assert.equal(upgradeModalForCountry("iq"), true);
   assert.equal(upgradeModalForCountry(null), true);
+});
+
+test("an admin's Egypt view shows either today's Egypt or the pop-up from before", () => {
+  assert.equal(parseEgyptView("now"), "now");
+  assert.equal(parseEgyptView("popup"), "popup");
+  assert.equal(parseEgyptView("off"), null);
+  assert.equal(parseEgyptView(undefined), null);
+  assert.equal(upgradeModalForViewer("eg", "now"), false);
+  assert.equal(upgradeModalForViewer("eg", "popup"), true);
+  assert.equal(upgradeModalForViewer("eg", null), false);
+  assert.equal(upgradeModalForViewer("iq", null), true);
 });

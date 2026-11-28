@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import type { ReactNode } from "react";
 
+import { EgyptViewChip } from "@/components/billing/egypt-view-chip";
 import { UpgradeModalHost } from "@/components/billing/upgrade-modal-host";
 import { AuthUserProvider } from "@/components/providers/auth-user-provider";
 import { FeatureProvider } from "@/components/providers/feature-provider";
@@ -16,8 +17,8 @@ import { getLessonFontSettings } from "@/lib/admin/lesson-font-queries";
 import { getTypingSoundSettings } from "@/lib/admin/typing-sound-queries";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { getVoiceSettings } from "@/lib/admin/voice-queries";
-import { resolvePricingCountry } from "@/lib/billing/geo-pricing";
-import { upgradeModalForCountry } from "@/lib/billing/upgrade-modal-audience";
+import { upgradeModalForViewer } from "@/lib/billing/upgrade-modal-audience";
+import { resolveViewerCountry } from "@/lib/billing/viewer-country";
 import { getCurrentUser } from "@/lib/supabase/auth";
 
 /**
@@ -60,8 +61,8 @@ export async function LearnerProviders({
   ]);
   const lessonColorCss = buildLessonColorCss(lessonColorSettings);
   // Not in Egypt (see upgradeModalForCountry): without the host a locked card and a plans link are plain links again.
-  const upgradePopup =
-    !asGuest && upgradeModalForCountry(resolvePricingCountry(await headers()).country);
+  const viewer = asGuest ? null : await resolveViewerCountry(await headers());
+  const upgradePopup = viewer !== null && upgradeModalForViewer(viewer.country, viewer.view);
 
   return (
     <>
@@ -102,6 +103,7 @@ export async function LearnerProviders({
                     {children}
                     {/* The upgrade pop-up (permission upgradeModal): listens for presses on locked cards and plans links. */}
                     {upgradePopup && <UpgradeModalHost />}
+                    {viewer?.view && <EgyptViewChip view={viewer.view} />}
                   </PronunciationSettingsProvider>
                 </LessonCompletionThemeProvider>
               </LessonFontSettingsProvider>
