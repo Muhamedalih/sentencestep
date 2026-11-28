@@ -6,18 +6,10 @@
  * here reads or writes anything.
  */
 
-import {
-  applyDictationInput,
-  dictationView,
-  isDictationComplete,
-  rawDictationTokens,
-  type DictationView,
-} from "@/lib/features/dictation";
 import { normalizeMistakeWord } from "@/lib/mistakes/normalize";
 import { containsWholeWord, splitAroundWord } from "@/lib/passages/text";
 import type { Passage, PassageProgress } from "@/lib/passages/types";
 import { isImportantWord } from "@/lib/today/important-words";
-import { isAutoSkipChar } from "@/lib/typing";
 import type { SessionReviewWord } from "@/lib/today/session-words";
 import { definitionOf, meaningChoices, termOf } from "@/lib/word-ladder/options";
 import type { LadderWord } from "@/lib/word-ladder/types";
@@ -488,56 +480,46 @@ export function passageNames(lines: readonly Pick<SceneLine, "en" | "speaker">[]
   );
 }
 
-/** Which graded words of a typed part (see dictationView) are names the learner does not type. */
-export function nameWordIndexes(typed: string, names: ReadonlySet<string>): Set<number> {
-  const indexes = rawDictationTokens(typed).flatMap((token, index) =>
-    names.has(bareWord(token)) ? [index] : [],
-  );
-  return new Set(indexes);
+/** A word of a typed part as the sentence is drawn (the same numbering as TypingText's words). */
+export interface TypedWord {
+  index: number;
+  /** Where the word starts in the typed part. */
+  start: number;
+  /** Where the next word starts: the word with the punctuation and the gap after it. */
+  end: number;
+  text: string;
 }
 
-/** Which graded words of a typed part are the day's own words. */
+export function typedWords(typed: string): TypedWord[] {
+  const matches = [...typed.matchAll(/\S+/g)];
+  return matches.map((match, index) => ({
+    index,
+    start: match.index,
+    end: matches[index + 1]?.index ?? typed.length,
+    text: match[0],
+  }));
+}
+
+/** Which words of a typed part are names the learner does not type. */
+export function nameWordIndexes(typed: string, names: ReadonlySet<string>): Set<number> {
+  return new Set(
+    typedWords(typed).flatMap((word) => (names.has(bareWord(word.text)) ? [word.index] : [])),
+  );
+}
+
+/** Which words of a typed part are the day's own words. */
 export function targetWordIndexes(typed: string, words: readonly SceneWord[]): Set<number> {
   const wanted = new Set(words.map((word) => normalizeMistakeWord(word.word)));
-  const indexes = rawDictationTokens(typed).flatMap((token, index) =>
-    wanted.has(bareWord(token).toLowerCase()) ? [index] : [],
-  );
-  return new Set(indexes);
-}
-
-/** The line as drawn: a given word stands written from the start, before the learner reaches it. */
-export function showGiven(view: DictationView, given: ReadonlySet<number>): DictationView {
-  if (given.size === 0) return view;
-  return {
-    ...view,
-    tokens: view.tokens.map((token) =>
-      token.kind === "space"
-        ? token
-        : {
-            ...token,
-            cells: token.cells.map((cell) =>
-              cell.kind === "slot" && given.has(cell.word)
-                ? { ...cell, typed: cell.typed ?? cell.char }
-                : cell,
-            ),
-          },
+  return new Set(
+    typedWords(typed).flatMap((word) =>
+      wanted.has(bareWord(word.text).toLowerCase()) ? [word.index] : [],
     ),
-  };
+  );
 }
 
-/** The answer with every given word that comes next written in (a word the learner began is left to them). */
-export function fillGiven(typed: string, value: string, given: ReadonlySet<number>): string {
-  const tokens = rawDictationTokens(typed);
-  let filled = value;
-  while (!isDictationComplete(typed, filled)) {
-    const cursor = dictationView(typed, filled).cursor;
-    if (!cursor || cursor.letter !== 0 || !given.has(cursor.word)) break;
-    const letters = Array.from(tokens[cursor.word] ?? "")
-      .filter((char) => !isAutoSkipChar(char))
-      .join("");
-    const next = applyDictationInput(typed, filled, filled + letters);
-    if (next === filled) break;
-    filled = next;
-  }
-  return filled;
+/** The stretches of a typed part that are written for the learner: each given word and what follows it. */
+export function givenRanges(typed: string, given: ReadonlySet<number>): [number, number][] {
+  return typedWords(typed).flatMap((word) =>
+    given.has(word.index) ? [[word.start, word.end] as [number, number]] : [],
+  );
 }

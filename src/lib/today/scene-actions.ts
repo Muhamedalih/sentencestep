@@ -6,6 +6,9 @@ import { track } from "@/lib/analytics/track";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { dealDailyQuests, recordQuestEventsAndBadges } from "@/lib/features/quest-service";
 import { getCurrentUser } from "@/lib/supabase/auth";
+import { loadTodayScene } from "@/lib/today/scene-load";
+import { makeSceneWordClip } from "@/lib/today/scene-word-clips";
+import { isSynthesisRateLimited } from "@/lib/voice/isolated-word-audio";
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const MAX_LINES = 5;
@@ -65,5 +68,23 @@ export async function recordSceneLinesAction(input: {
     );
   } catch (error) {
     console.error("[scene] recordSceneLinesAction failed", error);
+  }
+}
+
+/**
+ * Records a word of today's scene that has no clip yet and returns it. The word must be one the
+ * learner types in their own scene, so this is no general text-to-speech endpoint.
+ */
+export async function makeSceneWordClipAction(key: string): Promise<string | null> {
+  try {
+    if (typeof key !== "string" || key.length === 0 || key.length > 40) return null;
+    const [features, user] = await Promise.all([getEffectiveFeatures(), getCurrentUser()]);
+    if (!features.rollouts.dailyScene || !user) return null;
+    const today = await loadTodayScene(user.id, features);
+    if (!today || (await isSynthesisRateLimited())) return null;
+    return await makeSceneWordClip(today.passage.id, today.scene, key);
+  } catch (error) {
+    console.error("[scene] makeSceneWordClipAction failed", error);
+    return null;
   }
 }

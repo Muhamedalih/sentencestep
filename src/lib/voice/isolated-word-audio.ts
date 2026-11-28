@@ -358,7 +358,7 @@ const CLIP_LOOKUP_CHUNK_SIZE = 100;
  * simply absent. One query per CLIP_LOOKUP_CHUNK_SIZE distinct hashes, run
  * together — a hash lives in exactly one chunk, so the results never overlap.
  */
-async function lookupReadyClips(
+export async function lookupReadyClips(
   texts: readonly string[],
   voiceIds: readonly string[],
 ): Promise<Map<string, string>> {
