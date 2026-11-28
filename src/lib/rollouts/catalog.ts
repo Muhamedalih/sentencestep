@@ -73,6 +73,7 @@ export const ROLLOUT_IDS = [
   "dailyScene",
   "todayTidy",
   "passageSeries",
+  "seriesGuess",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -893,6 +894,18 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "Nothing changes for a learner who still has free passages or stories to finish: the taste and the moments start only after those are done.",
       "A moment never shows in the first 24 hours after sign-up, to a learner with an order still unpaid, to a subscriber or to a guest. Two dismissals within a week pause the moments for seven days.",
       "Every shown, clicked and dismissed moment is recorded (OFFER_SHOWN, OFFER_CLICKED, OFFER_DISMISSED), so the result can be read per group. To test it, choose “A share of learners”: the accounts left out keep today's Home and lock screens.",
+    ],
+  },
+  seriesGuess: {
+    id: "seriesGuess",
+    audience: "learner",
+    title: "Series: “What happens next?”",
+    description:
+      "At the end of a series episode a night stage opens: the question over the red book, three guesses, the chosen one written on a letter and sealed. The next episode opens the day after, with a countdown to midnight and a shop bell for a reminder email at 8, 9 or 10 PM; when the learner reaches the line that answers, the envelope opens and says whether they were right.",
+    notes: [
+      "Needs the series (“passageSeries”) open for the same people. Only episodes whose next one is written ask a question (episodes 1 and 2 today).",
+      "The guess is kept in the learner's own browser: on another device the next episode opens as usual, without the reveal.",
+      "The bell needs SESSION_REMINDER_MAX_PER_RUN set on the server, and reaches Google-verified addresses only.",
     ],
   },
   passageSeries: {

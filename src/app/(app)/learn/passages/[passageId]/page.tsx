@@ -5,6 +5,7 @@ import { PASSAGE_EXAMS } from "@/data/passages/exams";
 import { HybridWall } from "@/components/hybrid/hybrid-wall";
 import { PassageLocked, PosterArt } from "@/components/passages/passage-locked";
 import { PassageReader } from "@/components/passages/passage-reader";
+import { SeriesClosed } from "@/components/passages/series-closed";
 import { isAdmin } from "@/lib/admin/access";
 import { isGermanOpen } from "@/lib/learn-language-server";
 import { isGermanPassage } from "@/lib/passages/german-twin";
@@ -25,6 +26,7 @@ import { localizePassage } from "@/lib/passages/localize";
 import { resumeSectionIndex } from "@/lib/passages/progress";
 import { fetchPassage, fetchPassageProgress, fetchPassageSummaries } from "@/lib/passages/queries";
 import { episodeOf } from "@/lib/passages/series";
+import { seriesStagesFor } from "@/lib/passages/series-guess-load";
 import { getGateFigures } from "@/lib/stats/gate-figures";
 import { getCurrentUser } from "@/lib/supabase/auth";
 
@@ -165,9 +167,22 @@ export default async function PassageReaderPage({
     );
   }
 
-  const progress = user
-    ? (await fetchPassageProgress(user.id)).find((entry) => entry.passageId === passage.id)
-    : undefined;
+  const allProgress = user ? await fetchPassageProgress(user.id) : [];
+  const progress = allProgress.find((entry) => entry.passageId === passage.id);
+
+  // «What happens next?» (permission seriesGuess): a series episode asks at its end, opens the last
+  // guess on the way, and opens only the day after the episode before it was finished.
+  const series =
+    user && features.rollouts.seriesGuess && !learnerView
+      ? await seriesStagesFor({ passageId: passage.id, locale, progress: allProgress })
+      : null;
+  if (series?.closed) {
+    return (
+      <div className="lesson-shell bg-background text-foreground min-h-svh w-full">
+        <SeriesClosed userId={user!.id} {...series.closed} />
+      </div>
+    );
+  }
 
   // The next passage in list order — a suggestion on the end screen, never a requirement, and
   // never one this viewer can't open.
@@ -229,6 +244,7 @@ export default async function PassageReaderPage({
               )
         }
         wordsLink={wordsLink}
+        series={series}
       />
     </div>
   );

@@ -15,6 +15,8 @@ import type { PassageAnswer } from "@/components/passages/passage-question-dock"
 import { PassageRatingPrompt } from "@/components/passages/passage-rating-prompt";
 import { PassageText } from "@/components/passages/passage-text";
 import { PassageTips } from "@/components/passages/passage-tips";
+import { SeriesGuessStage, SeriesReveal } from "@/components/passages/series-stage";
+import type { PassageSeriesStages } from "@/components/passages/series-stage-props";
 import { ShiftReplayHint } from "@/components/learning/shift-replay-hint";
 import { useAuthUserId } from "@/components/providers/auth-user-provider";
 import { useLocale } from "@/components/providers/locale-provider";
@@ -30,6 +32,8 @@ import {
 import { questTitle } from "@/lib/features/quest-labels";
 import { savePassageProgressAction } from "@/lib/passages/actions";
 import { posterArtFor } from "@/lib/passages/art";
+import { readGuess, writeGuess, type StoredGuess } from "@/lib/passages/series-guess";
+import { guessStrings } from "@/lib/passages/series-guess-strings";
 import type { PassageRewards } from "@/lib/passages/engagement";
 import type { PauseMark } from "@/lib/passages/narration-pauses";
 import { todayLocalISODate } from "@/lib/progress/streak";
@@ -69,6 +73,8 @@ export interface PassageReaderProps {
   wordsLink: { href: string; adminPreview: boolean } | null;
   /** Where the narrator will pause, by sentence id — passed only to an admin, who sees it as small dots in the text; a learner is never given it. */
   pauseMarks?: Record<string, PauseMark>;
+  /** A series episode with «What happens next?» (permission seriesGuess); null otherwise. */
+  series?: PassageSeriesStages | null;
 }
 
 type Phase = "read" | "check";
@@ -86,8 +92,9 @@ export function PassageReader({
   hybridMoment,
   wordsLink,
   pauseMarks,
+  series,
 }: PassageReaderProps) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const userId = useAuthUserId();
   const reducedMotion = useReducedMotion();
   const prefs = usePassagePreferences();
@@ -114,6 +121,12 @@ export function PassageReader({
   const [notice, setNotice] = useState<string | null>(null);
   /** How much of the screen's bottom the question card takes (its height and margin) — the page leaves that much room under the text. */
   const [dockSpace, setDockSpace] = useState(0);
+
+  // «What happens next?»: the guess after this episode, and the last episode's guess opened here.
+  const asks = userId ? (series?.after ?? null) : null;
+  const [guessOpen, setGuessOpen] = useState(false);
+  const [sealed, setSealed] = useState(false);
+  const [revealing, setRevealing] = useState<StoredGuess | null>(null);
 
   const section = passage.sections[sectionIndex] as PassageSection | undefined;
   const showTranslation = prefs.translation && translationAvailable;
@@ -232,17 +245,52 @@ export function PassageReader({
     setRevealed(false);
   }, [stopAudio]);
 
+  /** The part that answers the last guess is done: the envelope opens. */
+  const openReveal = useCallback(
+    (sectionsDone: number) => {
+      const answered = series?.answers;
+      if (!userId || !answered || sectionsDone <= answered.guess.reveal.section) return;
+      const stored = readGuess(userId, answered.guess.after);
+      if (stored && !stored.revealed) setRevealing(stored);
+    },
+    [series, userId],
+  );
+
+  const closeReveal = useCallback(() => {
+    const answered = series?.answers;
+    if (userId && answered && revealing) {
+      writeGuess(userId, answered.guess.after, { ...revealing, revealed: true });
+    }
+    setRevealing(null);
+  }, [revealing, series, userId]);
+
+  // The episode is over: with no guess yet, the question comes by itself.
+  useEffect(() => {
+    if (!complete || !asks || !userId) return;
+    const stored = readGuess(userId, asks.guess.after);
+    setSealed(stored !== null);
+    if (stored) return;
+    const timer = window.setTimeout(() => setGuessOpen(true), 900);
+    return () => window.clearTimeout(timer);
+  }, [asks, complete, userId]);
+
+  const closeGuess = useCallback(() => {
+    setGuessOpen(false);
+    if (userId && asks) setSealed(readGuess(userId, asks.guess.after) !== null);
+  }, [asks, userId]);
+
   /** The part is done: save it, and move to the next part or the end screen. */
   const finishPart = useCallback(() => {
     const isLast = sectionIndex >= sectionCount - 1;
     void saveProgress(sectionIndex + 1, isLast);
     resetPart();
+    openReveal(sectionIndex + 1);
     // The passage is saved as finished here, exam or not: leaving during the exam costs nothing.
     if (isLast && exam.length > 0) setExamOpen(true);
     else if (isLast) setComplete(true);
     else setSectionIndex((current) => current + 1);
     window.scrollTo({ top: 0, behavior: reducedMotion ? "auto" : "smooth" });
-  }, [exam.length, reducedMotion, resetPart, saveProgress, sectionCount, sectionIndex]);
+  }, [exam.length, openReveal, reducedMotion, resetPart, saveProgress, sectionCount, sectionIndex]);
 
   /** The exam is checked and "Continue" pressed: its answers join the others, and the end screen opens. */
   const finishExam = useCallback(
@@ -352,7 +400,8 @@ export function PassageReader({
   // provider answers a lone Shift press with whatever is registered): here the part is read again
   // from its first sentence. Only while the text or the stage is on screen, not under a question.
   const { registerReplay } = usePronunciationSettings();
-  const shiftReplayEnabled = phase === "read" && !complete && !examOpen && audio.hasAudio;
+  const shiftReplayEnabled =
+    phase === "read" && !complete && !examOpen && !revealing && audio.hasAudio;
   useEffect(() => {
     if (!shiftReplayEnabled) return;
     return registerReplay(playAll);
@@ -360,7 +409,10 @@ export function PassageReader({
 
   // Enter does what the Check button does — the same shortcut the other check-then-continue screens
   // have (a focused button or sentence keeps its own Enter, and the tips card is not in the way).
-  useEnterToContinue(phase === "read" && !complete && !examOpen && !showTips, handleCheck);
+  useEnterToContinue(
+    phase === "read" && !complete && !examOpen && !showTips && !revealing,
+    handleCheck,
+  );
 
   // When the question card appears, make sure it is not sitting on the text: if the text runs
   // under it, the page scrolls just far enough to lift the text clear (the page keeps room for it).
@@ -413,6 +465,12 @@ export function PassageReader({
   ]);
 
   if (!section) return null;
+
+  const revealLine = series?.answers
+    ? passage.sections[series.answers.guess.reveal.section]?.sentences[
+        series.answers.guess.reveal.line
+      ]
+    : undefined;
 
   const activeQuestion = section.questions[questionIndex];
   const isLastQuestionOfPart = questionIndex >= section.questions.length - 1;
@@ -511,6 +569,16 @@ export function PassageReader({
               hybridMoment={hybridMoment ?? null}
               wordsLink={wordsLink}
               onReadAgain={handleReadAgain}
+              guess={
+                asks
+                  ? {
+                      label: sealed
+                        ? guessStrings(locale).boxSealed
+                        : guessStrings(locale).boxGuess,
+                      onOpen: () => setGuessOpen(true),
+                    }
+                  : null
+              }
             />
           </motion.div>
         ) : (
@@ -665,7 +733,29 @@ export function PassageReader({
       {showTips && <PassageTips onStart={dismissTips} />}
 
       {/* The first time a learner finishes a passage: a one-time "what do you think of Passages?" card. */}
-      <PassageRatingPrompt show={complete} passageId={passage.id} />
+      <PassageRatingPrompt show={complete && !guessOpen && !revealing} passageId={passage.id} />
+
+      {guessOpen && asks && userId && (
+        <SeriesGuessStage
+          userId={userId}
+          {...asks}
+          closeLabel={guessStrings(locale).continue}
+          onClose={closeGuess}
+          onOpenNext={() => window.location.assign(`/learn/passages/${asks.guess.next}`)}
+        />
+      )}
+
+      {revealing && series?.answers && (
+        <SeriesReveal
+          guess={series.answers.guess}
+          place={series.answers.place}
+          written={revealing.word}
+          sealedAt={revealing.sealedAt}
+          line={revealLine?.en ?? ""}
+          lineSupport={translationAvailable ? (revealLine?.ar ?? null) : null}
+          onClose={closeReveal}
+        />
+      )}
     </div>
   );
 }

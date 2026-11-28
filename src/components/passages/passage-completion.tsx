@@ -81,6 +81,7 @@ export function PassageCompletion({
   hybridMoment,
   wordsLink,
   onReadAgain,
+  guess,
 }: {
   passage: Passage;
   answers: Record<string, PassageAnswer>;
@@ -98,6 +99,8 @@ export function PassageCompletion({
   hybridMoment: { passages: number; stories: number } | null;
   wordsLink: { href: string; adminPreview: boolean } | null;
   onReadAgain: () => void;
+  /** «What happens next?»: the series box becomes the way into the night stage. */
+  guess?: { label: string; onOpen: () => void } | null;
 }) {
   const { t, locale } = useLocale();
   const reduced = useReducedMotion();
@@ -194,6 +197,16 @@ export function PassageCompletion({
             <p className="mt-1 font-semibold" dir="auto">
               {episode.next}
             </p>
+            {guess && (
+              <button
+                type="button"
+                onClick={guess.onOpen}
+                className="text-primary mt-2 inline-flex items-center gap-1.5 text-sm font-semibold"
+              >
+                <span dir="auto">{guess.label}</span>
+                <ArrowRight className="size-4" aria-hidden="true" />
+              </button>
+            )}
           </div>
         )}
 

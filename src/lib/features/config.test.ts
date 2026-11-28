@@ -460,6 +460,7 @@ test("rollouts: resolveFeatures leaves every Permissions feature closed for ever
       dailyScene: false,
       todayTidy: false,
       passageSeries: false,
+      seriesGuess: false,
     });
   }
 });
