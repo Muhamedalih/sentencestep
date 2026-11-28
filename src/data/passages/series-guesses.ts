@@ -2,7 +2,7 @@ import type { SupportLocale } from "@/lib/i18n/locales";
 
 /**
  * «What happens next?» (permission seriesGuess): at the end of an episode the learner picks one of
- * these guesses and writes it; the next episode opens it at the line that answers the question. One
+ * these guesses and it is sealed in an envelope; the next episode opens it at the line that answers the question. One
  * entry per episode whose NEXT episode is already written (the question itself is the series' own,
  * see lib/passages/series.ts).
  */
@@ -13,7 +13,7 @@ export interface GuessOption {
   /** The words the guess is chosen by. */
   label: string;
   support: Said;
-  /** The start of the sentence written on the letter, then the word the learner types. */
+  /** The sentence put in the envelope: its start, then the answer's word. */
   lead: string;
   word: string;
 }

@@ -1,6 +1,6 @@
 /**
  * The rules of «What happens next?» (permission seriesGuess): which episode asks, when the next one
- * opens, what the learner wrote and how it is typed. Pure: no screen and no database here.
+ * opens and what the learner chose. Pure: no screen and no database here.
  */
 
 import { SERIES_GUESSES, type SeriesGuess } from "@/data/passages/series-guesses";
@@ -47,29 +47,6 @@ export function countdown(target: number, now: number): string {
   return [seconds / 3600, (seconds / 60) % 60, seconds % 60]
     .map((value) => String(Math.floor(value)).padStart(2, "0"))
     .join(":");
-}
-
-/**
- * How much of `word` the typed text has written: its letters are taken in order and anything else
- * (a wrong letter, a space) is dropped, whatever the case.
- */
-export function typedSoFar(word: string, typed: string): number {
-  let done = 0;
-  for (const letter of typed) {
-    if (done < word.length && letter.toLowerCase() === word[done]!.toLowerCase()) done += 1;
-  }
-  return done;
-}
-
-/**
- * The letter a key press writes on the letter, or null. A keyboard left on Arabic (or any other
- * non-Latin layout) still writes: the key's own place gives the Latin letter.
- */
-export function typedLetter(key: string, code: string): string | null {
-  if (/^[a-z]$/i.test(key)) return key;
-  // Anything outside ASCII on a letter's key: Arabic gives one character there, or two (لا).
-  const foreign = [...key].some((character) => character.codePointAt(0)! > 127);
-  return foreign && /^Key[A-Z]$/.test(code) ? code.slice(3).toLowerCase() : null;
 }
 
 export interface StoredGuess {

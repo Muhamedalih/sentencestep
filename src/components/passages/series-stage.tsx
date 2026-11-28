@@ -7,13 +7,7 @@ import styles from "@/components/passages/series-stage.module.css";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useTypingSoundSettings } from "@/components/providers/typing-sound-settings-provider";
 import type { GuessOption, SeriesGuess } from "@/data/passages/series-guesses";
-import {
-  countdown,
-  readGuess,
-  typedLetter,
-  typedSoFar,
-  writeGuess,
-} from "@/lib/passages/series-guess";
+import { countdown, readGuess, writeGuess } from "@/lib/passages/series-guess";
 import { todayLocalISODate } from "@/lib/progress/streak";
 import { setSeriesReminderAction } from "@/lib/passages/series-guess-actions";
 import { guessStrings } from "@/lib/passages/series-guess-strings";
@@ -22,7 +16,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * «What happens next?» (permission seriesGuess): the night stage at the end of a series episode.
- * The question over the red book, the guess written on a letter, the letter sealed in an envelope,
+ * The question over the red book; the chosen guess goes straight into an envelope and is sealed;
  * then the wait: the countdown to midnight, a line of the next episode with its answer hidden, and
  * the shop's bell for a reminder. SeriesReveal is the other end: the next episode opening the guess.
  */
@@ -62,7 +56,6 @@ function useStageSounds() {
   );
   useEffect(() => () => void context.current?.close().catch(() => {}), []);
   return {
-    pen: useCallback(() => tone(900 + Math.random() * 500, 0.05, 0.025, "triangle", 0), [tone]),
     thump: useCallback(
       (when = 0) => {
         tone(90, 0.35, 0.3, "sine", when);
@@ -82,16 +75,11 @@ function useStageSounds() {
 
 function Overlay({
   label,
-  top,
   onClose,
-  onTap,
   children,
 }: {
   label: string;
-  top?: boolean;
   onClose: () => void;
-  /** A click or tap anywhere on the stage. */
-  onTap?: () => void;
   children: ReactNode;
 }) {
   const [mounted, setMounted] = useState(false);
@@ -122,20 +110,13 @@ function Overlay({
   if (!mounted) return null;
   // On the body: the reader's own moving panels would otherwise hold a "fixed" layer inside them.
   return createPortal(
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label={label}
-      className={styles.overlay}
-      dir="ltr"
-      onClick={onTap}
-    >
+    <div role="dialog" aria-modal="true" aria-label={label} className={styles.overlay} dir="ltr">
       <div className={styles.dust} aria-hidden="true">
         {dust.map((style, index) => (
           <i key={index} style={style} />
         ))}
       </div>
-      <div className={cn(styles.stage, top && styles.top)}>{children}</div>
+      <div className={styles.stage}>{children}</div>
     </div>,
     document.body,
   );
@@ -203,7 +184,7 @@ function BellArt() {
 
 // --- The guess --------------------------------------------------------------
 
-type Scene = "ask" | "write" | "sealed" | "wait";
+type Scene = "ask" | "sealed" | "wait";
 
 export function SeriesGuessStage({
   userId,
@@ -243,80 +224,33 @@ export function SeriesGuessStage({
     waitOnly || readGuess(userId, guess.after) ? "wait" : "ask",
   );
   const [picked, setPicked] = useState<GuessOption | null>(null);
-  const [typed, setTyped] = useState(0);
-  const [folding, setFolding] = useState(false);
-  const [otherKeyboard, setOtherKeyboard] = useState(false);
-  /** Letters written so far, read at once: two keys can come before the screen is redrawn. */
-  const written = useRef(0);
-  const input = useRef<HTMLInputElement>(null);
   const timers = useRef<number[]>([]);
   const later = useCallback((run: () => void, ms: number) => {
     timers.current.push(window.setTimeout(run, ms));
   }, []);
   useEffect(() => () => timers.current.forEach((timer) => window.clearTimeout(timer)), []);
 
+  /** Choosing is the whole move: the answer is kept at once and goes into the envelope. */
   const pick = (option: GuessOption) => {
     if (picked) return;
     setPicked(option);
-    sounds.thump();
-    // Focused inside the tap itself, so a phone opens its keyboard.
-    input.current?.focus({ preventScroll: true });
-    later(() => setScene("write"), 1000);
-  };
-
-  /** The word now has `done` letters: shown, and sealed once it is whole. */
-  const advance = (done: number) => {
-    if (!picked || written.current >= picked.word.length) return;
-    if (done > written.current) sounds.pen();
-    written.current = done;
-    setTyped(done);
-    const field = input.current;
-    const kept = picked.word.slice(0, done);
-    // A wrong letter is not kept.
-    if (field && field.value.toLowerCase() !== kept.toLowerCase()) field.value = kept;
-    if (done < picked.word.length) return;
     writeGuess(userId, guess.after, {
-      word: picked.word,
-      lead: picked.lead,
+      word: option.word,
+      lead: option.lead,
       sealedAt: new Date().toISOString(),
       revealed: false,
     });
-    field?.blur();
-    later(() => setFolding(true), 800);
+    sounds.thump();
     later(() => {
       setScene("sealed");
-      sounds.thump(0.8);
-    }, 1650);
-    later(() => setScene("wait"), 4650);
+      // The seal lands when the flap has closed.
+      sounds.thump(2.2);
+    }, 900);
+    later(() => setScene("wait"), 4900);
   };
 
-  const focusKeys = () => input.current?.focus({ preventScroll: true });
-
-  // A real keyboard writes wherever the last click went, not only while the hidden field has the focus.
-  useEffect(() => {
-    if (scene !== "write" || !picked) return;
-    const onKey = (event: KeyboardEvent) => {
-      if (event.ctrlKey || event.metaKey || event.altKey) return;
-      // A space would scroll whatever is behind.
-      if (event.key === " ") event.preventDefault();
-      const letter = typedLetter(event.key, event.code);
-      if (!letter) return;
-      event.preventDefault();
-      event.stopPropagation();
-      const next = picked.word[written.current];
-      if (next && next.toLowerCase() === letter.toLowerCase()) advance(written.current + 1);
-    };
-    window.addEventListener("keydown", onKey, true);
-    return () => window.removeEventListener("keydown", onKey, true);
-  });
-
   return (
-    <Overlay
-      label={question}
-      onClose={onClose}
-      onTap={scene === "write" ? focusKeys : undefined}
-      top={scene === "write"}
-    >
+    <Overlay label={question} onClose={onClose}>
       <Season place={place} />
 
       {scene === "ask" && (
@@ -343,33 +277,14 @@ export function SeriesGuessStage({
         </>
       )}
 
-      {scene === "write" && picked && (
-        <>
-          <div className={cn(styles.letter, folding && styles.fold)}>
-            <p aria-live="polite">
-              {picked.lead}
-              <br />
-              <span className={styles.word}>
-                {[...picked.word].map((letter, index) => (
-                  <u
-                    key={index}
-                    className={cn(index < typed && styles.written, index === typed && styles.now)}
-                  >
-                    {index < typed ? letter : " "}
-                  </u>
-                ))}
-              </span>
-              .
-            </p>
-          </div>
-          <Support className={styles.hint}>{strings.write}</Support>
-          {otherKeyboard && <Support>{strings.switchKeyboard}</Support>}
-        </>
-      )}
-
-      {scene === "sealed" && (
+      {scene === "sealed" && picked && (
         <>
           <div className={styles.envelope} aria-hidden="true">
+            <div className={styles.sheet}>
+              <b>{picked.label}</b>
+            </div>
+            <div className={styles.pocket} />
+            <div className={styles.flap} />
             <div className={styles.wax}>?</div>
           </div>
           <h1 className={cn(styles.title, styles.late)}>
@@ -391,24 +306,6 @@ export function SeriesGuessStage({
           ring={sounds.bell}
         />
       )}
-
-      <input
-        ref={input}
-        className={styles.keys}
-        aria-label={strings.write}
-        autoComplete="off"
-        autoCorrect="off"
-        autoCapitalize="off"
-        spellCheck={false}
-        // A phone's keyboard writes here.
-        onInput={(event) => {
-          if (!picked) return;
-          const value = event.currentTarget.value;
-          // A phone gives no key to read its place from: ask for the English keyboard.
-          setOtherKeyboard([...value].some((character) => character.codePointAt(0)! > 127));
-          advance(typedSoFar(picked.word, value));
-        }}
-      />
     </Overlay>
   );
 }
