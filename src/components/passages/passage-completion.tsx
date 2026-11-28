@@ -191,7 +191,9 @@ export function PassageCompletion({
             <p className="text-muted-foreground text-xs">
               <bdi>
                 {seriesLabels(locale).episode(episode.number, episode.total)} ·{" "}
-                {seriesLabels(locale).next}
+                {episode.number === episode.total
+                  ? seriesLabels(locale).end
+                  : seriesLabels(locale).next}
               </bdi>
             </p>
             <p className="mt-1 font-semibold" dir="auto">

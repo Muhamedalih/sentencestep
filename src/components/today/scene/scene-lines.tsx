@@ -445,7 +445,12 @@ export function SceneLines({
                 strings={strings}
                 reducedMotion={reducedMotion}
                 episode={episodeOf(passageId, locale)}
-                nextLabel={seriesLabels(locale).next}
+                nextLabel={
+                  // The season's last episode says «the end», not «next episode».
+                  episodeOf(passageId, locale)?.number === episodeOf(passageId, locale)?.total
+                    ? seriesLabels(locale).end
+                    : seriesLabels(locale).next
+                }
               />
             </div>
           ) : (

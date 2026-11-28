@@ -16,6 +16,7 @@ export const PASSAGE_VOICE_IDS: Record<Exclude<PassageVoiceAlias, "narrator">, s
   zara: "elevenlabs-jqcczkn6knx8bj5tbdyr", // Zara — warm, real-world conversationalist (female)
   ash: "elevenlabs-m3yahyfefktbcim5n7gf", // Ash — conversational, kind and bright (female)
   autumn: "elevenlabs-kovihoyldrqyd4pgalbs", // Autumn Veil — warm and reflective (female)
+  david: "elevenlabs-bngbhr0dnezixgqvzloa", // David — deep, engaging storyteller (male)
 };
 
 /**

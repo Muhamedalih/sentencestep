@@ -4,6 +4,7 @@ import { B1_EXAMS } from "@/data/passages/exams/b1";
 import { B2_EXAMS } from "@/data/passages/exams/b2";
 import type { PassageExamSeed } from "@/data/passages/exams/helpers";
 import { RED_BOOK_EXAMS } from "@/data/passages/series-red-book";
+import { RED_BOOK_FINALE_EXAMS } from "@/data/passages/series-red-book-finale";
 
 /** Every authored full exam, by passage slug. A passage without one simply has no exam step. */
 export const PASSAGE_EXAMS: Record<string, PassageExamSeed> = {
@@ -12,6 +13,7 @@ export const PASSAGE_EXAMS: Record<string, PassageExamSeed> = {
   ...B1_EXAMS,
   ...B2_EXAMS,
   ...RED_BOOK_EXAMS,
+  ...RED_BOOK_FINALE_EXAMS,
 };
 
 export type { PassageExamQuestionSeed, PassageExamSeed } from "@/data/passages/exams/helpers";

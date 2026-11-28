@@ -54,6 +54,42 @@ export const PASSAGE_SERIES: readonly PassageSeries[] = [
           tr: "Annesi küçük anahtardan neden korkuyor?",
         },
       },
+      {
+        passageId: "the-rose-under-the-floor",
+        next: {
+          en: "What is under the white rose?",
+          ar: "ماذا يوجد تحت الوردة البيضاء؟",
+          es: "¿Qué hay debajo de la rosa blanca?",
+          tr: "Beyaz gülün altında ne var?",
+        },
+      },
+      {
+        passageId: "twenty-birthdays",
+        next: {
+          en: "Why does the quiet reader want the shop?",
+          ar: "لماذا يريد القارئ الصامت المحل؟",
+          es: "¿Por qué el lector callado quiere la tienda?",
+          tr: "Sessiz okur dükkânı neden istiyor?",
+        },
+      },
+      {
+        passageId: "the-man-in-the-grey-hat",
+        next: {
+          en: "What did Nora write to her daughter?",
+          ar: "ماذا كتبت نورا لابنتها؟",
+          es: "¿Qué le escribió Nora a su hija?",
+          tr: "Nora kızına ne yazdı?",
+        },
+      },
+      {
+        passageId: "eleven-past-four",
+        next: {
+          en: "The Red Book is closed. Thank you for reading.",
+          ar: "انتهت حكاية «الكتاب الأحمر». شكراً لأنك قرأتها.",
+          es: "El libro rojo se cierra. Gracias por leer.",
+          tr: "Kırmızı Kitap kapandı. Okuduğun için teşekkürler.",
+        },
+      },
     ],
   },
 ];
@@ -125,20 +161,32 @@ export function seriesDayEpisode(args: {
 
 const LABELS: Record<
   "en" | SupportLocale,
-  { episode: (n: number, total: number) => string; next: string; series: string }
+  { episode: (n: number, total: number) => string; next: string; end: string; series: string }
 > = {
-  en: { episode: (n, total) => `Episode ${n} of ${total}`, next: "Next episode", series: "Series" },
+  en: {
+    episode: (n, total) => `Episode ${n} of ${total}`,
+    next: "Next episode",
+    end: "The end",
+    series: "Series",
+  },
   ar: {
     episode: (n, total) => `الحلقة ${n} من ${total}`,
     next: "في الحلقة القادمة",
+    end: "النهاية",
     series: "مسلسل",
   },
   es: {
     episode: (n, total) => `Episodio ${n} de ${total}`,
     next: "En el próximo episodio",
+    end: "Fin",
     series: "Serie",
   },
-  tr: { episode: (n, total) => `Bölüm ${n}/${total}`, next: "Gelecek bölümde", series: "Dizi" },
+  tr: {
+    episode: (n, total) => `Bölüm ${n}/${total}`,
+    next: "Gelecek bölümde",
+    end: "Son",
+    series: "Dizi",
+  },
 };
 
 export function seriesLabels(locale: SupportLocale | null | undefined) {

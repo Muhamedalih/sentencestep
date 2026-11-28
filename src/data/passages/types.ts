@@ -24,7 +24,8 @@ export type PassageVoiceAlias =
   | "calm-male" // calm, older-sounding male
   | "zara" // warm, real-world female
   | "ash" // kind, bright female
-  | "autumn"; // warm, reflective female
+  | "autumn" // warm, reflective female
+  | "david"; // deep storyteller male
 
 export interface PassageLineSeed {
   /** The character speaking. Omitted for the narrator. Must be a key of the passage's `cast`. */
