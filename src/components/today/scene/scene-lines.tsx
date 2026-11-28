@@ -15,6 +15,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, Check, Eye, Gauge, RotateCcw, X } from "lucide-react";
 
 import { CurrentWordLabel } from "@/components/learning/current-word-label";
+import { DictationHelp } from "@/components/learning/dictation-help";
 import {
   PronunciationButton,
   type PronunciationButtonHandle,
@@ -38,6 +39,12 @@ import { useTypingEngine } from "@/hooks/use-typing-engine";
 import { useTypingSound } from "@/hooks/use-typing-sound";
 import { resolveSectionFontFamily } from "@/lib/admin/lesson-font-settings";
 import { resolveSectionSentenceCompleteSound } from "@/lib/admin/typing-sound-settings";
+import {
+  advanceDictationGift,
+  dictationMissStarsLost,
+  dictationStarCapacity,
+  dictationStars,
+} from "@/lib/features/dictation";
 import { foldsDiacritics, languageOfContentId } from "@/lib/learn-language";
 import { isTrackableWord, normalizeMistakeWord } from "@/lib/mistakes/normalize";
 import { episodeOf, seriesLabels, type EpisodeInfo } from "@/lib/passages/series";
@@ -63,6 +70,11 @@ import { termOf } from "@/lib/word-ladder/options";
 function vibrateLightly(): void {
   if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate(10);
 }
+
+/** The same rules as Stories' help: it comes after this many wrong letters at one blank. */
+const HELP_AFTER_MISSES = 2;
+/** How long a shown word stays up (the same as Dictation's). */
+const PEEK_MS = 1500;
 
 /** The slide from one line to the next: the typing cursor waits for it to end. */
 const SLIDE_MS = 750;
@@ -139,6 +151,9 @@ export function SceneLines({
   const totalsRef = useRef({ clean: 0, mistakes: 0 });
   const lineMistakesRef = useRef(0);
   const recordedRef = useRef(false);
+  /** Stories' gift: lines in a row without using a star earn extra ones. */
+  const giftRef = useRef({ gifts: 0, run: 0 });
+  const [capacity, setCapacity] = useState(() => dictationStarCapacity(0));
   const inputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<PronunciationButtonHandle>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -276,7 +291,9 @@ export function SceneLines({
     return () => observer.disconnect();
   }, [arrange, allDone, index]);
 
-  function finishLine() {
+  function finishLine(usedStar: boolean) {
+    giftRef.current = advanceDictationGift(giftRef.current, usedStar);
+    setCapacity(dictationStarCapacity(giftRef.current.gifts));
     playSentenceComplete(resolveSectionSentenceCompleteSound(soundSettings, "stories"));
     if (lineMistakesRef.current === 0) totalsRef.current.clean += 1;
     lineMistakesRef.current = 0;
@@ -463,6 +480,12 @@ export function SceneLines({
                         hasStarted={hasStarted}
                         settled={settledIndex === index}
                         shown={shown}
+                        capacity={capacity}
+                        isMobile={isMobile}
+                        onGiveUp={() => {
+                          setShown(true);
+                          inputRef.current?.focus();
+                        }}
                         reducedMotion={reducedMotion}
                         onCorrect={() => {
                           play("letter");
@@ -511,6 +534,9 @@ function CurrentLine({
   hasStarted,
   settled,
   shown,
+  capacity,
+  isMobile,
+  onGiveUp,
   reducedMotion,
   onCorrect,
   onWrong,
@@ -524,13 +550,19 @@ function CurrentLine({
   /** The line has finished sliding in. */
   settled: boolean;
   shown: boolean;
+  /** The line's stars at its start (three, plus any gift stars). */
+  capacity: number;
+  isMobile: boolean;
+  /** Stories' "give up": the sentence is written out to be typed over. */
+  onGiveUp: () => void;
   reducedMotion: boolean;
   onCorrect: () => void;
   onWrong: (word: string | null) => void;
   onWordClick: (word: string) => void;
-  onComplete: () => void;
+  /** Told whether the line cost a star. */
+  onComplete: (usedStar: boolean) => void;
 }) {
-  const { dir } = useLocale();
+  const { dir, t } = useLocale();
   const font = resolveSectionFontFamily(useLessonFontSettings(), "stories");
   const targets = useMemo(() => targetWordIndexes(step.typed, step.words), [step]);
   const given = useMemo(() => {
@@ -542,6 +574,25 @@ function CurrentLine({
 
   // Where the cursor stands now, for the wrong-letter callback.
   const positionRef = useRef(0);
+
+  // Stories' help, by the same rules: stars lost to repeated misses and to each word shown.
+  const [streak, setStreak] = useState<{ position: number; count: number } | null>(null);
+  const [missStarsLost, setMissStarsLost] = useState(0);
+  const [helps, setHelps] = useState(0);
+  const [spent, setSpent] = useState(false);
+  const [peekWord, setPeekWord] = useState<number | null>(null);
+  const missesByBlankRef = useRef<Map<number, number>>(new Map());
+  const peekTimerRef = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(peekTimerRef.current), []);
+  // A line seen whole keeps no stars.
+  if (shown && !spent) setSpent(true);
+  const liveStars = dictationStars(capacity, missStarsLost + helps, spent);
+  const stuck = !shown && (streak?.count ?? 0) >= HELP_AFTER_MISSES;
+
+  function clearPeek() {
+    window.clearTimeout(peekTimerRef.current);
+    setPeekWord(null);
+  }
   const engine = useTypingEngine({
     target: step.typed,
     resetKey: step.line.id,
@@ -551,10 +602,24 @@ function CurrentLine({
     foldDiacritics: foldsDiacritics(languageOfContentId(step.line.id)),
     // A hidden sentence is typed as Dictation is: the space after a word writes itself.
     autoSpace: !shown,
-    onComplete,
-    onCorrectChar: onCorrect,
-    onErrorChar: () =>
-      onWrong(locateWordAtCharIndex(step.typed, positionRef.current)?.word ?? null),
+    onComplete: () => onComplete(spent || missStarsLost + helps > 0),
+    onCorrectChar: () => {
+      // The next letter is in: whatever was holding the learner up is over.
+      setStreak(null);
+      clearPeek();
+      onCorrect();
+    },
+    onErrorChar: () => {
+      const position = positionRef.current;
+      missesByBlankRef.current.set(position, (missesByBlankRef.current.get(position) ?? 0) + 1);
+      setMissStarsLost(dictationMissStarsLost(missesByBlankRef.current.values()));
+      setStreak((current) =>
+        current?.position === position
+          ? { position, count: current.count + 1 }
+          : { position, count: 1 },
+      );
+      onWrong(locateWordAtCharIndex(step.typed, position)?.word ?? null);
+    },
   });
   positionRef.current = engine.typed.length;
 
@@ -573,6 +638,49 @@ function CurrentLine({
           bareWord(typedWords(step.typed)[currentIndex]!.text).toLowerCase(),
       )
     : undefined;
+
+  function showWord() {
+    setHelps((count) => count + 1);
+    // The word shown at the last star spends it.
+    if (liveStars <= 1) setSpent(true);
+    window.clearTimeout(peekTimerRef.current);
+    setPeekWord(currentIndex);
+    peekTimerRef.current = window.setTimeout(() => setPeekWord(null), PEEK_MS);
+    // Said as well as shown.
+    onWordClick(typedWords(step.typed)[currentIndex]!.text);
+    inputRef.current?.focus();
+  }
+
+  const help = stuck && (
+    <div className="mt-4 flex justify-center font-sans text-base font-normal">
+      <DictationHelp
+        dir={dir}
+        prompt={t.dictation.stuckPrompt}
+        stars={liveStars}
+        maxStars={capacity}
+        showStakes
+        starsLabel={t.dictation.starsLabel}
+        lastStarCosts
+        hintStaysOpen
+        stablePrice
+        keepFocus
+        noStarsLabel={t.dictation.noStars}
+        onShowWord={showWord}
+        showWordLabel={t.dictation.help}
+        showWordTitle={t.dictation.helpTitle}
+        showingWord={peekWord !== null}
+        costLabel={t.dictation.costLabel}
+        costRecorded={t.dictation.costRecorded}
+        onGiveUp={() => {
+          clearPeek();
+          setStreak(null);
+          onGiveUp();
+        }}
+        giveUpLabel={t.dictation.giveUp}
+        giveUpTitle={t.dictation.giveUpTitle}
+      />
+    </div>
+  );
 
   return (
     <div>
@@ -600,6 +708,7 @@ function CurrentLine({
           reducedMotion={reducedMotion}
           obscureUntyped={!shown}
           writtenWords={given}
+          peekWord={peekWord}
           errorChar={engine.errorChar}
           textClassName="font-serif max-sm:text-[2rem] text-[clamp(3rem,1.4rem+4.5vw,7rem)] lg:text-[68px] lesson-sentence max-md:[html[data-keyboard]_&]:text-[24px]"
           textStyle={font ? { fontFamily: font } : undefined}
@@ -610,6 +719,8 @@ function CurrentLine({
           autoFocus={hasStarted}
         />
       </div>
+      {/* On a phone the help stands right under the sentence, above the keyboard. */}
+      {isMobile && help}
       {step.after.trim() && (
         <p className="text-muted-foreground mt-3 text-[clamp(16px,2vw,24px)] leading-[1.7] dark:text-[#6f7382] [html[data-keyboard]_&]:hidden">
           {step.after.trim()}
@@ -624,6 +735,7 @@ function CurrentLine({
       <div className="compact-hide font-sans text-base font-normal">
         <TypingStats wpm={engine.wpm} accuracy={engine.accuracy} centered />
       </div>
+      {!isMobile && help}
     </div>
   );
 }

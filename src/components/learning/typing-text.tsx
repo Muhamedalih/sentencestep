@@ -1,7 +1,7 @@
 "use client";
 
 import { SharedInput } from "@/components/learning/shared-input";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   useEffect,
   useLayoutEffect,
@@ -15,6 +15,14 @@ import {
 
 import { useLocale } from "@/components/providers/locale-provider";
 import { easeOut } from "@/lib/motion";
+import {
+  GLYPH_HIDDEN,
+  GLYPH_PEEK_OUT,
+  GLYPH_SHOWN,
+  PEEK_LIT_CLASS,
+  peekInTransition,
+  peekOutTransition,
+} from "@/lib/peek-glyph";
 import { getCurrentWordIndex, tokenize } from "@/lib/typing";
 import type { LetterState } from "@/lib/typing";
 import { cn } from "@/lib/utils";
@@ -137,6 +145,8 @@ interface TypingTextProps {
   wordClassName?: (index: number) => string | undefined;
   /** With obscureUntyped: words that stay written all the same (the day's scene's names). Punctuation then stays written too, and each blank is as wide as its letter, so showing the sentence moves nothing. */
   writtenWords?: ReadonlySet<number>;
+  /** With writtenWords: the hidden word whose letters are shown for a moment because the learner asked for help (Dictation's "Show the word"). */
+  peekWord?: number | null;
 }
 
 export interface UnderlineRect {
@@ -177,6 +187,7 @@ export function TypingText({
   highlightIndexes = null,
   wordClassName,
   writtenWords,
+  peekWord = null,
 }: TypingTextProps) {
   const { t } = useLocale();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -402,6 +413,7 @@ export function TypingText({
                     display={display}
                     blank={blank}
                     sized={writtenWords !== undefined}
+                    peek={peekWord === thisWordIndex ? i : null}
                     reveal={obscureUntyped}
                     reducedMotion={reducedMotion}
                     highlight={highlightIndexes?.has(index) ?? false}
@@ -637,6 +649,7 @@ function Letter({
   display,
   blank = false,
   sized = false,
+  peek = null,
   reveal = false,
   reducedMotion,
   highlight = false,
@@ -647,6 +660,8 @@ function Letter({
   blank?: boolean;
   /** The blank takes its own letter's width (see writtenWords). */
   sized?: boolean;
+  /** A sized blank whose letter is being shown for help: the letter's place in its word. */
+  peek?: number | null;
   /**
    * Word Lists' gap only: pop each letter in as it's confirmed correct,
    * rather than just recoloring already-visible text — since the glyph
@@ -668,7 +683,12 @@ function Letter({
     ) : !blank ? (
       display
     ) : sized ? (
-      <SizedBlank current={state === "current"} char={display} />
+      <SizedBlank
+        current={state === "current"}
+        char={display}
+        peek={peek}
+        reducedMotion={reducedMotion}
+      />
     ) : (
       <BlankTick current={state === "current"} />
     );
@@ -735,15 +755,45 @@ const BLANK_LINE_PX = 3;
  * Dictation: the letter holds the room, unseen. The current one's own line steps aside for the
  * cursor, which glides onto it.
  */
-function SizedBlank({ current, char }: { current: boolean; char: string }) {
+function SizedBlank({
+  current,
+  char,
+  peek,
+  reducedMotion,
+}: {
+  current: boolean;
+  char: string;
+  peek: number | null;
+  reducedMotion: boolean;
+}) {
   return (
     <span aria-hidden="true" className="relative inline-block">
       <span className="invisible">{char}</span>
+      {/* Show the word: the letter rises onto its line and later floats away (see peek-glyph.ts). */}
+      <AnimatePresence>
+        {peek !== null && (
+          <motion.span
+            data-peek=""
+            className={cn("absolute inset-0 text-center", PEEK_LIT_CLASS)}
+            initial={reducedMotion ? false : GLYPH_HIDDEN}
+            animate={GLYPH_SHOWN}
+            exit={
+              reducedMotion
+                ? { opacity: 0, transition: { duration: 0 } }
+                : { ...GLYPH_PEEK_OUT, transition: peekOutTransition(peek) }
+            }
+            transition={reducedMotion ? { duration: 0 } : peekInTransition(peek)}
+          >
+            {char}
+          </motion.span>
+        )}
+      </AnimatePresence>
       <span className="pointer-events-none absolute inset-x-0 bottom-[0.17em] flex h-[3px] justify-center">
         <span
           data-blank-line=""
           className={cn(
             "block h-full w-[max(calc(100%-0.16em),0.3em)] rounded-full bg-[var(--lesson-letter-pending)]",
+            peek !== null && "bg-[var(--lesson-primary)]",
             current && "opacity-0",
           )}
         />
