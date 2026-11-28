@@ -33,6 +33,24 @@ export const PASSAGE_SERIES: readonly PassageSeries[] = [
           tr: "Yirmi yıl önce Sara'ya kim yazdı?",
         },
       },
+      {
+        passageId: "a-letter-from-nora",
+        next: {
+          en: "What is inside the old clock?",
+          ar: "ماذا يوجد داخل الساعة القديمة؟",
+          es: "¿Qué hay dentro del viejo reloj?",
+          tr: "Eski saatin içinde ne var?",
+        },
+      },
+      {
+        passageId: "ten-past-four",
+        next: {
+          en: "Why is Mom afraid of the small key?",
+          ar: "لماذا تخاف الأم من المفتاح الصغير؟",
+          es: "¿Por qué mamá le tiene miedo a la llave pequeña?",
+          tr: "Annesi küçük anahtardan neden korkuyor?",
+        },
+      },
     ],
   },
 ];
