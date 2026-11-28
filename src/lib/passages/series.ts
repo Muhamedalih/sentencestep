@@ -14,6 +14,8 @@ export interface PassageSeries {
   title: Said;
   /** How many episodes the season has, written or not. */
   total: number;
+  /** The characters who are women; everyone else, and the narrator, is a man. */
+  women: readonly string[];
   /** The written episodes, in order. */
   episodes: { passageId: string; next: Said }[];
 }
@@ -23,6 +25,7 @@ export const PASSAGE_SERIES: readonly PassageSeries[] = [
     id: "red-book",
     title: { en: "The Red Book", ar: "الكتاب الأحمر", es: "El libro rojo", tr: "Kırmızı Kitap" },
     total: 7,
+    women: ["Sara", "Mom"],
     episodes: [
       {
         passageId: "open-on-your-first-day",
@@ -59,6 +62,18 @@ export const PASSAGE_SERIES: readonly PassageSeries[] = [
 export const SERIES_PASSAGE_IDS: readonly string[] = PASSAGE_SERIES.flatMap((series) =>
   series.episodes.map((episode) => episode.passageId),
 );
+
+/** Whose voice a line of a series episode is, or null when the passage is in no series. */
+export function seriesLineGender(
+  passageId: string,
+  speaker: string | null,
+): "female" | "male" | null {
+  const series = PASSAGE_SERIES.find((entry) =>
+    entry.episodes.some((episode) => episode.passageId === passageId),
+  );
+  if (!series) return null;
+  return speaker && series.women.includes(speaker) ? "female" : "male";
+}
 
 export interface EpisodeInfo {
   seriesTitle: string;

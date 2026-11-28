@@ -1,4 +1,4 @@
-import { SERIES_PASSAGE_IDS } from "@/lib/passages/series";
+import { seriesLineGender } from "@/lib/passages/series";
 import {
   pickWordClip,
   sentenceWordEntries,
@@ -18,14 +18,18 @@ import type { Scene } from "@/lib/today/scene";
  * The single-word clips of the day's scene: a wrong letter is answered by the word alone, never by
  * the whole line and never by the browser's voice. One neural voice says every word (Andrew, the one
  * with the most words already recorded); Aria's recording stands in when only she has the word. A
- * German passage's words come from the Voice Studio German voice. A series episode's words come from
- * a Voice Studio voice made offline (scripts/voice-studio), Andrew and Aria standing in for a word it
- * has not recorded. Server only.
+ * German passage's words come from the Voice Studio German voice. A series episode's words follow the
+ * line they stand in: one Voice Studio woman for a woman's line, one Voice Studio man for any other
+ * (made offline, scripts/voice-studio), the neural voice of the same gender standing in for a word
+ * they have not recorded. Server only.
  */
 const MAIN_VOICE = "edge-tts-en-us-andrew";
 const SECOND_VOICE = "edge-tts-en-us-aria";
-/** Voice Studio "The Teacher". Only ever looked up: the site cannot synthesise it. */
-const SERIES_VOICE = "voicestudio-aee032c3";
+/** Voice Studio "The Teacher" and "Christopher". Only ever looked up: the site cannot synthesise them. */
+const SERIES_VOICES = {
+  female: ["voicestudio-aee032c3", SECOND_VOICE],
+  male: ["voicestudio-a1a05fb7", MAIN_VOICE],
+} as const;
 
 /** Every distinct word the learner types in the scene, with the spellings its clip may be filed under. */
 export function sceneWordEntries(scene: Scene): { key: string; candidates: string[] }[] {
@@ -44,15 +48,44 @@ async function sceneVoices(passageId: string): Promise<WordVoice[]> {
     return german ? [german, ...(german.fallbackIds ?? []).map((id) => ({ ...german, id }))] : [];
   }
   const voices = await Promise.all(
-    (SERIES_PASSAGE_IDS.includes(passageId)
-      ? [SERIES_VOICE, MAIN_VOICE, SECOND_VOICE]
-      : [MAIN_VOICE, SECOND_VOICE]
-    ).map(async (id) => {
+    [MAIN_VOICE, SECOND_VOICE].map(async (id) => {
       const voice = await lookupVoice(id);
       return voice ? { id, providerVoiceId: voice.providerVoiceId } : null;
     }),
   );
   return voices.filter((voice) => voice !== null);
+}
+
+/**
+ * A series episode's clips, filed per line ("<line id>:<word>") because the same word is a woman's in
+ * one line and a man's in another. The day's words are left to their own clips.
+ */
+async function seriesWordClips(passageId: string, scene: Scene): Promise<Record<string, string>> {
+  const clips: Record<string, string> = {};
+  const own = new Set(scene.words.map((word) => word.word.toLowerCase()));
+  for (const gender of ["female", "male"] as const) {
+    const lines = scene.steps.filter(
+      (step) => seriesLineGender(passageId, step.line.speaker) === gender,
+    );
+    if (lines.length === 0) continue;
+    const entries = lines.flatMap((step) =>
+      sentenceWordEntries(step.line.id, step.typed).map((entry) => ({
+        id: `${step.line.id}:${entry.key}`,
+        key: entry.key,
+        candidates: wordTextCandidates(entry.raw, entry.key),
+      })),
+    );
+    const voices = SERIES_VOICES[gender];
+    const ready = await lookupReadyClips(
+      entries.flatMap((entry) => entry.candidates),
+      voices,
+    );
+    for (const entry of entries) {
+      const url = own.has(entry.key) ? null : pickWordClip(entry.candidates, voices, ready);
+      if (url) clips[entry.id] = url;
+    }
+  }
+  return clips;
 }
 
 /** Word -> clip URL for the words that already have one; the passage's own words use their own clips. */
@@ -62,7 +95,10 @@ export async function loadSceneWordClips(
 ): Promise<Record<string, string>> {
   const clips: Record<string, string> = {};
   try {
-    const entries = sceneWordEntries(scene);
+    // A series episode is answered per line; a word with no clip is made when it is first asked for.
+    const series = seriesLineGender(passageId, null) !== null;
+    if (series) Object.assign(clips, await seriesWordClips(passageId, scene));
+    const entries = series ? [] : sceneWordEntries(scene);
     const voices = (await sceneVoices(passageId)).map((voice) => voice.id);
     const ready = await lookupReadyClips(
       entries.flatMap((entry) => entry.candidates),
@@ -86,6 +122,6 @@ export async function makeSceneWordClip(
   key: string,
 ): Promise<string | null> {
   if (!sceneWordEntries(scene).some((entry) => entry.key === key)) return null;
-  const voice = (await sceneVoices(passageId)).find(({ id }) => id !== SERIES_VOICE);
+  const voice = (await sceneVoices(passageId))[0];
   return voice ? generateIsolatedWordAudio(key, voice.id, voice.providerVoiceId) : null;
 }
