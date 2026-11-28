@@ -7,7 +7,13 @@ import styles from "@/components/passages/series-stage.module.css";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useTypingSoundSettings } from "@/components/providers/typing-sound-settings-provider";
 import type { GuessOption, SeriesGuess } from "@/data/passages/series-guesses";
-import { countdown, readGuess, typedSoFar, writeGuess } from "@/lib/passages/series-guess";
+import {
+  countdown,
+  readGuess,
+  typedLetter,
+  typedSoFar,
+  writeGuess,
+} from "@/lib/passages/series-guess";
 import { todayLocalISODate } from "@/lib/progress/streak";
 import { setSeriesReminderAction } from "@/lib/passages/series-guess-actions";
 import { guessStrings } from "@/lib/passages/series-guess-strings";
@@ -78,11 +84,14 @@ function Overlay({
   label,
   top,
   onClose,
+  onTap,
   children,
 }: {
   label: string;
   top?: boolean;
   onClose: () => void;
+  /** A click or tap anywhere on the stage. */
+  onTap?: () => void;
   children: ReactNode;
 }) {
   const [mounted, setMounted] = useState(false);
@@ -113,7 +122,14 @@ function Overlay({
   if (!mounted) return null;
   // On the body: the reader's own moving panels would otherwise hold a "fixed" layer inside them.
   return createPortal(
-    <div role="dialog" aria-modal="true" aria-label={label} className={styles.overlay} dir="ltr">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={label}
+      className={styles.overlay}
+      dir="ltr"
+      onClick={onTap}
+    >
       <div className={styles.dust} aria-hidden="true">
         {dust.map((style, index) => (
           <i key={index} style={style} />
@@ -229,6 +245,9 @@ export function SeriesGuessStage({
   const [picked, setPicked] = useState<GuessOption | null>(null);
   const [typed, setTyped] = useState(0);
   const [folding, setFolding] = useState(false);
+  const [otherKeyboard, setOtherKeyboard] = useState(false);
+  /** Letters written so far, read at once: two keys can come before the screen is redrawn. */
+  const written = useRef(0);
   const input = useRef<HTMLInputElement>(null);
   const timers = useRef<number[]>([]);
   const later = useCallback((run: () => void, ms: number) => {
@@ -245,14 +264,16 @@ export function SeriesGuessStage({
     later(() => setScene("write"), 1000);
   };
 
-  const type = (field: HTMLInputElement) => {
-    if (!picked || folding) return;
-    const done = typedSoFar(picked.word, field.value);
-    // A wrong letter is not kept.
-    const kept = picked.word.slice(0, done);
-    if (field.value.toLowerCase() !== kept.toLowerCase()) field.value = kept;
-    if (done > typed) sounds.pen();
+  /** The word now has `done` letters: shown, and sealed once it is whole. */
+  const advance = (done: number) => {
+    if (!picked || written.current >= picked.word.length) return;
+    if (done > written.current) sounds.pen();
+    written.current = done;
     setTyped(done);
+    const field = input.current;
+    const kept = picked.word.slice(0, done);
+    // A wrong letter is not kept.
+    if (field && field.value.toLowerCase() !== kept.toLowerCase()) field.value = kept;
     if (done < picked.word.length) return;
     writeGuess(userId, guess.after, {
       word: picked.word,
@@ -260,7 +281,7 @@ export function SeriesGuessStage({
       sealedAt: new Date().toISOString(),
       revealed: false,
     });
-    field.blur();
+    field?.blur();
     later(() => setFolding(true), 800);
     later(() => {
       setScene("sealed");
@@ -269,8 +290,33 @@ export function SeriesGuessStage({
     later(() => setScene("wait"), 4650);
   };
 
+  const focusKeys = () => input.current?.focus({ preventScroll: true });
+
+  // A real keyboard writes wherever the last click went, not only while the hidden field has the focus.
+  useEffect(() => {
+    if (scene !== "write" || !picked) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.ctrlKey || event.metaKey || event.altKey) return;
+      // A space would scroll whatever is behind.
+      if (event.key === " ") event.preventDefault();
+      const letter = typedLetter(event.key, event.code);
+      if (!letter) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const next = picked.word[written.current];
+      if (next && next.toLowerCase() === letter.toLowerCase()) advance(written.current + 1);
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  });
+
   return (
-    <Overlay label={question} onClose={onClose} top={scene === "write"}>
+    <Overlay
+      label={question}
+      onClose={onClose}
+      onTap={scene === "write" ? focusKeys : undefined}
+      top={scene === "write"}
+    >
       <Season place={place} />
 
       {scene === "ask" && (
@@ -299,10 +345,7 @@ export function SeriesGuessStage({
 
       {scene === "write" && picked && (
         <>
-          <div
-            className={cn(styles.letter, folding && styles.fold)}
-            onClick={() => input.current?.focus({ preventScroll: true })}
-          >
+          <div className={cn(styles.letter, folding && styles.fold)}>
             <p aria-live="polite">
               {picked.lead}
               <br />
@@ -320,6 +363,7 @@ export function SeriesGuessStage({
             </p>
           </div>
           <Support className={styles.hint}>{strings.write}</Support>
+          {otherKeyboard && <Support>{strings.switchKeyboard}</Support>}
         </>
       )}
 
@@ -356,7 +400,14 @@ export function SeriesGuessStage({
         autoCorrect="off"
         autoCapitalize="off"
         spellCheck={false}
-        onInput={(event) => type(event.currentTarget)}
+        // A phone's keyboard writes here.
+        onInput={(event) => {
+          if (!picked) return;
+          const value = event.currentTarget.value;
+          // A phone gives no key to read its place from: ask for the English keyboard.
+          setOtherKeyboard([...value].some((character) => character.codePointAt(0)! > 127));
+          advance(typedSoFar(picked.word, value));
+        }}
       />
     </Overlay>
   );

@@ -12,6 +12,7 @@ import {
   opensTomorrow,
   parseGuess,
   previousEpisode,
+  typedLetter,
   typedSoFar,
 } from "./series-guess";
 import { seriesReminderId, seriesReminderPassage, seriesReminderText } from "./series-reminder";
@@ -60,6 +61,18 @@ test("the countdown and the letter", () => {
   assert.equal(typedSoFar("Cole", "co"), 2);
   assert.equal(typedSoFar("grandmother", "grxan dmother"), 11);
   assert.equal(typedSoFar("key", "zzz"), 0);
+});
+
+test("a key writes its letter, also on a keyboard left on Arabic", () => {
+  assert.equal(typedLetter("c", "KeyC"), "c");
+  assert.equal(typedLetter("C", "KeyC"), "C");
+  assert.equal(typedLetter("ؤ", "KeyC"), "c");
+  assert.equal(typedLetter("لا", "KeyB"), "b");
+  // Not a letter: left to the browser.
+  assert.equal(typedLetter("Escape", "Escape"), null);
+  assert.equal(typedLetter("Unidentified", ""), null);
+  assert.equal(typedLetter(" ", "Space"), null);
+  assert.equal(typedLetter("1", "Digit1"), null);
 });
 
 test("a stored guess is read back, and anything else is none", () => {
