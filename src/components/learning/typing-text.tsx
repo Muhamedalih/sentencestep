@@ -135,6 +135,8 @@ interface TypingTextProps {
   highlightIndexes?: ReadonlySet<number> | null;
   /** Extra classes for single words (index among non-space tokens): the day's scene colours its names and words through the letter colour variables. */
   wordClassName?: (index: number) => string | undefined;
+  /** With obscureUntyped: words that stay written all the same (the day's scene's names). Punctuation then stays written too, and each blank is as wide as its letter, so showing the sentence moves nothing. */
+  writtenWords?: ReadonlySet<number>;
 }
 
 export interface UnderlineRect {
@@ -174,6 +176,7 @@ export function TypingText({
   autoFocus = true,
   highlightIndexes = null,
   wordClassName,
+  writtenWords,
 }: TypingTextProps) {
   const { t } = useLocale();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -381,7 +384,11 @@ export function TypingText({
                 // the learner actually typed, not the correct letter
                 // recolored red — recoloring the real answer red would leak
                 // it at exactly the moment it's supposed to stay hidden.
-                const blank = obscureUntyped && (state === "current" || state === "pending");
+                const written =
+                  writtenWords !== undefined &&
+                  (writtenWords.has(thisWordIndex) || !/[\p{L}\p{N}]/u.test(char));
+                const blank =
+                  obscureUntyped && !written && (state === "current" || state === "pending");
                 const display = obscureUntyped && state === "error" ? (errorChar ?? char) : char;
                 return (
                   <Letter
@@ -389,6 +396,7 @@ export function TypingText({
                     state={state}
                     display={display}
                     blank={blank}
+                    sized={writtenWords !== undefined}
                     reveal={obscureUntyped}
                     reducedMotion={reducedMotion}
                     highlight={highlightIndexes?.has(index) ?? false}
@@ -620,6 +628,7 @@ function Letter({
   state,
   display,
   blank = false,
+  sized = false,
   reveal = false,
   reducedMotion,
   highlight = false,
@@ -628,6 +637,8 @@ function Letter({
   display: string;
   /** Render a placeholder tick instead of `display` — the character is still hidden. */
   blank?: boolean;
+  /** The blank takes its own letter's width (see writtenWords). */
+  sized?: boolean;
   /**
    * Word Lists' gap only: pop each letter in as it's confirmed correct,
    * rather than just recoloring already-visible text — since the glyph
@@ -643,7 +654,13 @@ function Letter({
   /** Fix Your Mistakes' red-letter hint (see TypingText's highlightIndex) — only ever changes anything while `state` is still "pending"/"current"; a "correct" or transient "error" letter already has its own color and ignores this. */
   highlight?: boolean;
 }) {
-  const content = blank ? <BlankTick current={state === "current"} /> : display;
+  const content = !blank ? (
+    display
+  ) : sized ? (
+    <SizedBlank current={state === "current"} char={display} />
+  ) : (
+    <BlankTick current={state === "current"} />
+  );
   const highlightPending = highlight && (state === "current" || state === "pending");
 
   return (
@@ -696,5 +713,20 @@ function BlankTick({ current }: { current: boolean }) {
         current ? "bg-[var(--lesson-underline)]" : "bg-[var(--lesson-letter-pending)]",
       )}
     />
+  );
+}
+
+/** A blank exactly as wide as the letter it hides (the day's scene): the letter holds the room, unseen. */
+function SizedBlank({ current, char }: { current: boolean; char: string }) {
+  return (
+    <span aria-hidden="true" className="relative inline-block">
+      <span className="invisible">{char}</span>
+      <span
+        className={cn(
+          "absolute inset-x-[0.04em] bottom-[0.2em] h-[3px] rounded-full transition-colors duration-150",
+          current ? "bg-[var(--lesson-underline)]" : "bg-[var(--lesson-letter-pending)]",
+        )}
+      />
+    </span>
   );
 }

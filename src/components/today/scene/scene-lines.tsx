@@ -12,7 +12,7 @@ import {
   type RefObject,
 } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, Check, Gauge, RotateCcw, X } from "lucide-react";
+import { ArrowRight, Check, Eye, Gauge, RotateCcw, X } from "lucide-react";
 
 import { CurrentWordLabel } from "@/components/learning/current-word-label";
 import {
@@ -69,8 +69,8 @@ const SLIDE_MS = 750;
 
 /** The size of every line but the current one, whose own is set in CSS (px, wide screen / phone). */
 const SIZES = {
-  wide: { prev: 22, old: 15, next: 22, far: 18, gap: 36, anchor: 120 },
-  phone: { prev: 17, old: 12, next: 17, far: 15, gap: 22, anchor: 90 },
+  wide: { prev: 22, old: 15, next: 22, far: 18, gap: 36, anchor: 76, firstAnchor: 12 },
+  phone: { prev: 17, old: 12, next: 17, far: 15, gap: 22, anchor: 64, firstAnchor: 8 },
 } as const;
 
 type LineRole = "cur" | "prev" | "old" | "next" | "far";
@@ -129,6 +129,8 @@ export function SceneLines({
   const reducedMotion = useReducedMotion() ?? false;
   const [index, setIndex] = useState(0);
   const [settledIndex, setSettledIndex] = useState<number | null>(null);
+  /** The sentence is written out, to be typed over. Every new line starts hidden. */
+  const [shown, setShown] = useState(false);
   const [audio, setAudio] = useState<PronunciationStatus>({
     supported: true,
     loading: false,
@@ -222,8 +224,9 @@ export function SceneLines({
     const current = items.findIndex((item) => item.distance === 0);
     if (current < 0) return;
     const currentHeight = heights[current]!;
-    // High enough that the whole line stays in view above a phone keyboard.
-    const anchor = Math.max(8, Math.min(sizes.anchor, stage.clientHeight - currentHeight - 16));
+    // High on the screen, and higher still with no line above; always in view above a phone keyboard.
+    const wanted = items.some((item) => item.distance < 0) ? sizes.anchor : sizes.firstAnchor;
+    const anchor = Math.max(8, Math.min(wanted, stage.clientHeight - currentHeight - 16));
     const tops: number[] = [];
     tops[current] = anchor;
     for (let i = current - 1, y: number = anchor; i >= 0; i--) {
@@ -277,7 +280,13 @@ export function SceneLines({
     playSentenceComplete(resolveSectionSentenceCompleteSound(soundSettings, "stories"));
     if (lineMistakesRef.current === 0) totalsRef.current.clean += 1;
     lineMistakesRef.current = 0;
+    setShown(false);
     setIndex((current) => current + 1);
+  }
+
+  function toggleSentence() {
+    setShown((current) => !current);
+    inputRef.current?.focus();
   }
 
   function replay() {
@@ -350,6 +359,12 @@ export function SceneLines({
           {!allDone && (
             <div className="bg-foreground/6 ml-auto flex shrink-0 items-center gap-0.5 rounded-2xl p-1">
               <ToolButton
+                label={strings.showSentence}
+                icon={<Eye className="size-4" aria-hidden="true" />}
+                pressed={shown}
+                onClick={toggleSentence}
+              />
+              <ToolButton
                 label={t.lessonSettings.speedTitle}
                 icon={<Gauge className="size-4" aria-hidden="true" />}
                 onClick={cycleSpeed}
@@ -395,7 +410,7 @@ export function SceneLines({
                   className="border-brand/70 bg-brand/14 flex items-center justify-between gap-3 rounded-[14px] border px-3.5 py-2"
                 >
                   <span className="text-[19px] font-semibold tracking-[.02em]" lang="en">
-                    {entry.word.word}
+                    {shown ? entry.word.word : blanks(entry.word.word)}
                   </span>
                   <span className="text-foreground text-[17px] dark:text-[#e6e7ff]" dir="auto">
                     {termOf(entry.word.hintAr)}
@@ -407,12 +422,14 @@ export function SceneLines({
 
         <div className="mx-auto mt-[18px] flex min-h-0 w-full max-w-[1280px] flex-1 gap-6 px-[18px] pb-2 md:mt-[26px] md:pr-7 md:pl-8 lg:gap-[46px] lg:pl-14 [html[data-keyboard]_&]:mt-1.5">
           {allDone ? (
-            <SceneDone
-              strings={strings}
-              reducedMotion={reducedMotion}
-              episode={episodeOf(passageId, locale)}
-              nextLabel={seriesLabels(locale).next}
-            />
+            <div className="flex min-h-0 flex-1 overflow-y-auto">
+              <SceneDone
+                strings={strings}
+                reducedMotion={reducedMotion}
+                episode={episodeOf(passageId, locale)}
+                nextLabel={seriesLabels(locale).next}
+              />
+            </div>
           ) : (
             <div
               ref={stageRef}
@@ -445,6 +462,7 @@ export function SceneLines({
                         inputRef={inputRef}
                         hasStarted={hasStarted}
                         settled={settledIndex === index}
+                        shown={shown}
                         reducedMotion={reducedMotion}
                         onCorrect={() => {
                           play("letter");
@@ -471,7 +489,9 @@ export function SceneLines({
               })}
             </div>
           )}
-          {!allDone && <SceneWordRail words={words} strings={strings} railRef={railRef} />}
+          {!allDone && (
+            <SceneWordRail words={words} shown={shown} strings={strings} railRef={railRef} />
+          )}
         </div>
       </div>
     </SharedInputProvider>
@@ -481,7 +501,8 @@ export function SceneLines({
 /**
  * The line being typed, drawn as TypingSentence draws a Stories sentence: the word's meaning above
  * (for the day's words, the ones with a written meaning), the sentence with its moving underlines,
- * the translation and the live numbers below.
+ * the translation and the live numbers below. Its letters are hidden until typed, unless the
+ * learner asks to see the sentence; names and punctuation are always written.
  */
 function CurrentLine({
   step,
@@ -489,6 +510,7 @@ function CurrentLine({
   inputRef,
   hasStarted,
   settled,
+  shown,
   reducedMotion,
   onCorrect,
   onWrong,
@@ -501,6 +523,7 @@ function CurrentLine({
   hasStarted: boolean;
   /** The line has finished sliding in. */
   settled: boolean;
+  shown: boolean;
   reducedMotion: boolean;
   onCorrect: () => void;
   onWrong: (word: string | null) => void;
@@ -533,10 +556,10 @@ function CurrentLine({
   });
   positionRef.current = engine.typed.length;
 
-  // A new array when the line arrives, so the underline is measured again where it now stands.
+  // A new array when the line arrives or is shown, so the underline is measured again where it now stands.
   const letterStates = useMemo(
-    () => (settled ? [...engine.letterStates] : engine.letterStates),
-    [engine.letterStates, settled],
+    () => (settled || shown ? [...engine.letterStates] : engine.letterStates),
+    [engine.letterStates, settled, shown],
   );
 
   const currentIndex =
@@ -558,7 +581,9 @@ function CurrentLine({
       )}
       <div className="mb-1 min-h-9 font-sans sm:min-h-[52px] [html[data-keyboard]_&]:hidden">
         <CurrentWordLabel
-          word={labelled ? { en: labelled.word, text: termOf(labelled.hintAr) } : undefined}
+          word={
+            labelled ? { en: shown ? labelled.word : "", text: termOf(labelled.hintAr) } : undefined
+          }
           dir={dir}
         />
       </div>
@@ -571,6 +596,9 @@ function CurrentLine({
           onChange={engine.handleChange}
           onPaste={engine.handlePaste}
           reducedMotion={reducedMotion}
+          obscureUntyped={!shown}
+          writtenWords={given}
+          errorChar={engine.errorChar}
           textClassName="font-serif max-sm:text-[2rem] text-[clamp(3rem,1.4rem+4.5vw,7rem)] lg:text-[68px] lesson-sentence max-md:[html[data-keyboard]_&]:text-[24px]"
           textStyle={font ? { fontFamily: font } : undefined}
           onWordClick={settled ? onWordClick : undefined}
@@ -688,6 +716,7 @@ function StageText({ row, names }: { row: StageRow; names: ReadonlySet<string> }
  */
 function SceneWordRail({
   words,
+  shown,
   strings,
   railRef,
 }: {
@@ -696,6 +725,8 @@ function SceneWordRail({
     current: boolean;
     done: boolean;
   }[];
+  /** The current line is written out, so its word may be too. */
+  shown: boolean;
   strings: SceneStrings;
   railRef: RefObject<HTMLDivElement | null>;
 }) {
@@ -711,7 +742,7 @@ function SceneWordRail({
         </h5>
         <ul className="contents">
           {words.map(({ word, current, done }) => {
-            const english = done || current ? word.word : blanks(word.word);
+            const english = done || (current && shown) ? word.word : blanks(word.word);
             return (
               <li
                 key={word.id}
@@ -731,6 +762,12 @@ function SceneWordRail({
                     current ? "text-[30px] leading-[1.3]" : "text-[15px]",
                     done && "text-[#1f7a4d] dark:text-[#bfeccf]",
                   )}
+                  // The blanks of a long word are drawn smaller so they all fit.
+                  style={
+                    current && !shown && word.word.length > 8
+                      ? { fontSize: 250 / word.word.length }
+                      : undefined
+                  }
                   lang="en"
                 >
                   {done ? "✓ " : ""}
@@ -773,33 +810,36 @@ function SceneDone({
       initial={reducedMotion ? false : { opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25 }}
-      className="flex max-w-[900px] flex-1 flex-col items-center justify-center gap-2.5 text-center"
+      className="m-auto flex w-full max-w-[460px] flex-col items-center py-4 text-center"
     >
-      <span className="border-success/40 bg-success/15 text-success grid size-[52px] place-items-center rounded-full border">
-        <Check className="size-[26px]" strokeWidth={2.4} aria-hidden="true" />
+      <span className="border-success/40 bg-success/15 text-success grid size-[84px] place-items-center rounded-full border">
+        <Check className="size-11" strokeWidth={2.4} aria-hidden="true" />
       </span>
-      <h1 className="text-[17px] font-bold" dir="auto">
+      <h1 className="mt-6 text-[28px] leading-snug font-bold md:text-[34px]" dir="auto">
         {strings.doneTitle}
       </h1>
-      <p className="text-muted-foreground text-[13px]" dir="auto">
+      <p className="text-muted-foreground mt-2 text-[17px] md:text-[19px]" dir="auto">
         {strings.doneBody}
       </p>
       {episode && (
-        <p className="border-primary/25 bg-primary/10 mt-2 max-w-xs rounded-xl border px-3.5 py-3">
-          <span className="text-muted-foreground block text-xs" dir="auto">
+        <div className="border-primary/25 bg-primary/10 mt-8 w-full rounded-2xl border px-6 py-5">
+          <span className="text-muted-foreground block text-[15px]" dir="auto">
             {nextLabel}
           </span>
-          <b className="mt-1 block text-sm" dir="auto">
+          <b className="mt-2 block text-[20px] leading-relaxed md:text-[22px]" dir="auto">
             {episode.next}
           </b>
-        </p>
+        </div>
       )}
       <Link
         href="/learn/today/go?step=words"
-        className="focus-visible:ring-ring mt-2 inline-flex w-full max-w-xs items-center justify-center gap-2 rounded-xl bg-slate-900 px-3.5 py-2.5 text-[13.5px] font-bold text-white outline-none focus-visible:ring-2 dark:bg-white dark:text-slate-900"
+        className={cn(
+          "focus-visible:ring-ring inline-flex h-14 w-full items-center justify-center gap-2.5 rounded-2xl bg-slate-900 text-[18px] font-bold text-white outline-none focus-visible:ring-2 dark:bg-white dark:text-slate-900",
+          episode ? "mt-4" : "mt-8",
+        )}
       >
         <span dir="auto">{strings.toWords}</span>
-        <ArrowRight className="size-4" aria-hidden="true" />
+        <ArrowRight className="size-5" aria-hidden="true" />
       </Link>
     </motion.div>
   );
