@@ -72,6 +72,7 @@ export const ROLLOUT_IDS = [
   "premiumStrip",
   "dailyScene",
   "todayTidy",
+  "passageSeries",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -892,6 +893,17 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "Nothing changes for a learner who still has free passages or stories to finish: the taste and the moments start only after those are done.",
       "A moment never shows in the first 24 hours after sign-up, to a learner with an order still unpaid, to a subscriber or to a guest. Two dismissals within a week pause the moments for seven days.",
       "Every shown, clicked and dismissed moment is recorded (OFFER_SHOWN, OFFER_CLICKED, OFFER_DISMISSED), so the result can be read per group. To test it, choose “A share of learners”: the accounts left out keep today's Home and lock screens.",
+    ],
+  },
+  passageSeries: {
+    id: "passageSeries",
+    audience: "learner",
+    title: "Series: passages that continue from one episode to the next",
+    description:
+      "A season of seven passages with the same people, each ending on a question the next one answers (the first is «The Red Book»). The episodes stand on their own shelf at the top of the Passages page, the end of each one shows the next episode's question, and while an episode is unfinished it is the day's passage (and the day's scene).",
+    notes: [
+      "Episodes are Draft passages for now, so only an admin sees them whatever this is set to: publish them in Admin > Passages before opening it to learners.",
+      "Episode 1 is the only one written so far; its voices are free Edge voices and can be replaced in Admin > Passages.",
     ],
   },
   dailyScene: {

@@ -1,4 +1,5 @@
 import { getLearnLanguage } from "@/lib/learn-language-server";
+import { viewerSeriesEpisodes } from "@/lib/passages/series-viewer";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -70,8 +71,14 @@ export default async function PassagesPage() {
 
   const progressById = new Map(progress.map((entry) => [entry.passageId, entry]));
 
+  // The series shelf (permission passageSeries): its episodes are drafts, so an admin's for now.
+  const series = (await viewerSeriesEpisodes()).map((summary) =>
+    localizeSummary(summary, pageLocale),
+  );
+
   return (
     <PassagesLibrary
+      series={series}
       passages={passages}
       progress={progress}
       upNextId={recommendedPassageId(

@@ -12,6 +12,8 @@ import { todayPicks } from "@/lib/hybrid/picks";
 import { getLocale } from "@/lib/i18n/get-locale";
 import type { SupportLocale } from "@/lib/i18n/locales";
 import { fetchPassage, fetchPassageProgress, fetchPassageSummaries } from "@/lib/passages/queries";
+import { seriesDayEpisode } from "@/lib/passages/series";
+import { viewerSeriesEpisodes } from "@/lib/passages/series-viewer";
 import type { PassageProgress, PassageSummary } from "@/lib/passages/types";
 import { fetchProgressCached } from "@/lib/progress/cached";
 import { SENTENCE_REVIEW_HREF, SENTENCE_REVIEW_MINUTES } from "@/lib/sentence-bank/review";
@@ -76,14 +78,22 @@ async function readLessonPicks(args: {
   completedStoryIds: string[];
 }) {
   const { userId, startingLevel } = args;
-  const [summaries, passageProgress] = await Promise.all([
+  const [published, passageProgress, series] = await Promise.all([
     args.passagesEnabled
       ? quiet("passages", () => fetchPassageSummaries(), [] as PassageSummary[])
       : ([] as PassageSummary[]),
     args.passagesEnabled
       ? quiet("passage progress", () => fetchPassageProgress(userId), [] as PassageProgress[])
       : ([] as PassageProgress[]),
+    // The series episodes this viewer is shown (permission passageSeries; drafts, so an admin's).
+    args.passagesEnabled ? viewerSeriesEpisodes() : ([] as PassageSummary[]),
   ]);
+  const summaries = [...published.filter((one) => !series.some((e) => e.id === one.id)), ...series];
+  // An unfinished episode is the passage open next, ahead of the usual list.
+  const done = new Set(
+    passageProgress.flatMap((entry) => (entry.completedAt ? [entry.passageId] : [])),
+  );
+  const episode = series.find((entry) => !done.has(entry.id)) ?? null;
 
   const picks = todayPicks({
     userId,
@@ -91,14 +101,15 @@ async function readLessonPicks(args: {
     isPremium: args.isPremium,
     taste: args.hybridOffers,
     startingLevel,
-    passages: { summaries, progress: passageProgress },
+    passages: { summaries: published, progress: passageProgress },
     storiesUnits: args.storiesUnits,
     completedStoryIds: args.completedStoryIds,
   });
   return {
     summaries,
     passageProgress,
-    passage: picks.passage,
+    series: series.map((entry) => entry.id),
+    passage: episode ?? picks.passage,
     story: picks.story,
     tasteToday: picks.passageIsTaste || picks.storyIsTaste,
   };
@@ -114,13 +125,21 @@ function scenePassageOf(
   todayISO: string,
   dayOf: (iso: string) => string,
 ): PassageSummary | null {
-  const id = sceneDayPassageId({
-    progress: picks.passageProgress,
-    todayISO,
-    dayOf,
-    known: (passageId) => picks.summaries.some((entry) => entry.id === passageId),
-    next: picks.passage?.id ?? null,
-  });
+  // While a series is on, the day's scene is its episode (see seriesDayEpisode).
+  const id =
+    seriesDayEpisode({
+      episodes: picks.series,
+      progress: picks.passageProgress,
+      todayISO,
+      dayOf,
+    }) ??
+    sceneDayPassageId({
+      progress: picks.passageProgress,
+      todayISO,
+      dayOf,
+      known: (passageId) => picks.summaries.some((entry) => entry.id === passageId),
+      next: picks.passage?.id ?? null,
+    });
   const summary = picks.summaries.find((entry) => entry.id === id);
   return summary?.wordGroupId ? summary : null;
 }

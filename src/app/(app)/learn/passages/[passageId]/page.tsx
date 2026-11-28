@@ -24,6 +24,7 @@ import { arrangedExam } from "@/lib/passages/exam";
 import { localizePassage } from "@/lib/passages/localize";
 import { resumeSectionIndex } from "@/lib/passages/progress";
 import { fetchPassage, fetchPassageProgress, fetchPassageSummaries } from "@/lib/passages/queries";
+import { episodeOf } from "@/lib/passages/series";
 import { getGateFigures } from "@/lib/stats/gate-figures";
 import { getCurrentUser } from "@/lib/supabase/auth";
 
@@ -213,11 +214,20 @@ export default async function PassageReaderPage({
         }
         // A step of Today's session (opened from Home): the end screen carries on to the story.
         // (`redo=1`, from "Redo today's lessons", keeps the story that follows today's own.)
-        todayNext={await todayNextLink(
-          features.rollouts.todaySession,
-          searchParams,
-          features.rollouts.dailyScene && passage.wordGroupId !== null,
-        )}
+        todayNext={
+          // A series episode goes on to its own lines: while it is the day's, the scene is it.
+          features.rollouts.passageSeries &&
+          features.rollouts.dailyScene &&
+          isAdminUser &&
+          !learnerView &&
+          episodeOf(passage.id, locale)
+            ? { href: "/learn/today/scene", scene: true }
+            : await todayNextLink(
+                features.rollouts.todaySession,
+                searchParams,
+                features.rollouts.dailyScene && passage.wordGroupId !== null,
+              )
+        }
         wordsLink={wordsLink}
       />
     </div>

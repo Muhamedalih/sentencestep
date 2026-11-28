@@ -11,6 +11,7 @@ import type { PassageAnswer } from "@/components/passages/passage-question-dock"
 import { useLocale } from "@/components/providers/locale-provider";
 import { scorePercent } from "@/lib/passages/progress";
 import { splitAroundWord } from "@/lib/passages/text";
+import { episodeOf, seriesLabels } from "@/lib/passages/series";
 import { sceneStrings } from "@/lib/today/scene-strings";
 import type { Passage, PassageQuestion, PassageWord } from "@/lib/passages/types";
 import { cn } from "@/lib/utils";
@@ -101,6 +102,8 @@ export function PassageCompletion({
   const { t, locale } = useLocale();
   const reduced = useReducedMotion();
   const speaker = useWordSpeaker();
+  // A series episode (see series.ts) ends on the question the next one answers.
+  const episode = episodeOf(passage.id, locale);
 
   const total = allQuestions.length;
   const correct = allQuestions.filter((question) => answers[question.id]?.correct).length;
@@ -178,6 +181,20 @@ export function PassageCompletion({
               </motion.li>
             ))}
           </ul>
+        )}
+
+        {episode && (
+          <div className="border-primary/25 bg-primary/10 mt-4 rounded-xl border px-3.5 py-3">
+            <p className="text-muted-foreground text-xs">
+              <bdi>
+                {seriesLabels(locale).episode(episode.number, episode.total)} ·{" "}
+                {seriesLabels(locale).next}
+              </bdi>
+            </p>
+            <p className="mt-1 font-semibold" dir="auto">
+              {episode.next}
+            </p>
+          </div>
         )}
 
         <div className="mt-6 flex flex-col gap-2.5">

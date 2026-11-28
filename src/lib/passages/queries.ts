@@ -2,6 +2,7 @@ import { unstable_cache } from "next/cache";
 import { cache } from "react";
 
 import { getDefaultPronunciationVoiceId } from "@/lib/admin/voices-queries";
+import { SERIES_PASSAGE_IDS } from "@/lib/passages/series";
 import { estimatePassageMinutes } from "@/lib/passages/progress";
 import { containsWholeWord } from "@/lib/passages/text";
 import { parseQuestions } from "@/lib/passages/parse";
@@ -85,14 +86,19 @@ function toSummary(
 
 // --- The list -------------------------------------------------------------
 
-async function loadSummaries(language: "en" | "de" = "en"): Promise<PassageSummary[]> {
+async function loadSummaries(language: "en" | "de" | "series" = "en"): Promise<PassageSummary[]> {
   const supabase = createServiceRoleClient();
 
   // German passages (permission germanTrack, ids "de-…") are drafts for now, listed to an admin alone.
-  const base = supabase.from("passages").select("*").eq("status", language === "de" ? "draft" : "published");
-  const { data: passages, error } = await (language === "de"
-    ? base.like("id", "de-%")
-    : base.not("id", "like", "de-%")
+  // So are series episodes (see series.ts), whatever their status.
+  const all = supabase.from("passages").select("*");
+  const status = language === "de" ? "draft" : "published";
+  const { data: passages, error } = await (
+    language === "series"
+      ? all.in("id", [...SERIES_PASSAGE_IDS])
+      : language === "de"
+        ? all.eq("status", status).like("id", "de-%")
+        : all.eq("status", status).not("id", "like", "de-%")
   )
     .order("level")
     .order("order_index");
@@ -153,6 +159,24 @@ export const fetchPassageSummaries = cache(async (): Promise<PassageSummary[]> =
     return [];
   }
 });
+
+/**
+ * The written series episodes as cards, in episode order, drafts included: the caller MUST have
+ * checked who may see them (see series-viewer.ts). Not cached; a failed read gives none.
+ */
+export async function fetchSeriesSummaries(): Promise<PassageSummary[]> {
+  if (!isSupabaseConfigured()) return [];
+  try {
+    const found = await loadSummaries("series");
+    // A card is numbered by its place in the series, not by its place in its level.
+    return SERIES_PASSAGE_IDS.flatMap((id, index) =>
+      found.filter((entry) => entry.id === id).map((entry) => ({ ...entry, order: index + 1 })),
+    );
+  } catch (error) {
+    console.error("[passages] fetchSeriesSummaries failed", error);
+    return [];
+  }
+}
 
 /**
  * The German passages (permission germanTrack) as cards, for an admin's list only: the caller MUST have

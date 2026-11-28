@@ -4,6 +4,12 @@ import { join } from "node:path";
 import test from "node:test";
 
 import { PASSAGE_SEEDS } from "@/data/passages";
+import {
+  episodeOf,
+  SERIES_PASSAGE_IDS,
+  seriesDayEpisode,
+  seriesLabels,
+} from "@/lib/passages/series";
 import type { PassageSeed } from "@/data/passages";
 import {
   isPassageWordGroupId,
@@ -1034,7 +1040,7 @@ test("Home's card: finish what you started, else the first one not started, else
 
 test("the passages cover A1, A2, B1 and B2, numbered 1, 2, 3… inside each level", () => {
   for (const [level, count] of [
-    ["A1", 15],
+    ["A1", 16],
     ["A2", 15],
     ["B1", 12],
     ["B2", 11],
@@ -1888,6 +1894,45 @@ test("German characters take their man/woman from the English character who says
 test("an English role without a voice of its own gives no gender, and passages that don't line up give nothing", () => {
   const roles = germanTwinRoles([{ speaker: "E-Mail" }], [{ speaker: "Email" }], () => null);
   assert.deepEqual(roles.get("E-Mail"), { twin: "Email", gender: null });
-  assert.equal(germanTwinRoles([{ speaker: null }], [{ speaker: null }, { speaker: null }], () => "male").size, 0);
+  assert.equal(
+    germanTwinRoles([{ speaker: null }], [{ speaker: null }, { speaker: null }], () => "male").size,
+    0,
+  );
   assert.equal(germanTwinRoles([], [], () => "male").size, 0);
+});
+
+// --- Series (permission passageSeries) ---------------------------------------------------------
+
+test("every series episode is an authored passage, and says its place and what comes next", () => {
+  for (const id of SERIES_PASSAGE_IDS) {
+    assert.ok(
+      PASSAGE_SEEDS.some((seed) => seed.slug === id),
+      id,
+    );
+    for (const locale of [null, "ar", "es", "tr"] as const) {
+      const episode = episodeOf(id, locale);
+      assert.ok(episode && episode.seriesTitle && episode.next);
+      assert.ok(episode.number >= 1 && episode.number <= episode.total);
+      assert.ok(seriesLabels(locale).episode(episode.number, episode.total));
+    }
+  }
+  assert.equal(episodeOf("did-you-eat", "ar"), null);
+});
+
+test("the day's episode is the one finished today, else the first one still to finish", () => {
+  const dayOf = (iso: string) => iso.slice(0, 10);
+  const episodes = ["one", "two", "three"];
+  const pick = (progress: { passageId: string; completedAt: string | null }[]) =>
+    seriesDayEpisode({ episodes, progress, todayISO: "2026-11-28", dayOf });
+  assert.equal(pick([]), "one");
+  assert.equal(pick([{ passageId: "one", completedAt: null }]), "one");
+  // Finished today: the day stays on it, so its lines and words are the day's.
+  assert.equal(pick([{ passageId: "one", completedAt: "2026-11-28T08:00:00Z" }]), "one");
+  assert.equal(pick([{ passageId: "one", completedAt: "2026-11-27T08:00:00Z" }]), "two");
+  // Every written episode finished before today: the day goes back to the usual passages.
+  assert.equal(
+    pick(episodes.map((id) => ({ passageId: id, completedAt: "2026-11-26T08:00:00Z" }))),
+    null,
+  );
+  assert.equal(seriesDayEpisode({ episodes: [], progress: [], todayISO: "x", dayOf }), null);
 });

@@ -44,6 +44,7 @@ import {
   isDictationComplete,
 } from "@/lib/features/dictation";
 import { normalizeMistakeWord } from "@/lib/mistakes/normalize";
+import { episodeOf, seriesLabels, type EpisodeInfo } from "@/lib/passages/series";
 import { todayLocalISODate } from "@/lib/progress/streak";
 import {
   bareWord,
@@ -122,7 +123,15 @@ interface Rejection {
  * words stand beside it with their meanings, their English hidden until written. After the last line
  * the day's second task is recorded and the way on is the words.
  */
-export function SceneLines({ scene, title }: { scene: Scene; title: string }) {
+export function SceneLines({
+  scene,
+  title,
+  passageId,
+}: {
+  scene: Scene;
+  title: string;
+  passageId: string;
+}) {
   const { locale, t, dir } = useLocale();
   const strings = sceneStrings(locale);
   const reducedMotion = useReducedMotion() ?? false;
@@ -539,7 +548,12 @@ export function SceneLines({ scene, title }: { scene: Scene; title: string }) {
 
         <div className="mx-auto mt-[18px] flex min-h-0 w-full max-w-[1280px] flex-1 gap-6 px-[18px] pb-2 md:mt-[26px] md:pr-7 md:pl-8 lg:gap-[46px] lg:pl-14 [html[data-keyboard]_&]:mt-1.5">
           {allDone ? (
-            <SceneDone strings={strings} reducedMotion={reducedMotion} />
+            <SceneDone
+              strings={strings}
+              reducedMotion={reducedMotion}
+              episode={episodeOf(passageId, locale)}
+              nextLabel={seriesLabels(locale).next}
+            />
           ) : (
             <div
               ref={stageRef}
@@ -802,7 +816,18 @@ function SceneWordRail({
 }
 
 /** After the last line: one calm mark and one button to the words. */
-function SceneDone({ strings, reducedMotion }: { strings: SceneStrings; reducedMotion: boolean }) {
+function SceneDone({
+  strings,
+  reducedMotion,
+  episode,
+  nextLabel,
+}: {
+  strings: SceneStrings;
+  reducedMotion: boolean;
+  /** A series episode ends on the question the next one answers. */
+  episode: EpisodeInfo | null;
+  nextLabel: string;
+}) {
   return (
     <motion.div
       initial={reducedMotion ? false : { opacity: 0, y: 8 }}
@@ -819,6 +844,16 @@ function SceneDone({ strings, reducedMotion }: { strings: SceneStrings; reducedM
       <p className="text-muted-foreground text-[13px]" dir="auto">
         {strings.doneBody}
       </p>
+      {episode && (
+        <p className="border-primary/25 bg-primary/10 mt-2 max-w-xs rounded-xl border px-3.5 py-3">
+          <span className="text-muted-foreground block text-xs" dir="auto">
+            {nextLabel}
+          </span>
+          <b className="mt-1 block text-sm" dir="auto">
+            {episode.next}
+          </b>
+        </p>
+      )}
       <Link
         href="/learn/today/go?step=words"
         className="focus-visible:ring-ring mt-2 inline-flex w-full max-w-xs items-center justify-center gap-2 rounded-xl bg-slate-900 px-3.5 py-2.5 text-[13.5px] font-bold text-white outline-none focus-visible:ring-2 dark:bg-white dark:text-slate-900"
