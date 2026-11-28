@@ -37,6 +37,27 @@ export default async function AdminPermissionsPage() {
           Anything we build from now on is added to this page.
         </p>
       </div>
+      <div className="border-border bg-card flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl border px-4 py-3">
+        <p className="text-sm">
+          <strong>See it as someone in Egypt</strong>
+          <span className="text-muted-foreground"> (only you, this browser, one hour)</span>
+        </p>
+        {/* Plain <a>, not <Link>: a prefetch would switch the view on by itself. */}
+        {/* eslint-disable @next/next/no-html-link-for-pages */}
+        <a
+          href="/api/egypt-view?mode=now"
+          className="text-sm font-medium underline underline-offset-4"
+        >
+          Current: lock page
+        </a>
+        <a
+          href="/api/egypt-view?mode=popup"
+          className="text-sm font-medium underline underline-offset-4"
+        >
+          Before: pop-up
+        </a>
+        {/* eslint-enable @next/next/no-html-link-for-pages */}
+      </div>
       <PermissionsForm
         initial={config}
         previewActive={previewActive}

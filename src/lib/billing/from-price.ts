@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 
 import { cheapestPerMonth } from "@/lib/billing/plan-views";
-import { resolvePricingCountry } from "@/lib/billing/geo-pricing";
+import { resolveViewerCountry } from "@/lib/billing/viewer-country";
 import { tierForCountry } from "@/lib/billing/pricing";
 
 /**
@@ -10,6 +10,6 @@ import { tierForCountry } from "@/lib/billing/pricing";
  * hosting platform's geolocation, exactly as /upgrade does.
  */
 export async function getFromMonthlyPrice(): Promise<string> {
-  const { country } = resolvePricingCountry(await headers());
+  const { country } = await resolveViewerCountry(await headers());
   return cheapestPerMonth(tierForCountry(country));
 }
