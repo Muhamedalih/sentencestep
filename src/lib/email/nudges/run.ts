@@ -20,6 +20,7 @@ import {
   dayOneNudgeEmail,
   nudgeLanguage,
   reminderEmail,
+  render,
   sessionReminderEmail,
   vodafoneSoonEmail,
 } from "@/lib/email/nudges/copy";
@@ -56,6 +57,7 @@ import {
   personalReminderEmail,
   reminderPath,
 } from "@/lib/return-loop/message";
+import { seriesReminderPassage, seriesReminderText } from "@/lib/passages/series-reminder";
 import type { PersonalReminder } from "@/lib/return-loop/message";
 import { warmupDay, warmupLimit } from "@/lib/email/providers/warmup";
 import { getEmailProvider, isSesRouteEnabled } from "@/lib/email/provider-registry";
@@ -150,7 +152,7 @@ interface Recipient {
   /** The date (YYYY-MM-DD) a session reminder was due (the session reminder only). */
   reminderDay?: string;
   /** The session reminder only: what the learner's chosen reminder names (null for a plain one, set before the return loop) and the channel they chose. */
-  personal?: (PersonalReminder & { path: string }) | null;
+  personal?: (PersonalReminder & { path: string; series?: string }) | null;
   channel?: "email" | "push";
 }
 
@@ -591,6 +593,25 @@ export async function runSessionReminders(options: {
     handled.has(`${userId}|SESSION_REMINDER:${day}`) ||
     handled.has(`${userId}|SESSION_REMINDER_PUSH:${day}`);
 
+  // A series reminder (see passages/series-reminder.ts) whose episode was already opened says nothing
+  // about it any more: it goes out as the plain reminder.
+  const seriesRows = rows.filter((row) => seriesReminderPassage(row.lesson_id));
+  const opened = new Set(
+    seriesRows.length === 0
+      ? []
+      : (
+          await chunked(
+            seriesRows.map((row) => row.user_id),
+            (c) =>
+              db
+                .from("passage_progress")
+                .select("user_id, passage_id")
+                .in("user_id", c)
+                .gt("sections_done", 0),
+          )
+        ).map((entry) => `${entry.user_id}|series:${entry.passage_id}`),
+  );
+
   const recipients: Recipient[] = [];
   for (const row of rows) {
     const day = row.remind_at.slice(0, 10);
@@ -609,7 +630,7 @@ export async function runSessionReminders(options: {
         language: nudgeLanguage(profile?.preferred_language),
         reminderDay: day,
         channel,
-        personal: personalOf(row),
+        personal: opened.has(`${row.user_id}|${row.lesson_id}`) ? null : personalOf(row),
       });
     }
   }
@@ -700,21 +721,23 @@ export async function runSessionReminders(options: {
       skipHoldout: true,
       makeEvent: (r) => ({ type: "SESSION_REMINDER", day: r.reminderDay ?? "" }),
       buildEmail: (r, unsubscribe) =>
-        r.personal
-          ? personalReminderEmail({
-              origin,
-              displayName: r.displayName,
-              language: r.language,
-              reminder: r.personal,
-              path: r.personal.path,
-              unsubscribe,
-            })
-          : sessionReminderEmail({
-              origin,
-              displayName: r.displayName,
-              language: r.language,
-              unsubscribe,
-            }),
+        r.personal?.series
+          ? seriesEmail(origin, r, r.personal.series, unsubscribe)
+          : r.personal
+            ? personalReminderEmail({
+                origin,
+                displayName: r.displayName,
+                language: r.language,
+                reminder: r.personal,
+                path: r.personal.path,
+                unsubscribe,
+              })
+            : sessionReminderEmail({
+                origin,
+                displayName: r.displayName,
+                language: r.language,
+                unsubscribe,
+              }),
     });
   }
   return summary;
@@ -759,8 +782,41 @@ async function loadDueReminders(db: Db, from: Date, to: Date): Promise<DueRemind
   }));
 }
 
+/** The email of a series reminder: the question left open, and the episode that answers it. */
+function seriesEmail(
+  origin: string,
+  recipient: Recipient,
+  passageId: string,
+  unsubscribe: UnsubscribeLinks | null,
+): EmailContent {
+  const text = seriesReminderText(recipient.language, passageId)!;
+  return render(recipient.language, {
+    subject: text.subject,
+    preview: text.preview,
+    heading: text.heading,
+    paragraphs: [text.body],
+    cta: text.cta,
+    ctaUrl: `${origin}${text.path}`,
+    settingsUrl: `${origin}/learn/settings`,
+    displayName: recipient.displayName,
+    unsubscribe,
+  });
+}
+
 /** What a chosen reminder names: its lesson and word, or null for a reminder set before the return loop (it is sent as the plain one). */
-function personalOf(row: DueReminderRow): (PersonalReminder & { path: string }) | null {
+function personalOf(
+  row: DueReminderRow,
+): (PersonalReminder & { path: string; series?: string }) | null {
+  const series = seriesReminderPassage(row.lesson_id);
+  if (series) {
+    return {
+      title: row.lesson_title,
+      word: null,
+      minutes: DEFAULT_MINUTES,
+      path: `/learn/passages/${series}`,
+      series,
+    };
+  }
   if (!row.lesson_id && !row.word) return null;
   return {
     title: row.lesson_title,
