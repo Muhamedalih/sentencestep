@@ -133,7 +133,7 @@ export function SceneLines({
   scene: Scene;
   title: string;
   passageId: string;
-  /** word (normalized) -> its recorded clip. */
+  /** word (normalized), or "<line id>:<word>" in a series -> its recorded clip. */
   wordClips: Record<string, string>;
 }) {
   const { locale, t } = useLocale();
@@ -194,14 +194,15 @@ export function SceneLines({
       lastWordRef.current = key;
       const request = ++askedRef.current;
       audioRef.current?.stop();
-      let url = wordClips[key] ?? madeRef.current[key] ?? null;
+      let url =
+        wordClips[`${step?.line.id}:${key}`] ?? wordClips[key] ?? madeRef.current[key] ?? null;
       if (!url) {
         url = await makeSceneWordClipAction(key).catch(() => null);
         if (url) madeRef.current[key] = url;
       }
       if (url && request === askedRef.current) wordClip.play(url);
     },
-    [wordClips, wordClip],
+    [wordClips, wordClip, step],
   );
 
   // The cursor is measured on screen, so it appears once the line has arrived.
