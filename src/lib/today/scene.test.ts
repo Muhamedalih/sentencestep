@@ -2,10 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import type { PassageSection, PassageWord } from "@/lib/passages/types";
-import { applyDictationInput, dictationView, isDictationComplete } from "@/lib/features/dictation";
 import {
   buildScene,
-  fillGiven,
+  givenRanges,
   nameWordIndexes,
   passageNames,
   sceneDayPassageId,
@@ -13,11 +12,11 @@ import {
   sceneReviewWords,
   sceneWordCards,
   sentenceSpans,
-  showGiven,
   stageRows,
   targetWordIndexes,
   typedSpan,
 } from "@/lib/today/scene";
+import { backspaceOverRanges, fillRanges } from "@/lib/given-ranges";
 import type { Scene } from "@/lib/today/scene";
 import { BLANK_TOKEN } from "@/types/word-lists";
 
@@ -326,26 +325,26 @@ test("names are written for the learner and the day's words are marked", () => {
   assert.deepEqual([...given], [0, 5]);
   assert.deepEqual([...targetWordIndexes(target, [{ ...word("guitar"), audioUrl: "x" }])], [3]);
 
-  // Every name is drawn from the start, the ones further along too.
-  const drawn = showGiven(dictationView(target, ""), given).tokens.flatMap((token) =>
-    token.kind === "word"
-      ? [token.cells.map((cell) => (cell.kind === "slot" ? (cell.typed ?? "_") : "")).join("")]
-      : [],
-  );
-  assert.deepEqual(drawn, ["Leo", "_____", "___", "______", "__", "Millbrook"]);
+  // Each name with what follows it is written for the learner.
+  assert.deepEqual(givenRanges(target, given), [
+    [0, 4],
+    [24, target.length],
+  ]);
+});
 
-  // The first word is a name: it is there before anything is typed.
-  const start = fillGiven(target, "", given);
-  assert.equal(dictationView(target, start).cursor?.word, 1);
-  // Typing up to the last name writes that one too, and the line is complete.
-  const end = fillGiven(
-    target,
-    applyDictationInput(target, start, `${start}takestheguitarto`),
-    given,
-  );
-  assert.ok(isDictationComplete(target, end));
-  // A line with no name is left as the learner has it.
-  assert.equal(fillGiven(target, "", new Set()), "");
+test("the typing passes over the names, forwards and back", () => {
+  const target = "Then Leo plays.";
+  const ranges = givenRanges(target, nameWordIndexes(target, new Set(["Leo"])));
+  assert.equal(fillRanges(target, "Then ", ranges), "Then Leo ");
+  assert.equal(fillRanges(target, "Then", ranges), "Then");
+  // A backspace after the name takes the learner's own space before it.
+  assert.equal(backspaceOverRanges(target, "Then Leo", ranges), "Then");
+  assert.equal(backspaceOverRanges(target, "Then Leo p", ranges), "Then Leo p");
+  // A name that opens the line is there before anything is typed.
+  const first = "Leo sings.";
+  const opening = givenRanges(first, new Set([0]));
+  assert.equal(fillRanges(first, "", opening), "Leo ");
+  assert.equal(backspaceOverRanges(first, "Leo", opening), "Leo ");
 });
 
 test("typing the scene is estimated in whole minutes, two at least", () => {

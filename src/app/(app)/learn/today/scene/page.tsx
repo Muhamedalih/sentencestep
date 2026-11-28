@@ -5,6 +5,7 @@ import { SceneLines } from "@/components/today/scene/scene-lines";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { loadTodayScene } from "@/lib/today/scene-load";
+import { loadSceneWordClips } from "@/lib/today/scene-word-clips";
 
 // Which passage is today's is read live, per learner.
 export const dynamic = "force-dynamic";
@@ -13,7 +14,7 @@ export const metadata: Metadata = { title: "Today's scene" };
 
 /**
  * The second step of the day's scene (permission "dailyScene"): today's passage with some of its
- * lines to type from the ear (see SceneLines). The lesson shell, full screen with no side menu: the
+ * lines to type as Stories' sentences are typed (see SceneLines). The lesson shell, full screen with no side menu: the
  * screen is a stage for the one line being typed. A day with no scene goes on to the words.
  */
 export default async function TodayScenePage() {
@@ -23,6 +24,8 @@ export default async function TodayScenePage() {
   const today = await loadTodayScene(user.id, features);
   if (!today) redirect("/learn/today/go?step=words");
 
+  const wordClips = await loadSceneWordClips(today.passage.id, today.scene);
+
   return (
     <div className="lesson-shell bg-background text-foreground min-h-svh w-full">
       <SceneLines
@@ -30,6 +33,7 @@ export default async function TodayScenePage() {
         passageId={today.passage.id}
         scene={today.scene}
         title={today.passage.title}
+        wordClips={wordClips}
       />
     </div>
   );

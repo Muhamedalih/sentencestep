@@ -20,6 +20,7 @@ import {
   isCorrectChar,
   isValidPrefixEdit,
 } from "@/lib/typing";
+import { backspaceOverRanges, fillRanges, type GivenRange } from "@/lib/given-ranges";
 import { isPlainStandIn, secondLetterToSwallow } from "@/lib/german-typing";
 import type { LetterState } from "@/lib/typing";
 
@@ -80,7 +81,14 @@ interface UseTypingEngineOptions {
    * Video section is the one caller that turns it on.
    */
   autoSpace?: boolean;
+  /**
+   * Stretches written for the learner (the names of the day's scene): filled in as soon as they come
+   * next, never counted as keystrokes, and passed over by a backspace. Must be stable between renders.
+   */
+  givenRanges?: readonly GivenRange[];
 }
+
+const NO_RANGES: readonly GivenRange[] = [];
 
 /**
  * Reusable character-by-character typing engine shared by every lesson mode
@@ -103,6 +111,7 @@ export function useTypingEngine({
   initialTyped,
   autoSpace = false,
   foldDiacritics = false,
+  givenRanges = NO_RANGES,
 }: UseTypingEngineOptions) {
   const [typed, setTyped] = useState("");
   const [errorIndex, setErrorIndex] = useState<number | null>(null);
@@ -134,7 +143,8 @@ export function useTypingEngine({
   // runs here too, not just after each accepted keystroke below.
   useEffect(() => {
     const seed = seedRef.current.key === resetKey ? (seedRef.current.typed ?? "") : "";
-    setTyped(advanceAutoSkip(target, isValidPrefixEdit(target, seed) ? seed : "", autoSpace));
+    const start = advanceAutoSkip(target, isValidPrefixEdit(target, seed) ? seed : "", autoSpace);
+    setTyped(fillRanges(target, start, givenRanges));
     setErrorIndex(null);
     setErrorChar(null);
     completedRef.current = false;
@@ -144,6 +154,7 @@ export function useTypingEngine({
     correctKeystrokesRef.current = 0;
     totalKeystrokesRef.current = 0;
     if (autoFocus) inputRef.current?.focus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- a reset happens only for a new sentence
   }, [resetKey, inputRef, autoFocus]);
 
   useEffect(() => {
@@ -232,6 +243,7 @@ export function useTypingEngine({
             if (next.length < opening.length) next = opening;
           }
           swallowRef.current = null;
+          if (givenRanges.length > 0) next = backspaceOverRanges(target, next, givenRanges);
           setTyped(next);
           setErrorIndex(null);
           setErrorChar(null);
@@ -253,11 +265,7 @@ export function useTypingEngine({
       // German: the second letter of ae/oe/ue/ss after a special letter is no mistake and no keystroke.
       const pendingSwallow = swallowRef.current;
       swallowRef.current = null;
-      if (
-        foldDiacritics &&
-        pendingSwallow !== null &&
-        nextChar.toLowerCase() === pendingSwallow
-      ) {
+      if (foldDiacritics && pendingSwallow !== null && nextChar.toLowerCase() === pendingSwallow) {
         return;
       }
 
@@ -271,10 +279,10 @@ export function useTypingEngine({
         if (standIn) {
           swallowRef.current = secondLetterToSwallow(targetChar, target.charAt(typed.length + 1));
         }
-        const updated = advanceAutoSkip(
+        const updated = fillRanges(
           target,
-          typed + (standIn ? targetChar : nextChar),
-          autoSpace,
+          advanceAutoSkip(target, typed + (standIn ? targetChar : nextChar), autoSpace),
+          givenRanges,
         );
         setTyped(updated);
         setErrorIndex(null);
@@ -304,6 +312,7 @@ export function useTypingEngine({
       target,
       autoSpace,
       foldDiacritics,
+      givenRanges,
       onCorrectChar,
       onErrorChar,
       onComplete,

@@ -9,12 +9,12 @@ import {
   useRef,
   useState,
   type ReactNode,
+  type RefObject,
 } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, Check, Eye, Gauge, RotateCcw, X } from "lucide-react";
+import { ArrowRight, Check, Gauge, RotateCcw, X } from "lucide-react";
 
-import { DictationHelp } from "@/components/learning/dictation-help";
-import { DictationText } from "@/components/learning/dictation-text";
+import { CurrentWordLabel } from "@/components/learning/current-word-label";
 import {
   PronunciationButton,
   type PronunciationButtonHandle,
@@ -23,60 +23,54 @@ import {
 import { SharedInputHost, SharedInputProvider } from "@/components/learning/shared-input";
 import { ShiftReplayHint } from "@/components/learning/shift-replay-hint";
 import { TapToStartOverlay } from "@/components/learning/typing-sentence";
+import { TypingStats } from "@/components/learning/typing-stats";
+import { TypingText } from "@/components/learning/typing-text";
+import { useLessonFontSettings } from "@/components/providers/lesson-font-settings-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import {
   PRONUNCIATION_SPEED_STEPS,
   usePronunciationSettings,
 } from "@/components/providers/pronunciation-settings-provider";
 import { useTypingSoundSettings } from "@/components/providers/typing-sound-settings-provider";
-import { useEnterToContinue } from "@/hooks/use-enter-to-continue";
+import { useAudioClip } from "@/hooks/use-audio-clip";
 import { useIsMobileViewport } from "@/hooks/use-is-mobile-viewport";
+import { useTypingEngine } from "@/hooks/use-typing-engine";
 import { useTypingSound } from "@/hooks/use-typing-sound";
+import { resolveSectionFontFamily } from "@/lib/admin/lesson-font-settings";
 import { resolveSectionSentenceCompleteSound } from "@/lib/admin/typing-sound-settings";
-import {
-  advanceDictationGift,
-  applyStrictDictationInput,
-  dictationMissStarsLost,
-  dictationStarCapacity,
-  dictationStars,
-  dictationView,
-  dictationWordLengths,
-  isDictationComplete,
-} from "@/lib/features/dictation";
-import { normalizeMistakeWord } from "@/lib/mistakes/normalize";
+import { foldsDiacritics, languageOfContentId } from "@/lib/learn-language";
+import { isTrackableWord, normalizeMistakeWord } from "@/lib/mistakes/normalize";
 import { episodeOf, seriesLabels, type EpisodeInfo } from "@/lib/passages/series";
 import { todayLocalISODate } from "@/lib/progress/streak";
 import {
   bareWord,
-  fillGiven,
+  givenRanges,
   nameWordIndexes,
   passageNames,
-  showGiven,
   stageRows,
   targetWordIndexes,
+  typedWords,
 } from "@/lib/today/scene";
-import type { Scene, StageRow } from "@/lib/today/scene";
-import { recordSceneLinesAction } from "@/lib/today/scene-actions";
+import type { Scene, SceneStep, StageRow } from "@/lib/today/scene";
+import { makeSceneWordClipAction, recordSceneLinesAction } from "@/lib/today/scene-actions";
 import { sceneStrings } from "@/lib/today/scene-strings";
 import type { SceneStrings } from "@/lib/today/scene-strings";
+import { locateWordAtCharIndex } from "@/lib/typing";
 import { cn } from "@/lib/utils";
 import { termOf } from "@/lib/word-ladder/options";
 
-/** The same rules as Stories' help: it comes after this many wrong letters at one blank. */
-const HELP_AFTER_MISSES = 2;
-/** How long a shown word stays up (the same as Dictation's). */
-const PEEK_MS = 1500;
-/** How long a wrong letter stays on its blank, shaking. */
-const REJECTION_MS = 350;
-/** A finished line stays lit this long before the next one (Enter skips the wait). */
-const NEXT_MS = 1100;
-/** The slide from one line to the next: the cursor waits for it to end. */
+/** The same light buzz a lesson's keys give. */
+function vibrateLightly(): void {
+  if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate(10);
+}
+
+/** The slide from one line to the next: the typing cursor waits for it to end. */
 const SLIDE_MS = 750;
 
 /** The size of every line but the current one, whose own is set in CSS (px, wide screen / phone). */
 const SIZES = {
-  wide: { prev: 22, old: 15, next: 22, far: 18, gap: 36, anchor: 140, help: 64 },
-  phone: { prev: 17, old: 12, next: 17, far: 15, gap: 22, anchor: 130, help: 110 },
+  wide: { prev: 22, old: 15, next: 22, far: 18, gap: 36, anchor: 120 },
+  phone: { prev: 17, old: 12, next: 17, far: 15, gap: 22, anchor: 90 },
 } as const;
 
 type LineRole = "cur" | "prev" | "old" | "next" | "far";
@@ -102,72 +96,51 @@ const roleOf = (distance: number): LineRole =>
 
 /** A name is written for the learner; the day's word stands out. */
 const NAME_TEXT = "text-[#5a66a8] dark:text-[#7d87b8]";
-const TARGET_TEXT = "text-[#3d46c9] dark:text-[#c9cbff]";
-const NAME_WORD = "[--lesson-letter-correct:#5a66a8] dark:[--lesson-letter-correct:#7d87b8]";
+const TARGET_TEXT = "text-[#3d46c9] dark:text-[#a9adff]";
+/** On the line being typed the colours go through the letters' own variables (see TypingText). */
+const NAME_WORD =
+  "[--lesson-letter-correct:#5a66a8] [--lesson-letter-pending:#5a66a8] dark:[--lesson-letter-correct:#7d87b8] dark:[--lesson-letter-pending:#7d87b8]";
 const TARGET_WORD =
-  "[--lesson-letter-correct:#3d46c9] dark:[--lesson-letter-correct:#c9cbff] [--lesson-letter-pending:var(--brand)] [&_[data-tick]]:!h-1";
-
-interface Rejection {
-  word: number;
-  letter: number;
-  char: string;
-  nonce: number;
-}
+  "[--lesson-letter-correct:#3d46c9] [--lesson-letter-pending:#9aa0e8] dark:[--lesson-letter-correct:#a9adff] dark:[--lesson-letter-pending:#555a9c]";
 
 /**
  * The second step of the day's scene (permission dailyScene): a stage. The line to be typed stands in
  * the middle, large; the line before it shrinks and fades above it, the one before that almost
- * vanishes, and the next one waits faintly below. Each missing line is heard in the passage's own
- * voice and typed letter by letter onto its blanks (Dictation's own engine and help, with the same
- * stars as Stories); names are written already; the whole line can be shown to type over. The scene's
- * words stand beside it with their meanings, their English hidden until written. After the last line
- * the day's second task is recorded and the way on is the words.
+ * vanishes, and the next one waits faintly below. The line itself is typed exactly as a Stories
+ * sentence is (the same text, engine, underlines, sounds, translation and numbers); only the names are
+ * written already and the day's words have their own colour. A wrong letter says that one word. The
+ * scene's words stand beside it with their meanings, the current one level with its sentence. After
+ * the last line the day's second task is recorded and the way on is the words.
  */
 export function SceneLines({
   scene,
   title,
   passageId,
+  wordClips,
 }: {
   scene: Scene;
   title: string;
   passageId: string;
+  /** word (normalized) -> its recorded clip. */
+  wordClips: Record<string, string>;
 }) {
-  const { locale, t, dir } = useLocale();
+  const { locale, t } = useLocale();
   const strings = sceneStrings(locale);
   const reducedMotion = useReducedMotion() ?? false;
   const [index, setIndex] = useState(0);
-  const [value, setValue] = useState("");
-  const [lineDone, setLineDone] = useState(false);
-  const [peekWord, setPeekWord] = useState<number | null>(null);
-  const [rejection, setRejection] = useState<Rejection | null>(null);
-  /** Wrong letters in a row at the same blank: what brings up the help. */
-  const [streak, setStreak] = useState<{ word: number; letter: number; count: number } | null>(
-    null,
-  );
-  const [missStarsLost, setMissStarsLost] = useState(0);
-  const [helps, setHelps] = useState(0);
-  const [spent, setSpent] = useState(false);
-  const [capacity, setCapacity] = useState(() => dictationStarCapacity(0));
-  /** The whole line is shown, to be typed over. Every new line starts hidden. */
-  const [shown, setShown] = useState(false);
   const [settledIndex, setSettledIndex] = useState<number | null>(null);
   const [audio, setAudio] = useState<PronunciationStatus>({
     supported: true,
     loading: false,
     playing: false,
   });
-  const missesByBlankRef = useRef<Map<string, number>>(new Map());
-  const giftRef = useRef({ gifts: 0, run: 0 });
-  /** This line had a word asked for or was shown whole. */
-  const helpedRef = useRef(false);
   const totalsRef = useRef({ clean: 0, mistakes: 0 });
-  const nonceRef = useRef(0);
-  const timersRef = useRef<{ peek?: number; rejection?: number }>({});
+  const lineMistakesRef = useRef(0);
   const recordedRef = useRef(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<PronunciationButtonHandle>(null);
   const stageRef = useRef<HTMLDivElement>(null);
-  const helpRef = useRef<HTMLDivElement>(null);
+  const railRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobileViewport();
   const [tapped, setTapped] = useState(false);
   // The server draws no tap gate: it appears only after the first client render.
@@ -181,19 +154,6 @@ export function SceneLines({
   const allDone = index >= total;
 
   const names = useMemo(() => passageNames(scene.lines), [scene]);
-  const targets = useMemo(
-    () => (step ? targetWordIndexes(step.typed, step.words) : new Set<number>()),
-    [step],
-  );
-  /** The words of this line the learner does not type. */
-  const given = useMemo(() => {
-    if (!step) return new Set<number>();
-    const found = [...nameWordIndexes(step.typed, names)].filter((word) => !targets.has(word));
-    // A line made only of names is typed whole: there would be nothing to do.
-    return new Set(found.length < dictationWordLengths(step.typed).length ? found : []);
-  }, [step, names, targets]);
-  const answer = step ? fillGiven(step.typed, value, given) : "";
-  const view = step ? showGiven(dictationView(step.typed, answer), given) : null;
 
   const soundSettings = useTypingSoundSettings();
   const { play, playSentenceComplete } = useTypingSound({
@@ -203,64 +163,35 @@ export function SceneLines({
     sentenceCompleteSound: soundSettings.sentenceCompleteSound,
   });
 
-  useEffect(() => {
-    const timers = timersRef.current;
-    return () => {
-      window.clearTimeout(timers.peek);
-      window.clearTimeout(timers.rejection);
-    };
-  }, []);
-
-  /** On to the line after `from`; a second call for the same line does nothing. */
-  const advance = useCallback((from: number) => {
-    window.clearTimeout(timersRef.current.peek);
-    helpedRef.current = false;
-    missesByBlankRef.current = new Map();
-    setValue("");
-    setLineDone(false);
-    setPeekWord(null);
-    setRejection(null);
-    setStreak(null);
-    setMissStarsLost(0);
-    setHelps(0);
-    setSpent(false);
-    setShown(false);
-    setCapacity(dictationStarCapacity(giftRef.current.gifts));
-    setIndex((current) => (current === from ? current + 1 : current));
-  }, []);
-
-  useEnterToContinue(lineDone, () => advance(index));
-  // A finished line stays lit a moment, then the next one comes.
-  useEffect(() => {
-    if (!lineDone) return;
-    const timer = window.setTimeout(() => advance(index), NEXT_MS);
-    return () => window.clearTimeout(timer);
-  }, [lineDone, index, advance]);
+  // One word, from a recording: the line's narration stops for it.
+  const wordClip = useAudioClip(undefined, { shared: true });
+  const madeRef = useRef<Record<string, string>>({});
+  const askedRef = useRef(0);
+  const lastWordRef = useRef<string | null>(null);
+  const sayWord = useCallback(
+    async (word: string) => {
+      if (!isTrackableWord(word)) return;
+      const key = normalizeMistakeWord(word);
+      // A word already being said is left to finish.
+      if (lastWordRef.current === key && wordClip.status === "playing") return;
+      lastWordRef.current = key;
+      const request = ++askedRef.current;
+      audioRef.current?.stop();
+      let url = wordClips[key] ?? madeRef.current[key] ?? null;
+      if (!url) {
+        url = await makeSceneWordClipAction(key).catch(() => null);
+        if (url) madeRef.current[key] = url;
+      }
+      if (url && request === askedRef.current) wordClip.play(url);
+    },
+    [wordClips, wordClip],
+  );
 
   // The cursor is measured on screen, so it appears once the line has arrived.
   useEffect(() => {
     const timer = window.setTimeout(() => setSettledIndex(index), reducedMotion ? 0 : SLIDE_MS);
     return () => window.clearTimeout(timer);
   }, [index, reducedMotion]);
-
-  // The keyboard goes to the line being typed, and stays there from line to line.
-  useEffect(() => {
-    if (hasStarted && !allDone) inputRef.current?.focus();
-  }, [hasStarted, index, allDone]);
-
-  // Typing wins the keyboard whatever was clicked last (replay, speed, a word card).
-  useEffect(() => {
-    if (allDone) return;
-    function refocus(event: KeyboardEvent) {
-      if (event.ctrlKey || event.metaKey || event.altKey || event.isComposing) return;
-      if (event.key.length !== 1 && event.key !== "Backspace") return;
-      const active = document.activeElement;
-      if (active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement) return;
-      inputRef.current?.focus();
-    }
-    document.addEventListener("keydown", refocus);
-    return () => document.removeEventListener("keydown", refocus);
-  }, [allDone]);
 
   // The last line is in: the day's second task is done.
   useEffect(() => {
@@ -274,7 +205,7 @@ export function SceneLines({
     }).catch(() => {});
   }, [allDone, total]);
 
-  /** Puts the lines (and the help under the current one) where they belong; the CSS slides them there. */
+  /** Puts the lines where they belong (the CSS slides them there) and the current word beside its sentence. */
   const arrange = useCallback(() => {
     const stage = stageRef.current;
     if (!stage) return;
@@ -291,20 +222,15 @@ export function SceneLines({
     const current = items.findIndex((item) => item.distance === 0);
     if (current < 0) return;
     const currentHeight = heights[current]!;
-    const helpHeight = helpRef.current?.offsetHeight ?? 0;
-    // High enough that the line and its help stay in view above a phone keyboard.
-    const anchor = Math.max(
-      8,
-      Math.min(sizes.anchor, stage.clientHeight - currentHeight - sizes.help - 16),
-    );
+    // High enough that the whole line stays in view above a phone keyboard.
+    const anchor = Math.max(8, Math.min(sizes.anchor, stage.clientHeight - currentHeight - 16));
     const tops: number[] = [];
     tops[current] = anchor;
     for (let i = current - 1, y: number = anchor; i >= 0; i--) {
       y -= heights[i]! + sizes.gap / (i === current - 1 ? 1 : 2.5);
       tops[i] = y;
     }
-    const below = anchor + currentHeight + (helpHeight ? helpHeight + 14 : 0) + sizes.gap;
-    for (let i = current + 1, y = below; i < items.length; i++) {
+    for (let i = current + 1, y = anchor + currentHeight + sizes.gap; i < items.length; i++) {
       tops[i] = y;
       y += heights[i]! + sizes.gap / 2;
     }
@@ -319,97 +245,39 @@ export function SceneLines({
         node.dataset.placed = "1";
       }
     });
-    // On a very short screen the help covers the foot of the line rather than leaving the stage.
-    if (helpRef.current) {
-      const top = Math.min(anchor + currentHeight + 14, stage.clientHeight - helpHeight - 4);
-      helpRef.current.style.top = `${Math.max(0, top)}px`;
-    }
+
+    // The word's card is always centred on the middle of the sentence being typed.
+    const rail = railRef.current;
+    const sentence = items[current]!.node.querySelector<HTMLElement>("[data-scene-sentence]");
+    const cards = rail?.querySelectorAll<HTMLElement>("[data-current-card]");
+    if (!rail || !sentence || !cards || cards.length === 0) return;
+    const first = cards[0]!;
+    const last = cards[cards.length - 1]!;
+    const sentenceMiddle = anchor + sentence.offsetTop + sentence.offsetHeight / 2;
+    const cardsMiddle = (first.offsetTop + last.offsetTop + last.offsetHeight) / 2;
+    rail.style.transform = `translateY(${sentenceMiddle - cardsMiddle}px)`;
   }, []);
 
   useLayoutEffect(() => {
     arrange();
   });
+  // The line's own height changes while it is typed (a wrap, the word's label), without a render here.
   useEffect(() => {
     const stage = stageRef.current;
     if (!stage) return;
     const observer = new ResizeObserver(arrange);
     observer.observe(stage);
+    const current = stage.querySelector("[data-stage-line][data-distance='0']");
+    if (current) observer.observe(current);
     document.fonts?.ready?.then(arrange).catch(() => {});
     return () => observer.disconnect();
-  }, [arrange, allDone]);
+  }, [arrange, allDone, index]);
 
   function finishLine() {
-    setLineDone(true);
-    setPeekWord(null);
-    setRejection(null);
-    setStreak(null);
     playSentenceComplete(resolveSectionSentenceCompleteSound(soundSettings, "stories"));
-    const usedStar = helpedRef.current || missStarsLost + helps > 0;
-    giftRef.current = advanceDictationGift(giftRef.current, usedStar);
-    if (!helpedRef.current) totalsRef.current.clean += 1;
-  }
-
-  function handleChange(next: string) {
-    // Only letters are added: what is already in is right, so nothing is erased.
-    if (!step || lineDone || next.length < answer.length) return;
-    const result = applyStrictDictationInput(step.typed, answer, next);
-    let filled = answer;
-    if (result.value !== answer) {
-      filled = fillGiven(step.typed, result.value, given);
-      play("letter");
-      setPeekWord(null);
-      setStreak(null);
-      setValue(filled);
-    }
-    if (result.rejected !== null && result.at) {
-      const { word, letter } = result.at;
-      totalsRef.current.mistakes += 1;
-      const blank = `${word}:${letter}`;
-      missesByBlankRef.current.set(blank, (missesByBlankRef.current.get(blank) ?? 0) + 1);
-      setMissStarsLost(dictationMissStarsLost(missesByBlankRef.current.values()));
-      setStreak((current) =>
-        current && current.word === word && current.letter === letter
-          ? { ...current, count: current.count + 1 }
-          : { word, letter, count: 1 },
-      );
-      nonceRef.current += 1;
-      setRejection({ word, letter, char: result.rejected, nonce: nonceRef.current });
-      window.clearTimeout(timersRef.current.rejection);
-      timersRef.current.rejection = window.setTimeout(() => setRejection(null), REJECTION_MS);
-      play("error");
-      // A guess costs a listen, but a line already being said is left to finish.
-      if (!audio.playing && !audio.loading) audioRef.current?.replay();
-    }
-    if (isDictationComplete(step.typed, filled)) finishLine();
-  }
-
-  const liveStars = dictationStars(capacity, missStarsLost + helps, spent);
-  const stuck = !allDone && !shown && !lineDone && (streak?.count ?? 0) >= HELP_AFTER_MISSES;
-
-  function showWord() {
-    const word = view?.cursor?.word;
-    if (word === undefined || lineDone) return;
-    helpedRef.current = true;
-    setHelps((count) => count + 1);
-    // The word shown at the last star spends it.
-    if (liveStars <= 1) setSpent(true);
-    setPeekWord(word);
-    window.clearTimeout(timersRef.current.peek);
-    timersRef.current.peek = window.setTimeout(() => setPeekWord(null), PEEK_MS);
-    inputRef.current?.focus();
-  }
-
-  function toggleSentence() {
-    if (lineDone || allDone) return;
-    if (!shown) {
-      // A line seen whole keeps no stars.
-      helpedRef.current = true;
-      setSpent(true);
-      setPeekWord(null);
-    }
-    setStreak(null);
-    setShown(!shown);
-    inputRef.current?.focus();
+    if (lineMistakesRef.current === 0) totalsRef.current.clean += 1;
+    lineMistakesRef.current = 0;
+    setIndex((current) => current + 1);
   }
 
   function replay() {
@@ -423,14 +291,12 @@ export function SceneLines({
   }
 
   const rows = allDone ? [] : stageRows(scene, index);
-  const wordClass = (word: number) =>
-    targets.has(word) ? TARGET_WORD : given.has(word) ? NAME_WORD : undefined;
   const words = scene.steps.flatMap((entry, position) =>
-    entry.words.map((word) => {
-      const current = !allDone && position === index;
-      const done = position < index || (current && lineDone);
-      return { word, current, done, written: done || (current && shown) };
-    }),
+    entry.words.map((word) => ({
+      word,
+      current: !allDone && position === index,
+      done: position < index,
+    })),
   );
 
   return (
@@ -484,13 +350,6 @@ export function SceneLines({
           {!allDone && (
             <div className="bg-foreground/6 ml-auto flex shrink-0 items-center gap-0.5 rounded-2xl p-1">
               <ToolButton
-                label={strings.showSentence}
-                icon={<Eye className="size-4" aria-hidden="true" />}
-                pressed={shown}
-                disabled={lineDone}
-                onClick={toggleSentence}
-              />
-              <ToolButton
                 label={t.lessonSettings.speedTitle}
                 icon={<Gauge className="size-4" aria-hidden="true" />}
                 onClick={cycleSpeed}
@@ -515,7 +374,7 @@ export function SceneLines({
               key={entry.line.id}
               className={cn(
                 "h-1 flex-1 rounded-[3px] transition-colors duration-400",
-                position < index || (position === index && lineDone)
+                position < index
                   ? "bg-brand"
                   : position === index
                     ? "bg-brand/45"
@@ -536,7 +395,7 @@ export function SceneLines({
                   className="border-brand/70 bg-brand/14 flex items-center justify-between gap-3 rounded-[14px] border px-3.5 py-2"
                 >
                   <span className="text-[19px] font-semibold tracking-[.02em]" lang="en">
-                    {entry.written ? entry.word.word : blanks(entry.word.word)}
+                    {entry.word.word}
                   </span>
                   <span className="text-foreground text-[17px] dark:text-[#e6e7ff]" dir="auto">
                     {termOf(entry.word.hintAr)}
@@ -558,7 +417,7 @@ export function SceneLines({
             <div
               ref={stageRef}
               onClick={() => inputRef.current?.focus()}
-              className="relative max-w-[900px] min-w-0 flex-1 overflow-hidden text-[length:clamp(29px,3.75vw,48px)] max-md:[html[data-keyboard]_&]:text-[length:24px]"
+              className="relative max-w-[900px] min-w-0 flex-1 overflow-hidden text-[length:clamp(29px,3.75vw,48px)]"
             >
               {rows.map((row) => {
                 const role = roleOf(row.distance);
@@ -575,89 +434,167 @@ export function SceneLines({
                     lang="en"
                   >
                     {row.role !== "locked" && row.line.speaker && (
-                      <span className="mb-[.4em] block font-sans text-[.38em] font-semibold tracking-[.02em] text-[#6b6f80] dark:text-[#8f93a5]">
+                      <span className="mb-1 block font-sans text-[15px] font-semibold tracking-[.02em] text-[#6b6f80] dark:text-[#8f93a5]">
                         {row.line.speaker}
                       </span>
                     )}
-                    {row.role === "current" && row.step && view ? (
-                      <div className="[--lesson-letter-pending:color-mix(in_oklch,var(--muted-foreground)_72%,transparent)] dark:[--lesson-letter-pending:#6e7386] dark:[--lesson-underline:#fff]">
-                        {row.step.before.trim() && (
-                          <p className="text-muted-foreground mb-[.5em] text-[.52em] leading-[1.7] dark:text-[#6f7382] [html[data-keyboard]_&]:hidden">
-                            {row.step.before.trim()}
-                          </p>
-                        )}
-                        <DictationText
-                          view={view}
-                          value={answer}
-                          inputRef={inputRef}
-                          onChange={handleChange}
-                          onEnter={() => lineDone && advance(index)}
-                          ariaLabel={strings.typeLine}
-                          showBlanks
-                          reducedMotion={reducedMotion}
-                          textClassName="font-quote text-[1em] leading-[1.5] font-medium tracking-normal sm:leading-[1.5] [&_[data-tick]]:h-[3px]"
-                          rejection={rejection}
-                          peekWord={peekWord}
-                          reveal={shown && !lineDone}
-                          wordClassName={wordClass}
-                          // Also while the line is still sliding in: the cursor waits for it.
-                          finished={lineDone || settledIndex !== index}
-                          after={
-                            lineDone && (
-                              <span className="text-success ml-[.3em] text-[.6em]">✓</span>
-                            )
-                          }
-                        />
-                        {row.step.after.trim() && (
-                          <p className="text-muted-foreground mt-[.5em] text-[.52em] leading-[1.7] dark:text-[#6f7382] [html[data-keyboard]_&]:hidden">
-                            {row.step.after.trim()}
-                          </p>
-                        )}
-                      </div>
+                    {row.role === "current" && row.step ? (
+                      <CurrentLine
+                        step={row.step}
+                        names={names}
+                        inputRef={inputRef}
+                        hasStarted={hasStarted}
+                        settled={settledIndex === index}
+                        reducedMotion={reducedMotion}
+                        onCorrect={() => {
+                          play("letter");
+                          vibrateLightly();
+                        }}
+                        onWrong={(word) => {
+                          totalsRef.current.mistakes += 1;
+                          lineMistakesRef.current += 1;
+                          play("error");
+                          vibrateLightly();
+                          if (word) void sayWord(word);
+                        }}
+                        onWordClick={(word) => {
+                          lastWordRef.current = null;
+                          void sayWord(word);
+                        }}
+                        onComplete={finishLine}
+                      />
                     ) : (
                       <StageText row={row} names={names} />
                     )}
                   </div>
                 );
               })}
-              {/* Above a phone's keyboard there is room for one row: the stars and the button. */}
-              <div
-                ref={helpRef}
-                className="absolute inset-x-0 top-0 flex justify-center max-md:[html[data-keyboard]_&_[role=group]>div>span:first-child]:hidden"
-              >
-                {stuck && (
-                  <DictationHelp
-                    dir={dir}
-                    prompt={t.dictation.stuckPrompt}
-                    stars={liveStars}
-                    maxStars={capacity}
-                    showStakes
-                    starsLabel={t.dictation.starsLabel}
-                    lastStarCosts
-                    hintStaysOpen
-                    stablePrice
-                    keepFocus
-                    noStarsLabel={t.dictation.noStars}
-                    onShowWord={showWord}
-                    showWordLabel={t.dictation.help}
-                    showWordTitle={t.dictation.helpTitle}
-                    showingWord={peekWord !== null}
-                    costLabel={t.dictation.costLabel}
-                    costRecorded={t.dictation.costRecorded}
-                    giveUpLabel={t.dictation.giveUp}
-                    giveUpTitle={t.dictation.giveUpTitle}
-                  />
-                )}
-              </div>
-              <span className="sr-only" role="status">
-                {rejection ? strings.wrongLetter : ""}
-              </span>
             </div>
           )}
-          <SceneWordRail words={words} strings={strings} />
+          {!allDone && <SceneWordRail words={words} strings={strings} railRef={railRef} />}
         </div>
       </div>
     </SharedInputProvider>
+  );
+}
+
+/**
+ * The line being typed, drawn as TypingSentence draws a Stories sentence: the word's meaning above
+ * (for the day's words, the ones with a written meaning), the sentence with its moving underlines,
+ * the translation and the live numbers below.
+ */
+function CurrentLine({
+  step,
+  names,
+  inputRef,
+  hasStarted,
+  settled,
+  reducedMotion,
+  onCorrect,
+  onWrong,
+  onWordClick,
+  onComplete,
+}: {
+  step: SceneStep;
+  names: ReadonlySet<string>;
+  inputRef: RefObject<HTMLInputElement | null>;
+  hasStarted: boolean;
+  /** The line has finished sliding in. */
+  settled: boolean;
+  reducedMotion: boolean;
+  onCorrect: () => void;
+  onWrong: (word: string | null) => void;
+  onWordClick: (word: string) => void;
+  onComplete: () => void;
+}) {
+  const { dir } = useLocale();
+  const font = resolveSectionFontFamily(useLessonFontSettings(), "stories");
+  const targets = useMemo(() => targetWordIndexes(step.typed, step.words), [step]);
+  const given = useMemo(() => {
+    const found = [...nameWordIndexes(step.typed, names)].filter((word) => !targets.has(word));
+    // A line made only of names is typed whole: there would be nothing to do.
+    return new Set(found.length < typedWords(step.typed).length ? found : []);
+  }, [step, names, targets]);
+  const ranges = useMemo(() => givenRanges(step.typed, given), [step, given]);
+
+  // Where the cursor stands now, for the wrong-letter callback.
+  const positionRef = useRef(0);
+  const engine = useTypingEngine({
+    target: step.typed,
+    resetKey: step.line.id,
+    inputRef,
+    autoFocus: hasStarted,
+    givenRanges: ranges,
+    foldDiacritics: foldsDiacritics(languageOfContentId(step.line.id)),
+    onComplete,
+    onCorrectChar: onCorrect,
+    onErrorChar: () =>
+      onWrong(locateWordAtCharIndex(step.typed, positionRef.current)?.word ?? null),
+  });
+  positionRef.current = engine.typed.length;
+
+  // A new array when the line arrives, so the underline is measured again where it now stands.
+  const letterStates = useMemo(
+    () => (settled ? [...engine.letterStates] : engine.letterStates),
+    [engine.letterStates, settled],
+  );
+
+  const currentIndex =
+    typedWords(step.typed).findLast((word) => word.start <= engine.typed.length)?.index ?? 0;
+  const labelled = targets.has(currentIndex)
+    ? step.words.find(
+        (word) =>
+          normalizeMistakeWord(word.word) ===
+          bareWord(typedWords(step.typed)[currentIndex]!.text).toLowerCase(),
+      )
+    : undefined;
+
+  return (
+    <div>
+      {step.before.trim() && (
+        <p className="text-muted-foreground mb-3 text-[clamp(16px,2vw,24px)] leading-[1.7] dark:text-[#6f7382] [html[data-keyboard]_&]:hidden">
+          {step.before.trim()}
+        </p>
+      )}
+      <div className="mb-1 min-h-9 font-sans sm:min-h-[52px] [html[data-keyboard]_&]:hidden">
+        <CurrentWordLabel
+          word={labelled ? { en: labelled.word, text: termOf(labelled.hintAr) } : undefined}
+          dir={dir}
+        />
+      </div>
+      <div data-scene-sentence="" className={cn(!settled && "[--lesson-underline:transparent]")}>
+        <TypingText
+          target={step.typed}
+          typed={engine.typed}
+          letterStates={letterStates}
+          inputRef={engine.inputRef}
+          onChange={engine.handleChange}
+          onPaste={engine.handlePaste}
+          reducedMotion={reducedMotion}
+          textClassName="font-serif max-sm:text-[2rem] text-[clamp(3rem,1.4rem+4.5vw,7rem)] lg:text-[68px] lesson-sentence max-md:[html[data-keyboard]_&]:text-[24px]"
+          textStyle={font ? { fontFamily: font } : undefined}
+          onWordClick={settled ? onWordClick : undefined}
+          wordClassName={(word) =>
+            targets.has(word) ? TARGET_WORD : given.has(word) ? NAME_WORD : undefined
+          }
+          autoFocus={hasStarted}
+        />
+      </div>
+      {step.after.trim() && (
+        <p className="text-muted-foreground mt-3 text-[clamp(16px,2vw,24px)] leading-[1.7] dark:text-[#6f7382] [html[data-keyboard]_&]:hidden">
+          {step.after.trim()}
+        </p>
+      )}
+      <p
+        className="mt-4 font-sans text-xl font-normal text-[var(--lesson-subtitle)] select-none sm:text-2xl [html[data-keyboard]_&]:text-base"
+        dir={dir}
+      >
+        {step.line.ar}
+      </p>
+      <div className="compact-hide font-sans text-base font-normal">
+        <TypingStats wpm={engine.wpm} accuracy={engine.accuracy} centered />
+      </div>
+    </div>
   );
 }
 
@@ -745,72 +682,75 @@ function StageText({ row, names }: { row: StageRow; names: ReadonlySet<string> }
   );
 }
 
-/** On a wide screen: the scene's words with their meanings; the current one large, each written one ticked. */
+/**
+ * On a wide screen: the scene's words with their meanings; the current one large, each written one
+ * ticked. The whole list is moved so the current card is centred on its sentence (see arrange).
+ */
 function SceneWordRail({
   words,
   strings,
+  railRef,
 }: {
   words: {
     word: { id: string; word: string; hintAr: string };
     current: boolean;
     done: boolean;
-    written: boolean;
   }[];
   strings: SceneStrings;
+  railRef: RefObject<HTMLDivElement | null>;
 }) {
   const { dir } = useLocale();
   return (
-    <aside className="mt-1 ml-auto hidden w-[200px] shrink-0 flex-col gap-2.5 self-start md:flex lg:w-[250px]">
-      <h5 className="text-muted-foreground text-sm font-semibold" dir={dir}>
-        {strings.sideTitle}
-      </h5>
-      <ul className="flex flex-col gap-2.5">
-        {words.map(({ word, current, done, written }) => {
-          const large = current;
-          const english = written ? word.word : blanks(word.word);
-          return (
-            <li
-              key={word.id}
-              className={cn(
-                "flex origin-left flex-col gap-0.5 rounded-[14px] border [transition:all_.55s_cubic-bezier(.22,.8,.2,1)] motion-reduce:[transition:none]",
-                large
-                  ? "border-brand/70 bg-brand/14 scale-[1.06] px-4 py-[18px]"
-                  : "bg-card px-3.5 py-[9px] dark:bg-[#0c0c0f]",
-                !large &&
-                  (done ? "border-success/35 opacity-[.62]" : "border-foreground/9 opacity-45"),
-              )}
-            >
-              <span
+    <aside className="relative ml-auto hidden w-[220px] shrink-0 overflow-hidden px-2.5 md:block lg:w-[270px]">
+      <div
+        ref={railRef}
+        className="absolute inset-x-2.5 top-0 flex flex-col gap-2.5 [transition:transform_.7s_cubic-bezier(.22,.8,.2,1)] motion-reduce:[transition:none]"
+      >
+        <h5 className="text-muted-foreground text-sm font-semibold" dir={dir}>
+          {strings.sideTitle}
+        </h5>
+        <ul className="contents">
+          {words.map(({ word, current, done }) => {
+            const english = done || current ? word.word : blanks(word.word);
+            return (
+              <li
+                key={word.id}
+                data-current-card={current ? "" : undefined}
                 className={cn(
-                  "overflow-hidden font-semibold tracking-[.02em] whitespace-nowrap",
-                  large ? "text-[30px] leading-[1.3]" : "text-[15px]",
-                  done && !large && "text-[#1f7a4d] dark:text-[#bfeccf]",
+                  "flex flex-col gap-0.5 rounded-[14px] border",
+                  current
+                    ? "border-brand/70 bg-brand/14 px-4 py-[18px]"
+                    : "bg-card px-3.5 py-[9px] dark:bg-[#0c0c0f]",
+                  !current &&
+                    (done ? "border-success/35 opacity-[.62]" : "border-foreground/9 opacity-45"),
                 )}
-                // The blanks of a long word are drawn smaller so they all fit.
-                style={
-                  large && !written && word.word.length > 8
-                    ? { fontSize: 250 / word.word.length }
-                    : undefined
-                }
-                lang="en"
               >
-                {done && !large ? "✓ " : ""}
-                {english}
-              </span>
-              <span
-                className={cn(
-                  large
-                    ? "text-foreground text-[21px] dark:text-[#e6e7ff]"
-                    : "text-[13px] text-[#4a4f8f] dark:text-[#a3a6d6]",
-                )}
-                dir="auto"
-              >
-                {termOf(word.hintAr)}
-              </span>
-            </li>
-          );
-        })}
-      </ul>
+                <span
+                  className={cn(
+                    "overflow-hidden font-semibold tracking-[.02em] whitespace-nowrap",
+                    current ? "text-[30px] leading-[1.3]" : "text-[15px]",
+                    done && "text-[#1f7a4d] dark:text-[#bfeccf]",
+                  )}
+                  lang="en"
+                >
+                  {done ? "✓ " : ""}
+                  {english}
+                </span>
+                <span
+                  className={cn(
+                    current
+                      ? "text-foreground text-[21px] dark:text-[#e6e7ff]"
+                      : "text-[13px] text-[#4a4f8f] dark:text-[#a3a6d6]",
+                  )}
+                  dir="auto"
+                >
+                  {termOf(word.hintAr)}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
     </aside>
   );
 }

@@ -133,6 +133,8 @@ interface TypingTextProps {
    * every other caller, which keeps them completely unaffected.
    */
   highlightIndexes?: ReadonlySet<number> | null;
+  /** Extra classes for single words (index among non-space tokens): the day's scene colours its names and words through the letter colour variables. */
+  wordClassName?: (index: number) => string | undefined;
 }
 
 export interface UnderlineRect {
@@ -171,6 +173,7 @@ export function TypingText({
   disabled = false,
   autoFocus = true,
   highlightIndexes = null,
+  wordClassName,
 }: TypingTextProps) {
   const { t } = useLocale();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -365,6 +368,7 @@ export function TypingText({
                 isSavable &&
                   !isTargetVocabulary &&
                   "decoration-primary/70 underline decoration-dotted decoration-2 underline-offset-[7px]",
+                wordClassName?.(thisWordIndex),
               )}
             >
               {isHighlighted && <HighlightMark reducedMotion={reducedMotion} />}
