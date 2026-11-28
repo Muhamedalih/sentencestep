@@ -84,6 +84,12 @@ interface DictationTextProps {
   peekWord?: number | null;
   /** Every letter is in: the cursor bar has nothing left to point at. */
   finished?: boolean;
+  /** The whole sentence is shown faintly, to be typed over (the day's scene). */
+  reveal?: boolean;
+  /** Extra classes for one graded word: its colours and how thick its blanks are. */
+  wordClassName?: (word: number) => string | undefined;
+  /** Drawn right after the last word, on its line. */
+  after?: ReactNode;
 }
 
 interface CursorBarRect {
@@ -255,6 +261,9 @@ export function DictationText({
   rejection = null,
   peekWord = null,
   finished = false,
+  reveal = false,
+  wordClassName,
+  after,
 }: DictationTextProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -323,7 +332,8 @@ export function DictationText({
                   pulse={lit && Boolean(words?.litPulse)}
                   phase={phase}
                   reducedMotion={reducedMotion}
-                  peeking={peekWord === cell.word}
+                  peeking={reveal || peekWord === cell.word}
+                  ghost={reveal && peekWord !== cell.word}
                   rejection={
                     rejection && rejection.word === cell.word && rejection.letter === cell.letter
                       ? rejection
@@ -367,6 +377,7 @@ export function DictationText({
                 tappable &&
                   "cursor-pointer transition-transform duration-200 ease-out hover:scale-[1.045] active:scale-95 pointer-coarse:before:absolute pointer-coarse:before:-inset-x-2 pointer-coarse:before:-inset-y-1 pointer-coarse:before:content-['']",
                 lit && "scale-[1.045]",
+                first !== null && wordClassName?.(first),
               )}
             >
               {cells}
@@ -388,6 +399,8 @@ export function DictationText({
             </span>
           </span>
         ))}
+
+        {after}
 
         {!showBlanks && (
           <>
@@ -482,6 +495,7 @@ function TickTrack({ current = false, children }: { current?: boolean; children?
   return (
     <span
       aria-hidden="true"
+      data-tick=""
       data-current-tick={current ? "true" : undefined}
       className="pointer-events-none absolute inset-x-0 bottom-[0.17em] flex h-[0.05em] min-h-[2px] justify-center"
     >
@@ -590,6 +604,7 @@ function Slot({
   phase,
   reducedMotion,
   peeking,
+  ghost = false,
   rejection,
 }: {
   cell: Extract<DictationCell, { kind: "slot" }>;
@@ -603,6 +618,8 @@ function Slot({
   reducedMotion: boolean;
   /** The learner asked for help on this slot's word: show its real letter (unless they have typed here). */
   peeking: boolean;
+  /** The letter shown is part of the whole sentence shown faintly, not of a word asked for. */
+  ghost?: boolean;
   /** A wrong letter was just turned away at this very slot. */
   rejection: { char: string; nonce: number } | null;
 }) {
@@ -612,6 +629,10 @@ function Slot({
   // is over, floats away (peekingOut) instead of vanishing at once.
   const peekingIn = peeking && !filled;
   const peekingOut = !peeking && glyph.peekFading && !filled;
+  // A faint letter stays faint while it leaves.
+  const faintRef = useRef(false);
+  if (peeking) faintRef.current = ghost;
+  const faint = faintRef.current;
 
   const introDelay = Math.min(order * INTRO_STEP, INTRO_MAX_DELAY);
   const glyphDelay = glyph.revealsReal && phase === "intro" ? introDelay : 0;
@@ -662,7 +683,9 @@ function Slot({
           filled
             ? "text-[var(--lesson-letter-correct)]"
             : peekingIn || peekingOut
-              ? PEEK_LIT_CLASS
+              ? faint
+                ? "text-foreground/25"
+                : PEEK_LIT_CLASS
               : "text-[var(--lesson-letter-pending)]",
           glyph.concealed && "invisible",
         )}
@@ -690,7 +713,9 @@ function Slot({
             }
             className={cn(
               "block h-full w-[max(calc(100%-0.16em),0.3em)] rounded-full bg-[var(--lesson-letter-pending)] transition-colors duration-200 group-hover/word:bg-[var(--lesson-primary)]",
-              (lit || peekingIn || peekingOut) && "bg-[var(--lesson-primary)]",
+              (lit || ((peekingIn || peekingOut) && !faint)) && "bg-[var(--lesson-primary)]",
+              // A letter shown faintly is its own mark: no line under it.
+              faint && peekingIn && "invisible",
               // A CSS animation outranks the inline opacity framer-motion sets, so
               // a pulsing word would bring back the lines that are meant to be
               // hidden: those under typed letters, and the current blank's own,

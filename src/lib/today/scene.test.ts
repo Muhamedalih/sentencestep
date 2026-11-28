@@ -2,14 +2,20 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import type { PassageSection, PassageWord } from "@/lib/passages/types";
+import { applyDictationInput, dictationView, isDictationComplete } from "@/lib/features/dictation";
 import {
   buildScene,
+  fillGiven,
+  nameWordIndexes,
+  passageNames,
   sceneDayPassageId,
   sceneLinesMinutes,
   sceneReviewWords,
-  sceneScript,
   sceneWordCards,
   sentenceSpans,
+  showGiven,
+  stageRows,
+  targetWordIndexes,
   typedSpan,
 } from "@/lib/today/scene";
 import type { Scene } from "@/lib/today/scene";
@@ -225,47 +231,35 @@ test("the day's scene is the first passage finished today, else the next one", (
   );
 });
 
-const kinds = (scene: Scene, current: number) =>
-  sceneScript(scene, current).map((row) => {
-    if (row.kind === "done" || row.kind === "current") return `${row.kind}:${row.step.line.index}`;
-    if (row.kind === "context") return `context:${row.line.index}`;
-    if (row.kind === "gap") return `gap:${row.context?.index ?? "-"}`;
-    return row.kind;
-  });
+const stage = (scene: Scene, current: number) =>
+  stageRows(scene, current).map((row) => `${row.line.index}:${row.role}`);
 
-test("the script keeps the last finished lines, the current one, one line more and a locked mark", () => {
+test("the stage keeps a few lines around the one being typed, and the last typed one", () => {
   const scene = built();
-  assert.deepEqual(kinds(scene, 0), ["current:0", "context:1", "locked"]);
-  // The next line is still to be typed: it is never shown, only a locked mark.
-  assert.deepEqual(kinds(scene, 2), ["done:0", "gap:1", "done:2", "current:3", "locked"]);
-  assert.deepEqual(kinds(scene, 3), [
-    "done:0",
-    "gap:1",
-    "done:2",
-    "done:3",
-    "current:4",
-    "context:5",
-    "locked",
+  // The next typed line is never shown.
+  assert.deepEqual(stage(scene, 0), ["0:current", "1:context", "2:locked"]);
+  assert.deepEqual(stage(scene, 2), [
+    "0:done",
+    "1:context",
+    "2:done",
+    "3:current",
+    "4:locked",
+    "5:context",
   ]);
-  // Only three finished lines stay; what is above them is left out.
-  assert.deepEqual(kinds(scene, 4), ["gap:1", "done:2", "done:3", "done:4", "gap:5", "current:6"]);
-  assert.deepEqual(kinds(scene, 5), ["gap:-", "done:3", "done:4", "gap:5", "done:6"]);
+  assert.deepEqual(stage(scene, 4), ["3:done", "4:done", "5:context", "6:current"]);
+  assert.deepEqual(stage(scene, 5), []);
+  assert.deepEqual(
+    stageRows(scene, 2).map((row) => row.distance),
+    [-3, -2, -1, 0, 1, 2],
+  );
 });
 
-test("no line that is still to be typed ever appears in the script", () => {
+test("no line that is still to be typed is ever shown on the stage", () => {
   const scene = built();
   for (let current = 0; current < scene.steps.length; current++) {
     const later = new Set(scene.steps.slice(current + 1).map((step) => step.line.index));
-    for (const row of sceneScript(scene, current)) {
-      const shown =
-        row.kind === "context"
-          ? row.line.index
-          : row.kind === "gap"
-            ? row.context?.index
-            : row.kind === "done" || row.kind === "current"
-              ? row.step.line.index
-              : undefined;
-      assert.ok(shown === undefined || !later.has(shown), `line ${shown} shown at ${current}`);
+    for (const row of stageRows(scene, current)) {
+      assert.ok(!later.has(row.line.index) || row.role === "locked");
     }
   }
 });
@@ -312,8 +306,46 @@ test("a context line that spells a word still to be typed is not shown", () => {
     words: ["guitar", "song", "terrible"].map((w) => word(w)),
   });
   assert.ok(scene);
-  assert.deepEqual(kinds(scene, 1), ["done:0", "gap:1", "current:2", "locked"]);
-  assert.deepEqual(kinds(scene, 2), ["done:0", "gap:1", "done:2", "gap:3", "current:4"]);
+  assert.deepEqual(stage(scene, 1), ["0:done", "1:context", "2:current", "3:locked", "4:locked"]);
+  assert.deepEqual(stage(scene, 2), ["1:context", "2:done", "3:context", "4:current"]);
+});
+
+test("the names of a passage are its people and places, not its ordinary capitals", () => {
+  const names = passageNames([
+    { en: "On Monday, Leo walks to Millbrook with his grandma.", speaker: null },
+    { en: 'She says, "Come here, Dad." Then Mr. Brown opens the door.', speaker: "Nora" },
+    { en: "I speak English. The green door opens onto Green Street.", speaker: null },
+    { en: "Millbrook's baker is Leo's friend: Honestly the best.", speaker: null },
+  ]);
+  assert.deepEqual([...names].sort(), ["Brown", "Leo", "Millbrook", "Nora", "Street"]);
+});
+
+test("names are written for the learner and the day's words are marked", () => {
+  const target = "Leo takes the guitar to Millbrook.";
+  const given = nameWordIndexes(target, new Set(["Leo", "Millbrook"]));
+  assert.deepEqual([...given], [0, 5]);
+  assert.deepEqual([...targetWordIndexes(target, [{ ...word("guitar"), audioUrl: "x" }])], [3]);
+
+  // Every name is drawn from the start, the ones further along too.
+  const drawn = showGiven(dictationView(target, ""), given).tokens.flatMap((token) =>
+    token.kind === "word"
+      ? [token.cells.map((cell) => (cell.kind === "slot" ? (cell.typed ?? "_") : "")).join("")]
+      : [],
+  );
+  assert.deepEqual(drawn, ["Leo", "_____", "___", "______", "__", "Millbrook"]);
+
+  // The first word is a name: it is there before anything is typed.
+  const start = fillGiven(target, "", given);
+  assert.equal(dictationView(target, start).cursor?.word, 1);
+  // Typing up to the last name writes that one too, and the line is complete.
+  const end = fillGiven(
+    target,
+    applyDictationInput(target, start, `${start}takestheguitarto`),
+    given,
+  );
+  assert.ok(isDictationComplete(target, end));
+  // A line with no name is left as the learner has it.
+  assert.equal(fillGiven(target, "", new Set()), "");
 });
 
 test("typing the scene is estimated in whole minutes, two at least", () => {
