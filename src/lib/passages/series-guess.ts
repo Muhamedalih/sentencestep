@@ -61,6 +61,17 @@ export function typedSoFar(word: string, typed: string): number {
   return done;
 }
 
+/**
+ * The letter a key press writes on the letter, or null. A keyboard left on Arabic (or any other
+ * non-Latin layout) still writes: the key's own place gives the Latin letter.
+ */
+export function typedLetter(key: string, code: string): string | null {
+  if (/^[a-z]$/i.test(key)) return key;
+  // Anything outside ASCII on a letter's key: Arabic gives one character there, or two (لا).
+  const foreign = [...key].some((character) => character.codePointAt(0)! > 127);
+  return foreign && /^Key[A-Z]$/.test(code) ? code.slice(3).toLowerCase() : null;
+}
+
 export interface StoredGuess {
   word: string;
   lead: string;

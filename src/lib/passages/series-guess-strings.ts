@@ -9,6 +9,7 @@ export interface GuessStrings {
   boxGuess: string;
   boxSealed: string;
   write: string;
+  switchKeyboard: string;
   sealedTomorrow: string;
   sealedNext: string;
   opensIn: string;
@@ -33,6 +34,7 @@ const STRINGS: Record<"en" | SupportLocale, GuessStrings> = {
   en: {
     boxGuess: "Guess what happens",
     boxSealed: "Your guess is sealed",
+    switchKeyboard: "Switch your keyboard to English",
     write: "Write your guess on the letter, one letter at a time",
     sealedTomorrow: "Your guess is sealed. Nobody opens it before tomorrow.",
     sealedNext: "Your guess is sealed. The next episode opens it.",
@@ -56,6 +58,7 @@ const STRINGS: Record<"en" | SupportLocale, GuessStrings> = {
   ar: {
     boxGuess: "خمّن ماذا سيحدث",
     boxSealed: "تخمينك مختوم",
+    switchKeyboard: "بدّل لوحة المفاتيح إلى الإنجليزية",
     write: "اكتب تخمينك على الرسالة، حرفاً حرفاً",
     sealedTomorrow: "ختمنا تخمينك. لا أحد يفتحه قبل الغد.",
     sealedNext: "ختمنا تخمينك. تفتحه الحلقة التالية.",
@@ -79,6 +82,7 @@ const STRINGS: Record<"en" | SupportLocale, GuessStrings> = {
   es: {
     boxGuess: "Adivina qué pasa",
     boxSealed: "Tu respuesta está sellada",
+    switchKeyboard: "Cambia el teclado a inglés",
     write: "Escribe tu respuesta en la carta, letra a letra",
     sealedTomorrow: "Tu respuesta está sellada. Nadie la abre antes de mañana.",
     sealedNext: "Tu respuesta está sellada. La abre el próximo episodio.",
@@ -102,6 +106,7 @@ const STRINGS: Record<"en" | SupportLocale, GuessStrings> = {
   tr: {
     boxGuess: "Ne olacağını tahmin et",
     boxSealed: "Tahminin mühürlendi",
+    switchKeyboard: "Klavyeni İngilizceye geçir",
     write: "Tahminini mektuba harf harf yaz",
     sealedTomorrow: "Tahminin mühürlendi. Yarından önce kimse açamaz.",
     sealedNext: "Tahminin mühürlendi. Onu sonraki bölüm açacak.",
