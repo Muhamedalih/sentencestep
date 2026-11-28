@@ -201,11 +201,16 @@ export function TypingText({
   const [highlightedWordIndices, setHighlightedWordIndices] = useState<ReadonlySet<number>>(
     () => new Set(),
   );
-  const underlineRect = useUnderlinePosition(containerRef, '[data-current="true"]', 3, [
-    target,
-    typed,
-    letterStates,
-  ]);
+  // Hidden sentence with written words (the day's scene): one line only, as Stories' Dictation draws
+  // it. The blank being typed IS the cursor, so neither typing underline is drawn beside the blanks.
+  const blanksOnly = obscureUntyped && writtenWords !== undefined;
+  const underlineRect = useUnderlinePosition(
+    containerRef,
+    blanksOnly ? '[data-current="true"] [data-blank-line]' : '[data-current="true"]',
+    // The cursor lies exactly on the blank's own line (3px, hidden while it is current).
+    blanksOnly ? -BLANK_LINE_PX : 3,
+    [target, typed, letterStates, blanksOnly],
+  );
 
   // Word-level indicator only makes sense on the same screens that already
   // expose per-word interaction (the translation card + word click, gated
@@ -214,7 +219,7 @@ export function TypingText({
   // 4's scope. Derived from the same getCurrentWordIndex used by
   // CurrentWordCard, so the translation card and this underline can never
   // disagree about which word is "current."
-  const showWordUnderline = showTypingCursor && Boolean(onWordClick);
+  const showWordUnderline = showTypingCursor && Boolean(onWordClick) && !blanksOnly;
   const currentWordIndex = showWordUnderline ? getCurrentWordIndex(target, typed.length) : -1;
   const wordUnderlineRect = useUnderlinePosition(containerRef, '[data-current-word="true"]', 3, [
     target,
@@ -432,7 +437,10 @@ export function TypingText({
       )}
       <motion.div
         aria-hidden="true"
-        className="pointer-events-none absolute top-0 left-0 h-[5px] rounded-full bg-[var(--lesson-underline)]"
+        className={cn(
+          "pointer-events-none absolute top-0 left-0 rounded-full bg-[var(--lesson-underline)]",
+          blanksOnly ? "h-[3px]" : "h-[5px]",
+        )}
         initial={false}
         animate={
           underlineRect
@@ -654,13 +662,16 @@ function Letter({
   /** Fix Your Mistakes' red-letter hint (see TypingText's highlightIndex) — only ever changes anything while `state` is still "pending"/"current"; a "correct" or transient "error" letter already has its own color and ignores this. */
   highlight?: boolean;
 }) {
-  const content = !blank ? (
-    display
-  ) : sized ? (
-    <SizedBlank current={state === "current"} char={display} />
-  ) : (
-    <BlankTick current={state === "current"} />
-  );
+  const content =
+    sized && reveal && state === "error" ? (
+      <RejectedBlank char={display} />
+    ) : !blank ? (
+      display
+    ) : sized ? (
+      <SizedBlank current={state === "current"} char={display} />
+    ) : (
+      <BlankTick current={state === "current"} />
+    );
   const highlightPending = highlight && (state === "current" || state === "pending");
 
   return (
@@ -716,17 +727,37 @@ function BlankTick({ current }: { current: boolean }) {
   );
 }
 
-/** A blank exactly as wide as the letter it hides (the day's scene): the letter holds the room, unseen. */
+/** The thickness of a sized blank's line, and of the cursor that lies on it. */
+const BLANK_LINE_PX = 3;
+
+/**
+ * A blank exactly as wide as the letter it hides (the day's scene), with the line of Stories'
+ * Dictation: the letter holds the room, unseen. The current one's own line steps aside for the
+ * cursor, which glides onto it.
+ */
 function SizedBlank({ current, char }: { current: boolean; char: string }) {
   return (
     <span aria-hidden="true" className="relative inline-block">
       <span className="invisible">{char}</span>
-      <span
-        className={cn(
-          "absolute inset-x-[0.04em] bottom-[0.2em] h-[3px] rounded-full transition-colors duration-150",
-          current ? "bg-[var(--lesson-underline)]" : "bg-[var(--lesson-letter-pending)]",
-        )}
-      />
+      <span className="pointer-events-none absolute inset-x-0 bottom-[0.17em] flex h-[3px] justify-center">
+        <span
+          data-blank-line=""
+          className={cn(
+            "block h-full w-[max(calc(100%-0.16em),0.3em)] rounded-full bg-[var(--lesson-letter-pending)]",
+            current && "opacity-0",
+          )}
+        />
+      </span>
+    </span>
+  );
+}
+
+/** A wrong key at a sized blank: what was typed, in red over the blank's red line, in the blank's own room. */
+function RejectedBlank({ char }: { char: string }) {
+  return (
+    <span aria-hidden="true" className="relative inline-block min-w-[0.5em]">
+      <span className="block text-center">{char === " " ? NBSP : char}</span>
+      <span className="absolute inset-x-[0.08em] bottom-[0.17em] h-[3px] rounded-full bg-[var(--lesson-letter-wrong)]" />
     </span>
   );
 }

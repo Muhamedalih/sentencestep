@@ -549,6 +549,8 @@ function CurrentLine({
     autoFocus: hasStarted,
     givenRanges: ranges,
     foldDiacritics: foldsDiacritics(languageOfContentId(step.line.id)),
+    // A hidden sentence is typed as Dictation is: the space after a word writes itself.
+    autoSpace: !shown,
     onComplete,
     onCorrectChar: onCorrect,
     onErrorChar: () =>
