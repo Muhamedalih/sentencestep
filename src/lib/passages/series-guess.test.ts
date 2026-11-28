@@ -12,8 +12,6 @@ import {
   opensTomorrow,
   parseGuess,
   previousEpisode,
-  typedLetter,
-  typedSoFar,
 } from "./series-guess";
 import { seriesReminderId, seriesReminderPassage, seriesReminderText } from "./series-reminder";
 
@@ -55,24 +53,9 @@ test("an episode is closed only on the day the one before it was finished", () =
   assert.equal(closed("2026-11-28T09:00:00Z", 1), false);
 });
 
-test("the countdown and the letter", () => {
+test("the countdown", () => {
   assert.equal(countdown(3_723_000, 0), "01:02:03");
   assert.equal(countdown(0, 5_000), "00:00:00");
-  assert.equal(typedSoFar("Cole", "co"), 2);
-  assert.equal(typedSoFar("grandmother", "grxan dmother"), 11);
-  assert.equal(typedSoFar("key", "zzz"), 0);
-});
-
-test("a key writes its letter, also on a keyboard left on Arabic", () => {
-  assert.equal(typedLetter("c", "KeyC"), "c");
-  assert.equal(typedLetter("C", "KeyC"), "C");
-  assert.equal(typedLetter("ؤ", "KeyC"), "c");
-  assert.equal(typedLetter("لا", "KeyB"), "b");
-  // Not a letter: left to the browser.
-  assert.equal(typedLetter("Escape", "Escape"), null);
-  assert.equal(typedLetter("Unidentified", ""), null);
-  assert.equal(typedLetter(" ", "Space"), null);
-  assert.equal(typedLetter("1", "Digit1"), null);
 });
 
 test("a stored guess is read back, and anything else is none", () => {

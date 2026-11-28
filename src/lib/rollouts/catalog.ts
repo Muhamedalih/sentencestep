@@ -886,7 +886,7 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
     audience: "learner",
     title: "Series: “What happens next?”",
     description:
-      "At the end of a series episode a night stage opens: the question over the red book, three guesses, the chosen one written on a letter and sealed. The next episode opens the day after, with a countdown to midnight and a shop bell for a reminder email at 8, 9 or 10 PM; when the learner reaches the line that answers, the envelope opens and says whether they were right.",
+      "At the end of a series episode a night stage opens: the question over the red book, three guesses, the chosen one put straight into an envelope and sealed. The next episode opens the day after, with a countdown to midnight and a shop bell for a reminder email at 8, 9 or 10 PM; when the learner reaches the line that answers, the envelope opens and says whether they were right.",
     notes: [
       "Needs the series (“passageSeries”) open for the same people. Only episodes whose next one is written ask a question (episodes 1 and 2 today).",
       "The guess is kept in the learner's own browser: on another device the next episode opens as usual, without the reveal.",
